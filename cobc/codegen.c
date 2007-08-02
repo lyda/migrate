@@ -334,7 +334,11 @@ output_base (struct cb_field *f)
 			if (!f01->flag_local) {
 				output_storage ("static ");
 			}
+#ifdef __GNUC__
+			output_storage ("unsigned char %s%s[%d] __attribute__((aligned));",
+#else
 			output_storage ("unsigned char %s%s[%d];",
+#endif
 					CB_PREFIX_BASE, name, f01->memory_size);
 			output_storage ("\t/* %s */\n", f01->name);
 		}
@@ -734,7 +738,7 @@ output_integer (cb_tree x)
 			return;
 
 		case CB_USAGE_POINTER:
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+#ifdef	COB_NON_ALIGNED
 			output ("(cob_get_pointer (");
 			output_data (x);
 			output ("))");
@@ -746,7 +750,7 @@ output_integer (cb_tree x)
 			return;
 
 		case CB_USAGE_PROGRAM_POINTER:
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+#ifdef	COB_NON_ALIGNED
 			output ("(cob_get_prog_pointer (");
 			output_data (x);
 			output ("))");
@@ -769,6 +773,13 @@ output_integer (cb_tree x)
 			}
 			break;
 
+		case CB_USAGE_PACKED:
+			if (f->pic->scale == 0 && f->pic->digits < 10) {
+				output_func_1 ("cob_get_packed_int", x);
+				return;
+			}
+			break;
+
 		case CB_USAGE_BINARY:
 		case CB_USAGE_COMP_5:
 		case CB_USAGE_COMP_X:
@@ -782,9 +793,13 @@ output_integer (cb_tree x)
 				output ("))");
 				return;
 			}
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+#ifdef	COB_NON_ALIGNED
 			if (f->indexes == 0 && (
+#ifdef	COB_SHORT_BORK
+				(f->size == 2 && (f->offset % 4 == 0)) ||
+#else
 				(f->size == 2 && (f->offset % 2 == 0)) ||
+#endif
 				(f->size == 4 && (f->offset % 4 == 0)) ||
 				(f->size == 8 && (f->offset % 8 == 0)))) {
 #else
@@ -2421,7 +2436,7 @@ output_stmt (cb_tree x)
 	struct cb_label		*lp;
 	struct cb_assign	*ap;
 	struct cb_if		*ip;
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+#ifdef	COB_NON_ALIGNED
 	struct cb_cast		*cp;
 #endif
 	int			code;
@@ -2532,7 +2547,11 @@ output_stmt (cb_tree x)
 		lp = CB_LABEL (x);
 		output_newline ();
 		if (lp->is_section) {
-			output_line ("/* %s SECTION: */", lp->name);
+			if (strcmp ((char *)(lp->name) , "MAIN SECTION")) {
+				output_line ("/* %s SECTION: */", lp->name);
+			} else {
+				output_line ("/* %s: */", lp->name);
+			}
 			excp_current_section = (const char *)lp->name;
 			excp_current_paragraph = NULL;
 		} else {
@@ -2544,7 +2563,13 @@ output_stmt (cb_tree x)
 		}
 		if (cb_flag_trace) {
 			if (lp->is_section) {
-				output_line ("fputs (\"%s:%s SECTION\\n\", stderr);", excp_current_program_id, lp->orig_name);
+				if (strcmp ((char *)(lp->name) , "MAIN SECTION")) {
+					output_line ("fputs (\"%s:%s SECTION\\n\", stderr);", excp_current_program_id, lp->orig_name);
+				} else {
+					output_line ("fputs (\"%s:%s\\n\", stderr);", excp_current_program_id, lp->orig_name);
+				}
+			} else if (lp->is_entry) {
+				output_line ("fputs (\"%s:ENTRY %s\\n\", stderr);", excp_current_program_id, lp->orig_name);
 			} else {
 				output_line ("fputs (\"%s:%s\\n\", stderr);", excp_current_program_id, lp->orig_name);
 			}
@@ -2566,7 +2591,7 @@ output_stmt (cb_tree x)
 		break;
 	case CB_TAG_ASSIGN:
 		ap = CB_ASSIGN (x);
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+#ifdef	COB_NON_ALIGNED
 		/* Nonaligned */
 		if (CB_TREE_CLASS (ap->var) == CB_CLASS_POINTER
 		    || CB_TREE_CLASS (ap->val) == CB_CLASS_POINTER) {
@@ -3342,6 +3367,12 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 					CB_PREFIX_FILE, fl->cname);
 		}
 	}
+	if (prog->decimal_index_max) {
+		for (i = 0; i < prog->decimal_index_max; i++) {
+			output_line ("	mpz_clear (d%d.value);", i);
+			output_line ("	d%d.scale = 0;", i);
+		}
+	}
 	output_line ("	initialized = 0;");
 	output_line ("	return 0;");
 	output_line ("}");
@@ -3383,10 +3414,16 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line
 	    ("cob_check_version (COB_SOURCE_FILE, COB_PACKAGE_VERSION, COB_PATCH_LEVEL);");
 	if (!prog->gen_main) {
-		output_line ("if (module.next)");
-		output_line ("  cob_set_cancel ((const char *)\"%s\", (void *)%s, (void *)%s_);",
-			prog->orig_source_name, prog->program_id,
-			prog->program_id);
+		if (cb_implicit_init) {
+			output_line ("cob_set_cancel ((const char *)\"%s\", (void *)%s, (void *)%s_);",
+				prog->orig_source_name, prog->program_id,
+				prog->program_id);
+		} else {
+			output_line ("if (module.next)");
+			output_line ("  cob_set_cancel ((const char *)\"%s\", (void *)%s, (void *)%s_);",
+				prog->orig_source_name, prog->program_id,
+				prog->program_id);
+		}
 	}
 	if (prog->flag_screen) {
 		output_line ("cob_screen_init ();");
@@ -3848,6 +3885,7 @@ codegen (struct cb_program *prog, int nested)
 				output("	}\n");
 				output("	memcpy (f1->data, &tmptr, sizeof(void *));\n");
 				output("}\n\n");
+				break;
 			}
 		}
 	}

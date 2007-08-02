@@ -50,8 +50,8 @@ extern int cob_decimal_cmp (cob_decimal *d1, cob_decimal *d2);
 
 extern int cob_add (cob_field *f1, cob_field *f2, const int opt);
 extern int cob_sub (cob_field *f1, cob_field *f2, const int opt);
-extern int cob_add_int (cob_field *f, int n);
-extern int cob_sub_int (cob_field *f, int n);
+extern int cob_add_int (cob_field *f, const int n);
+extern int cob_sub_int (cob_field *f, const int n);
 extern int cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field *quotient, const int opt);
 extern int cob_div_remainder (cob_field *fld_remainder, const int opt);
 
@@ -62,5 +62,6 @@ extern int cob_cmp_sign_numdisp (const unsigned char *data, const size_t size, c
 extern int cob_cmp_long_numdisp (const unsigned char *data, const size_t size, const int n);
 extern int cob_cmp_long_sign_numdisp (const unsigned char *data, const size_t size, const int n);
 extern void cob_set_packed_zero (cob_field *f);
+extern void cob_set_packed_int (cob_field *f, const int val);
 
 #endif /* COB_NUMERIC_H */

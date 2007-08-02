@@ -78,6 +78,25 @@ static char		expr_prio[256];
 
 int			sending_id = 0;
 
+static const char	* const bin_set_funcs[] = {
+	NULL,
+	"cob_setswp_u16_binary",
+	"cob_setswp_u24_binary",
+	"cob_setswp_u32_binary",
+	"cob_setswp_u40_binary",
+	"cob_setswp_u48_binary",
+	"cob_setswp_u56_binary",
+	"cob_setswp_u64_binary",
+	NULL,
+	"cob_setswp_s16_binary",
+	"cob_setswp_s24_binary",
+	"cob_setswp_s32_binary",
+	"cob_setswp_s40_binary",
+	"cob_setswp_s48_binary",
+	"cob_setswp_s56_binary",
+	"cob_setswp_s64_binary"
+};
+
 static const char	* const bin_compare_funcs[] = {
 	"cob_cmp_u8_binary",
 	"cob_cmp_u16_binary",
@@ -191,7 +210,7 @@ static const char	* const align_bin_compare_funcs[] = {
 	"cob_cmp_u40_binary",
 	"cob_cmp_u48_binary",
 	"cob_cmp_u56_binary",
-	"cob_cmp_u64_binary",
+	"cob_cmp_align_u64_binary",
 	"cob_cmp_s8_binary",
 	"cob_cmp_align_s16_binary",
 	"cob_cmp_s24_binary",
@@ -199,7 +218,7 @@ static const char	* const align_bin_compare_funcs[] = {
 	"cob_cmp_s40_binary",
 	"cob_cmp_s48_binary",
 	"cob_cmp_s56_binary",
-	"cob_cmp_s64_binary",
+	"cob_cmp_align_s64_binary",
 	"cob_cmp_u8_binary",
 	"cob_cmpswp_align_u16_binary",
 	"cob_cmpswp_u24_binary",
@@ -207,7 +226,7 @@ static const char	* const align_bin_compare_funcs[] = {
 	"cob_cmpswp_u40_binary",
 	"cob_cmpswp_u48_binary",
 	"cob_cmpswp_u56_binary",
-	"cob_cmpswp_u64_binary",
+	"cob_cmpswp_align_u64_binary",
 	"cob_cmp_s8_binary",
 	"cob_cmpswp_align_s16_binary",
 	"cob_cmpswp_s24_binary",
@@ -215,7 +234,7 @@ static const char	* const align_bin_compare_funcs[] = {
 	"cob_cmpswp_s40_binary",
 	"cob_cmpswp_s48_binary",
 	"cob_cmpswp_s56_binary",
-	"cob_cmpswp_s64_binary"
+	"cob_cmpswp_align_s64_binary"
 };
 
 static const char	* const align_bin_add_funcs[] = {
@@ -226,7 +245,7 @@ static const char	* const align_bin_add_funcs[] = {
 	"cob_add_u40_binary",
 	"cob_add_u48_binary",
 	"cob_add_u56_binary",
-	"cob_add_u64_binary",
+	"cob_add_align_u64_binary",
 	"cob_add_s8_binary",
 	"cob_add_align_s16_binary",
 	"cob_add_s24_binary",
@@ -234,7 +253,7 @@ static const char	* const align_bin_add_funcs[] = {
 	"cob_add_s40_binary",
 	"cob_add_s48_binary",
 	"cob_add_s56_binary",
-	"cob_add_s64_binary",
+	"cob_add_align_s64_binary",
 	"cob_add_u8_binary",
 	"cob_addswp_u16_binary",
 	"cob_addswp_u24_binary",
@@ -261,7 +280,7 @@ static const char	* const align_bin_sub_funcs[] = {
 	"cob_sub_u40_binary",
 	"cob_sub_u48_binary",
 	"cob_sub_u56_binary",
-	"cob_sub_u64_binary",
+	"cob_sub_align_u64_binary",
 	"cob_sub_s8_binary",
 	"cob_sub_align_s16_binary",
 	"cob_sub_s24_binary",
@@ -269,7 +288,7 @@ static const char	* const align_bin_sub_funcs[] = {
 	"cob_sub_s40_binary",
 	"cob_sub_s48_binary",
 	"cob_sub_s56_binary",
-	"cob_sub_s64_binary",
+	"cob_sub_align_s64_binary",
 	"cob_sub_u8_binary",
 	"cob_subswp_u16_binary",
 	"cob_subswp_u24_binary",
@@ -780,7 +799,7 @@ cb_build_identifier (cb_tree x)
 							 cb_build_cast_integer (sub),
 							 cb_int1,
 							 cb_build_cast_integer (p->occurs_depending),
-							 cb_build_string0 ((ucharptr)p->name));
+							 cb_build_string0 ((ucharptr)name));
 						r->check = cb_list_add (r->check, e1);
 						r->check = cb_list_add (r->check, e2);
 					} else {
@@ -789,7 +808,7 @@ cb_build_identifier (cb_tree x)
 								cb_build_cast_integer (sub),
 								cb_int1,
 								cb_int (p->occurs_max),
-								cb_build_string0 ((ucharptr)p->name));
+								cb_build_string0 ((ucharptr)name));
 							r->check = cb_list_add (r->check, e1);
 						}
 					}
@@ -960,10 +979,12 @@ cb_validate_program_data (struct cb_program *prog)
 	cb_tree		x;
 	cb_tree		assign;
 	struct cb_field	*p;
+	struct cb_file	*f;
 
 	for (l = current_program->file_list; l; l = CB_CHAIN (l)) {
-		if (!CB_FILE (CB_VALUE (l))->finalized) {
-			finalize_file (CB_FILE (CB_VALUE (l)), NULL);
+		f = CB_FILE (CB_VALUE (l));
+		if (!f->finalized) {
+			finalize_file (f, NULL);
 		}
 	}
 	/* build undeclared assignment name now */
@@ -1021,6 +1042,27 @@ cb_validate_program_data (struct cb_program *prog)
 	/* resolve all references so far */
 	for (l = cb_list_reverse (prog->reference_list); l; l = CB_CHAIN (l)) {
 		cb_ref (CB_VALUE (l));
+	}
+	for (l = current_program->file_list; l; l = CB_CHAIN (l)) {
+		f = CB_FILE (CB_VALUE (l));
+		if (f->record_depending && f->record_depending != cb_error_node) {
+			x = f->record_depending;
+			if (cb_ref (x) != cb_error_node) {
+				if (CB_REFERENCE_P(x) || CB_FIELD_P(x)) {
+					p = cb_field (x);
+					switch (p->storage) {
+					case CB_STORAGE_WORKING:
+					case CB_STORAGE_LOCAL:
+					case CB_STORAGE_LINKAGE:
+						break;
+					default:
+						cb_error (_("RECORD DEPENDING item must be in WORKING/LOCAL/LINKAGE section"));
+					}
+				} else {
+					cb_error (_("Invalid RECORD DEPENDING item"));
+				}
+			}
+		}
 	}
 }
 
@@ -1757,9 +1799,15 @@ cb_build_optim_cond (struct cb_binary_op *p)
 	if (CB_REFERENCE_P (p->x) || CB_FIELD_P (p->x)) {
 		f = cb_field (p->x);
 		if (!f->pic->scale && f->usage == CB_USAGE_PACKED) {
-			return cb_build_funcall_2 ("cob_cmp_packed",
-				p->x,
-				cb_build_cast_integer (p->y));
+			if (f->pic->digits < 10) {
+				return cb_build_funcall_2 ("cob_cmp_packed_int",
+					p->x,
+					cb_build_cast_integer (p->y));
+			} else {
+				return cb_build_funcall_2 ("cob_cmp_packed",
+					p->x,
+					cb_build_cast_integer (p->y));
+			}
 		}
 		if (!f->pic->scale && f->usage == CB_USAGE_DISPLAY &&
 		    !f->flag_sign_leading && !f->flag_sign_separate) {
@@ -1794,9 +1842,13 @@ cb_build_optim_cond (struct cb_binary_op *p)
 		    f->usage == CB_USAGE_COMP_X)) {
 			n = (f->size - 1) + (8 * (f->pic->have_sign ? 1 : 0)) +
 				(16 * (f->flag_binary_swap ? 1 : 0));
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+#if	defined(COB_NON_ALIGNED) && !defined(_MSC_VER)
 			switch (f->size) {
 			case 2:
+#ifdef	COB_SHORT_BORK
+				s = bin_compare_funcs[n];
+				break;
+#endif
 			case 4:
 			case 8:
 				if (f->indexes == 0 && (f->offset % f->size) == 0) {
@@ -1810,7 +1862,7 @@ cb_build_optim_cond (struct cb_binary_op *p)
 				break;
 			}
 #else
-			s = align_bin_compare_funcs[n];
+			s = bin_compare_funcs[n];
 #endif
 			if (s) {
 				return cb_build_funcall_2 (s,
@@ -1820,6 +1872,50 @@ cb_build_optim_cond (struct cb_binary_op *p)
 		}
 	}
 	return cb_build_funcall_2 ("cob_cmp_int", p->x, cb_build_cast_integer (p->y));
+}
+
+static int
+cb_chk_num_cond (cb_tree x, cb_tree y)
+{
+	struct cb_field		*fx;
+	struct cb_field		*fy;
+
+	if (!CB_REFERENCE_P (x) && !CB_FIELD_P (x)) {
+		return 0;
+	}
+	if (!CB_REFERENCE_P (y) && !CB_FIELD_P (y)) {
+		return 0;
+	}
+	if (CB_TREE_CATEGORY (x) != CB_CATEGORY_NUMERIC) {
+		return 0;
+	}
+	if (CB_TREE_CATEGORY (y) != CB_CATEGORY_NUMERIC) {
+		return 0;
+	}
+	if (CB_TREE_CLASS (x) != CB_CLASS_NUMERIC) {
+		return 0;
+	}
+	if (CB_TREE_CLASS (y) != CB_CLASS_NUMERIC) {
+		return 0;
+	}
+	fx = cb_field (x);
+	fy = cb_field (y);
+	if (fx->usage != CB_USAGE_DISPLAY) {
+		return 0;
+	}
+	if (fy->usage != CB_USAGE_DISPLAY) {
+		return 0;
+	}
+	if (fx->pic->have_sign || fy->pic->have_sign) {
+		return 0;
+	}
+	if (fx->size != fy->size) {
+		return 0;
+	}
+	if (fx->pic->scale != fy->pic->scale) {
+		return 0;
+	}
+	return 1;
 }
 
 static int
@@ -1904,6 +2000,14 @@ cb_build_cond (cb_tree x)
 				x = cb_list_reverse (decimal_stack);
 				decimal_stack = NULL;
 			} else {
+				if (cb_chk_num_cond (p->x, p->y)) {
+					size1 = cb_field_size (p->x);
+					x = cb_build_funcall_3 ("memcmp",
+						cb_build_cast_address (p->x),
+						cb_build_cast_address (p->y),
+						cb_int (size1));
+					break;
+				}
 				if (CB_TREE_CLASS (p->x) == CB_CLASS_NUMERIC
 				    && CB_TREE_CLASS (p->y) == CB_CLASS_NUMERIC
 				    && cb_fits_int (p->y)) {
@@ -1972,9 +2076,13 @@ cb_build_optim_add (cb_tree v, cb_tree n)
 		    f->usage == CB_USAGE_COMP_X)) {
 			z = (f->size - 1) + (8 * (f->pic->have_sign ? 1 : 0)) +
 				(16 * (f->flag_binary_swap ? 1 : 0));
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+#if	defined(COB_NON_ALIGNED) && !defined(_MSC_VER)
 			switch (f->size) {
 			case 2:
+#ifdef	COB_SHORT_BORK
+				s = bin_add_funcs[z];
+				break;
+#endif
 			case 4:
 			case 8:
 				if (f->indexes == 0 && (f->offset % f->size) == 0) {
@@ -1988,13 +2096,17 @@ cb_build_optim_add (cb_tree v, cb_tree n)
 				break;
 			}
 #else
-			s = align_bin_add_funcs[z];
+			s = bin_add_funcs[z];
 #endif
 			if (s) {
 				return cb_build_funcall_2 (s,
 					cb_build_cast_address (v),
 					cb_build_cast_integer (n));
 			}
+		} else if (!f->pic->scale && f->usage == CB_USAGE_PACKED &&
+		       f->pic->digits < 10) {
+			return cb_build_funcall_2 ("cob_add_packed_int",
+				v, cb_build_cast_integer (n));
 		}
 
 	}
@@ -2015,9 +2127,13 @@ cb_build_optim_sub (cb_tree v, cb_tree n)
 		    f->usage == CB_USAGE_COMP_X)) {
 			z = (f->size - 1) + (8 * (f->pic->have_sign ? 1 : 0)) +
 				(16 * (f->flag_binary_swap ? 1 : 0));
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+#if	defined(COB_NON_ALIGNED) && !defined(_MSC_VER)
 			switch (f->size) {
 			case 2:
+#ifdef	COB_SHORT_BORK
+				s = bin_sub_funcs[z];
+				break;
+#endif
 			case 4:
 			case 8:
 				if (f->indexes == 0 && (f->offset % f->size) == 0) {
@@ -2031,7 +2147,7 @@ cb_build_optim_sub (cb_tree v, cb_tree n)
 				break;
 			}
 #else
-			s = align_bin_sub_funcs[z];
+			s = bin_sub_funcs[z];
 #endif
 			if (s) {
 				return cb_build_funcall_2 (s,
@@ -2050,7 +2166,7 @@ cb_build_add (cb_tree v, cb_tree n, cb_tree round_opt)
 	cb_tree		opt;
 	struct cb_field	*f;
 
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+#ifdef	COB_NON_ALIGNED
 	if (CB_INDEX_P (v)) {
 		return cb_build_move (cb_build_binary_op (v, '+', n), v);
 	}
@@ -2072,6 +2188,13 @@ cb_build_add (cb_tree v, cb_tree n, cb_tree round_opt)
 		f = cb_field (n);
 		f->count++;
 	}
+	if (round_opt == cb_high) {
+		if (cb_fits_int (n)) {
+			return cb_build_optim_add (v, n);
+		} else {
+			return cb_build_funcall_3 ("cob_add", v, n, cb_int0);
+		}
+	}
 	opt = build_store_option (v, round_opt);
 	if (opt == cb_int0 && cb_fits_int (n)) {
 		return cb_build_optim_add (v, n);
@@ -2085,7 +2208,7 @@ cb_build_sub (cb_tree v, cb_tree n, cb_tree round_opt)
 	cb_tree		opt;
 	struct cb_field	*f;
 
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+#ifdef	COB_NON_ALIGNED
 	if (CB_INDEX_P (v)) {
 		return cb_build_move (cb_build_binary_op (v, '-', n), v);
 	}
@@ -3271,7 +3394,12 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 			if (least_significant < -f->pic->scale) {
 				goto size_overflow;
 			}
-			if (most_significant >= f->pic->digits - (f->pic->scale > 0 ? f->pic->scale : 0)) {
+			if (f->pic->scale > 0) {
+				size = f->pic->digits - f->pic->scale;
+			} else {
+				size = f->pic->digits;
+			}
+			if (most_significant >= size) {
 				goto size_overflow;
 			}
 		} else {
@@ -3503,10 +3631,16 @@ cb_build_move_num_zero (cb_tree x)
 			return cb_build_memset (x, 0);
 		}
 		switch (f->size) {
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+#ifdef	COB_NON_ALIGNED
 		case 1:
 			return cb_build_assign (x, cb_int0);
 		case 2:
+#ifdef	COB_SHORT_BORK
+			if (f->indexes == 0 && (f->offset % 4 == 0)) {
+				return cb_build_assign (x, cb_int0);
+			}
+			break;
+#endif
 		case 4:
 		case 8:
 			if (f->indexes == 0 && (f->offset % f->size == 0)) {
@@ -3804,17 +3938,26 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 		if (val == 0) {
 			return cb_build_move_num_zero (dst);
 		}
-		if (f->flag_binary_swap) {
-			return cb_build_move_call (src, dst);
-		}
 		if (f->size == 1) {
 			return cb_build_assign (dst, cb_int (val));
 		}
+		if (f->flag_binary_swap) {
+			i = (f->size - 1) + (8 * (f->pic->have_sign ? 1 : 0));
+			return cb_build_funcall_2 (bin_set_funcs[i],
+				cb_build_cast_address (dst),
+				cb_int (val));
+		}
 		switch (f->size) {
 		case 2:
+#ifdef	COB_SHORT_BORK
+			if (f->indexes == 0 && (f->offset % 4 == 0)) {
+				return cb_build_assign (dst, cb_int (val));
+			}
+			break;
+#endif
 		case 4:
 		case 8:
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+#ifdef	COB_NON_ALIGNED
 			if (f->indexes == 0 && (f->offset % f->size == 0)) {
 				return cb_build_assign (dst, cb_int (val));
 			}
@@ -3824,6 +3967,19 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 #endif
 		}
 		return cb_build_move_call (src, dst);
+	} else if (cb_fits_int (src) && f->usage == CB_USAGE_PACKED) {
+		val = cb_get_int (src);
+		n = f->pic->scale - l->scale;
+		for (; n > 0; n--) {
+			val *= 10;
+		}
+		for (; n < 0; n++) {
+			val /= 10;
+		}
+		if (val == 0) {
+			return cb_build_move_num_zero (dst);
+		}
+		return cb_build_funcall_2 ("cob_set_packed_int", dst, cb_int (val));
 	} else {
 		return cb_build_move_call (src, dst);
 	}
@@ -3936,85 +4092,21 @@ cb_build_move (cb_tree src, cb_tree dst)
 		}
 	}
 
-/*
-	if (f->usage == CB_USAGE_BINARY || f->usage == CB_USAGE_COMP_5
-	    || f->usage == CB_USAGE_COMP_X) {
-		if (src == cb_zero ||
-		    (CB_LITERAL_P (src) && CB_LITERAL(src)->scale == 0 &&
-		     CB_LITERAL(src)->size < 10 && cb_get_int (src) == 0)) {
-			if (f->flag_binary_swap) {
-				return cb_build_memset (dst, 0);
-			}
-			if (f->size == 1
-				|| (f->size == 2
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
-				&& (f->offset % 2 == 0) && f->indexes == 0
-#endif
-				) || (f->size == 4
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
-				&& (f->offset % 4 == 0) && f->indexes == 0
-#endif
-				) || (f->size == 8
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
-				&& (f->offset % 8 == 0) && f->indexes == 0
-#endif
-				)) {
-				return cb_build_move_zero (dst);
-			}
-			return cb_build_memset (dst, 0);
-		}
+	/* output optimal code */
+	if (src == cb_zero) {
+		return cb_build_move_zero (dst);
+	} else if (src == cb_space) {
+		return cb_build_move_space (dst);
+	} else if (src == cb_high) {
+		return cb_build_move_high (dst);
+	} else if (src == cb_low) {
+		return cb_build_move_low (dst);
+	} else if (src == cb_quote) {
+		return cb_build_move_quote (dst);
+	} else if (CB_LITERAL_P (src)) {
+		return cb_build_move_literal (src, dst);
 	}
-*/
-
-	/* no optimization for binary swap and packed decimal for now */
-/*
-	if (f->flag_binary_swap
-	    || f->usage == CB_USAGE_PACKED
-	    || f->usage == CB_USAGE_FLOAT
-	    || f->usage == CB_USAGE_DOUBLE
-	    || ((f->usage == CB_USAGE_BINARY ||
-		 f->usage == CB_USAGE_COMP_5 || f->usage == CB_USAGE_COMP_X)
-		&& (f->size == 3 || f->size == 5 || f->size == 6 ||
-		f->size == 7 || f->size > 8))) {
-		return cb_build_move_call (src, dst);
-	}
-*/
-
-	/* Hack for systems that don't require data alignment */
-/*
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
-	if (f->indexes == 0 && 
-		(f->size == 1 || (f->size == 2 && (f->offset % 2 == 0)) ||
-		(f->size == 4 && (f->offset % 4 == 0)) ||
-		(f->size == 8 && (f->offset % 8 == 0)))) {
-#endif
-*/
-		/* output optimal code */
-		if (src == cb_zero) {
-			return cb_build_move_zero (dst);
-		} else if (src == cb_space) {
-			return cb_build_move_space (dst);
-		} else if (src == cb_high) {
-			return cb_build_move_high (dst);
-		} else if (src == cb_low) {
-			return cb_build_move_low (dst);
-		} else if (src == cb_quote) {
-			return cb_build_move_quote (dst);
-		} else if (f->flag_binary_swap) {
-			return cb_build_move_call (src, dst);
-		} else if (CB_LITERAL_P (src)) {
-			return cb_build_move_literal (src, dst);
-		}
-/*
-#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
-	}
-	return cb_build_move_call (src, dst);
-#else
-*/
 	return cb_build_move_field (src, dst);
-/*
-#endif
-*/
 }
 
 void
@@ -4315,12 +4407,18 @@ cb_build_search_all (cb_tree table, cb_tree cond)
 void
 cb_emit_search (cb_tree table, cb_tree varying, cb_tree at_end, cb_tree whens)
 {
+	if (table == cb_error_node) {
+		return;
+	}
 	cb_emit (cb_build_search (0, table, varying, at_end, whens));
 }
 
 void
 cb_emit_search_all (cb_tree table, cb_tree at_end, cb_tree when, cb_tree stmts)
 {
+	if (table == cb_error_node) {
+		return;
+	}
 	cb_emit (cb_build_search (1, table, NULL, at_end,
 				  cb_build_if (cb_build_search_all (table, when), stmts, NULL)));
 }

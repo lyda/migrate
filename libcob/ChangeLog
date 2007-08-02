@@ -1,3 +1,25 @@
+2007-08-01  Roger While <simrw@sim-basis.de>
+
+	* call.c : Implement cob_c_cancel
+	* General : More contification
+
+2007-07-26  Roger While <simrw@sim-basis.de>
+
+	* common.c, fileio.c : (un)likely optimizations
+	* byteswap.h : For i386, let gcc work out the 2 byte case
+
+2007-07-24  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Do not use locks if filename begins with "/dev/"
+
+2007-07-21  Roger While <simrw@sim-basis.de>
+
+	* common.c : Use calloc instead of malloc
+
+2007-07-11  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Fix a memory leak in the I/S close code
+
 2007-07-02  Roger While <simrw@sim-basis.de>
 
 	* call.c : Previously we were trying to detect if dlopen(NULL)

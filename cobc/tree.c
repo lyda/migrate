@@ -762,7 +762,7 @@ cb_build_picture (const char *str)
 	struct cb_picture *pic =
 	    make_tree (CB_TAG_PICTURE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_picture));
 	const char	*p;
-	char		category = 0;
+	int		category = 0;
 	size_t		idx = 0;
 	int		size = 0;
 	int		digits = 0;
@@ -1602,7 +1602,7 @@ cb_build_cast (enum cb_cast_type type, cb_tree val)
  */
 
 cb_tree
-cb_build_label (cb_tree name, struct cb_label * section)
+cb_build_label (cb_tree name, struct cb_label *section)
 {
 	struct cb_label *p = make_tree (CB_TAG_LABEL, CB_CATEGORY_UNKNOWN, sizeof (struct cb_label));
 
@@ -1731,7 +1731,7 @@ cb_build_perform_varying (cb_tree name, cb_tree from, cb_tree by, cb_tree until)
 
 	p->name = name;
 	p->from = from;
-	p->step = name ? cb_build_add (name, by, cb_int0) : NULL;
+	p->step = name ? cb_build_add (name, by, cb_high) : NULL;
 	p->until = until;
 	return CB_TREE (p);
 }

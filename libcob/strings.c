@@ -196,7 +196,7 @@ cob_inspect_start (void)
 }
 
 void
-cob_inspect_before (cob_field *str)
+cob_inspect_before (const cob_field *str)
 {
 	unsigned char	*p;
 
@@ -209,7 +209,7 @@ cob_inspect_before (cob_field *str)
 }
 
 void
-cob_inspect_after (cob_field *str)
+cob_inspect_after (const cob_field *str)
 {
 	unsigned char	*p;
 

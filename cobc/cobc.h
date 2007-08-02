@@ -33,6 +33,14 @@
 #define	COB_MEDIUM_BUFF		8192
 #define	COB_LARGE_BUFF		16384
 
+#if !defined(__i386__) && !defined(__x86_64__) && !defined(__powerpc__) && !defined(__powerpc64__) && !defined(__ppc__) && !defined(__amd64__)
+#define	COB_NON_ALIGNED
+/* Some DEC Alphas can only directly load shorts at 4-byte aligned addresses */
+#ifdef	__alpha
+#define COB_SHORT_BORK
+#endif
+#endif
+
 #define ABORT()								      \
 do {									      \
 	fprintf (stderr, "%s:%d: Internal compiler error\n", __FILE__, __LINE__); \

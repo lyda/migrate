@@ -315,7 +315,7 @@ static int	comp_field (const void *m1, const void *m2);
 void
 cob_init_intrinsic ()
 {
-	int		i;
+	size_t		i;
 
 	cob_decimal_init (&d1);
 	cob_decimal_init (&d2);

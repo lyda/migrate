@@ -44,6 +44,19 @@
 
 #define	COB_MAX_BINARY	36
 
+static const unsigned char packed_bytes[] = {
+	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
+	0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
+	0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29,
+	0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39,
+	0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49,
+	0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59,
+	0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69,
+	0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79,
+	0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89,
+	0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99
+};
+
 static cob_decimal	cob_d1;
 static cob_decimal	cob_d2;
 static cob_decimal	cob_d3;
@@ -194,7 +207,7 @@ align_decimal (cob_decimal *d1, cob_decimal *d2)
  */
 
 static void
-cob_decimal_set (cob_decimal *dst, cob_decimal *src)
+cob_decimal_set (cob_decimal *dst, const cob_decimal *src)
 {
 	mpz_set (dst->value, src->value);
 	dst->scale = src->scale;
@@ -203,7 +216,7 @@ cob_decimal_set (cob_decimal *dst, cob_decimal *src)
 /* double */
 
 static void
-cob_decimal_set_double (cob_decimal *d, double v)
+cob_decimal_set_double (cob_decimal *d, const double v)
 {
 	mpz_set_d (d->value, v * 1.0e9);
 	d->scale = 9;
@@ -229,14 +242,26 @@ cob_decimal_get_double (cob_decimal *d)
 static void
 cob_decimal_set_display (cob_decimal *d, cob_field *f)
 {
-	int		sign = cob_get_sign (f);
+	int		sign;
 	size_t		size = COB_FIELD_SIZE (f);
 	unsigned char	*data = COB_FIELD_DATA (f);
 	unsigned int	n;
 	unsigned char	buff[64];
 
+	if (unlikely(*data == 255)) {
+		mpz_ui_pow_ui (d->value, 10, size);
+		d->scale = COB_FIELD_SCALE(f);
+		return;
+	}
+	if (unlikely(*data == 0)) {
+		mpz_ui_pow_ui (d->value, 10, size);
+		mpz_neg (d->value, d->value);
+		d->scale = COB_FIELD_SCALE(f);
+		return;
+	}
+	sign = cob_get_sign (f);
 	/* skip leading zeros */
-	while (size > 1 && cob_d2i (data[0]) == 0) {
+	while (size > 1 && *data == '0') {
 		size--;
 		data++;
 	}
@@ -666,6 +691,39 @@ cob_set_packed_zero (cob_field *f)
 	}
 }
 
+void
+cob_set_packed_int (cob_field *f, const int val)
+{
+	unsigned char	*p;
+	size_t		sign = 0;
+	int		n;
+
+	if ( val < 0) {
+		n = -val;
+		sign = 1;
+	} else {
+		n = val;
+	}
+	own_memset (f->data, 0, f->size);
+	p = f->data + f->size - 1;
+	*p = (n % 10) << 4;
+	if (!COB_FIELD_HAVE_SIGN (f)) {
+		*p |= 0x0f;
+	} else if (sign) {
+		*p |= 0x0d;
+	} else {
+		*p |= 0x0c;
+	}
+	n /= 10;
+	p--;
+	for (; n && p >= f->data; n /= 100, p--) {
+		*p = packed_bytes[n % 100];
+	}
+	if ((COB_FIELD_DIGITS(f) % 2) == 0) {
+		*(f->data) &= 0x0f;
+	}
+}
+
 /* General field */
 
 void
@@ -845,8 +903,7 @@ display_add_int (unsigned char *data, const size_t size, unsigned int n)
 
 	while (n > 0) {
 		i = n % 10;
-
-		n = n / 10;
+		n /= 10;
 
 		/* check for overflow */
 		if (unlikely(--sp < data)) {
@@ -890,8 +947,7 @@ display_sub_int (unsigned char *data, const size_t size, unsigned int n)
 
 	while (n > 0) {
 		i = n % 10;
-
-		n = n / 10;
+		n /= 10;
 
 		/* check for overflow */
 		if (unlikely(--sp < data)) {
@@ -1010,7 +1066,7 @@ cob_sub (cob_field *f1, cob_field *f2, const int opt)
 }
 
 int
-cob_add_int (cob_field *f, int n)
+cob_add_int (cob_field *f, const int n)
 {
 	if (unlikely(n == 0)) {
 		return 0;
@@ -1037,7 +1093,7 @@ cob_add_int (cob_field *f, int n)
 }
 
 int
-cob_sub_int (cob_field *f, int n)
+cob_sub_int (cob_field *f, const int n)
 {
 	if (unlikely(n == 0)) {
 		return 0;
@@ -1192,12 +1248,7 @@ cob_cmp_numdisp (const unsigned char *data, const size_t size, const int n)
 	for (inc = 0; inc < size; inc++, p++) {
 		val = (val * 10) + (*p - (unsigned char)'0');
 	}
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
+	return (val < n) ? -1 : (val > n);
 }
 
 int
@@ -1211,12 +1262,7 @@ cob_cmp_long_numdisp (const unsigned char *data, const size_t size, const int n)
 	for (inc = 0; inc < size; inc++, p++) {
 		val = (val * 10) + (*p - (unsigned char)'0');
 	}
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
+	return (val < n) ? -1 : (val > n);
 }
 
 static int
@@ -1389,12 +1435,7 @@ cob_cmp_sign_numdisp (const unsigned char *data, const size_t size, const int n)
 			break;
 		}
 	}
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
+	return (val < n) ? -1 : (val > n);
 }
 
 int
@@ -1435,11 +1476,5 @@ cob_cmp_long_sign_numdisp (const unsigned char *data, const size_t size, const i
 			break;
 		}
 	}
-	if (val < n) {
-		return -1;
-	} else if (val > n) {
-		return 1;
-	}
-	return 0;
+	return (val < n) ? -1 : (val > n);
 }
-

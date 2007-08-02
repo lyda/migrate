@@ -302,7 +302,7 @@ static struct handlerlist {
  */
 
 unsigned char *
-cob_get_pointer (unsigned char *srcptr)
+cob_get_pointer (const unsigned char *srcptr)
 {
 	unsigned char	*tmptr;
 
@@ -311,7 +311,7 @@ cob_get_pointer (unsigned char *srcptr)
 }
 
 void *
-cob_get_prog_pointer (unsigned char *srcptr)
+cob_get_prog_pointer (const unsigned char *srcptr)
 {
 	void	*tmptr;
 
@@ -851,13 +851,13 @@ cob_field_to_string (const cob_field *f, char *s)
  */
 
 int
-cob_get_switch (int n)
+cob_get_switch (const int n)
 {
 	return cob_switch[n];
 }
 
 void
-cob_set_switch (int n, int flag)
+cob_set_switch (const int n, const int flag)
 {
 	cob_switch[n] = flag;
 }
@@ -873,7 +873,7 @@ cmpc (const unsigned char *s1, const unsigned char c, const size_t size)
 	int			ret;
 	const unsigned char	*s = cob_current_module->collating_sequence;
 
-	if (s) {
+	if (unlikely(s)) {
 		for (i = 0; i < size; i++) {
 			if ((ret = s[s1[i]] - s[c]) != 0) {
 				return ret;
@@ -896,7 +896,7 @@ cmps (const unsigned char *s1, const unsigned char *s2, const size_t size)
 	int			ret;
 	const unsigned char	*s = cob_current_module->collating_sequence;
 
-	if (s) {
+	if (unlikely(s)) {
 		for (i = 0; i < size; i++) {
 			if ((ret = s[s1[i]] - s[s2[i]]) != 0) {
 				return ret;
@@ -1038,7 +1038,7 @@ cob_cmp (cob_field *f1, cob_field *f2)
  */
 
 int
-cob_is_omitted (cob_field *f)
+cob_is_omitted (const cob_field *f)
 {
 	return f->data == NULL;
 }
@@ -1190,7 +1190,7 @@ sort_compare (const void *data1, const void *data2)
 }
 
 void
-cob_table_sort_init (int nkeys, const unsigned char *collating_sequence)
+cob_table_sort_init (const int nkeys, const unsigned char *collating_sequence)
 {
 	sort_nkeys = 0;
 	sort_keys = cob_malloc (nkeys * sizeof (cob_file_key));
@@ -1202,7 +1202,7 @@ cob_table_sort_init (int nkeys, const unsigned char *collating_sequence)
 }
 
 void
-cob_table_sort_init_key (int flag, cob_field *field, size_t offset)
+cob_table_sort_init_key (const int flag, cob_field *field, size_t offset)
 {
 	sort_keys[sort_nkeys].flag = flag;
 	sort_keys[sort_nkeys].field = field;
@@ -1211,7 +1211,7 @@ cob_table_sort_init_key (int flag, cob_field *field, size_t offset)
 }
 
 void
-cob_table_sort (cob_field *f, int n)
+cob_table_sort (cob_field *f, const int n)
 {
 	qsort (f->data, (size_t) n, f->size, sort_compare);
 	free (sort_keys);
@@ -1319,12 +1319,11 @@ cob_malloc (const size_t size)
 {
 	void *mptr;
 
-	mptr = malloc (size);
+	mptr = calloc (1, size);
 	if (unlikely(!mptr)) {
 		cob_runtime_error ("Cannot acquire %d bytes of memory - Aborting", size);
 		cob_stop_run (1);
 	}
-	memset (mptr, 0, size);
 	return mptr;
 }
 
@@ -1718,7 +1717,7 @@ CBL_ERROR_PROC (unsigned char *x, unsigned char *pptr)
 }
 
 int
-SYSTEM (unsigned char *cmd)
+SYSTEM (const unsigned char *cmd)
 {
 	int	i;
 	char	buff[COB_MEDIUM_BUFF];

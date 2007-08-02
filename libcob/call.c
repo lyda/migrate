@@ -277,7 +277,7 @@ cob_resolve_1 (const char *name)
 }
 
 void *
-cob_call_resolve_1 (cob_field *f)
+cob_call_resolve_1 (const cob_field *f)
 {
 	void	*p;
 
@@ -421,7 +421,7 @@ cob_get_buff (size_t buffsize)
 }
 
 void *
-cob_call_resolve (cob_field *f)
+cob_call_resolve (const cob_field *f)
 {
 	char	*buff;
 
@@ -444,7 +444,7 @@ cob_call_error (void)
 }
 
 void
-cob_cancel (cob_field *f)
+cob_cancel (const cob_field *f)
 {
 	struct call_hash	*p;
 	char			*name;
@@ -452,6 +452,27 @@ cob_cancel (cob_field *f)
 
 	name = cob_get_buff (f->size + 1);
 	cob_field_to_string (f, name);
+
+#ifdef	COB_ALT_HASH
+	for (p = call_table; p; p = p->next) {
+#else
+	for (p = call_table[hash ((unsigned char *)name)]; p; p = p->next) {
+#endif
+		if (strcmp (name, p->name) == 0) {
+			if (p->cancel) {
+				cancel_func = p->cancel;
+				cancel_func (-1, NULL, NULL, NULL, NULL, NULL,
+						NULL, NULL, NULL);
+			}
+		}
+	}
+}
+
+void
+cob_c_cancel (const char *name)
+{
+	struct call_hash	*p;
+	int			(*cancel_func)(int, ...);
 
 #ifdef	COB_ALT_HASH
 	for (p = call_table; p; p = p->next) {

@@ -331,7 +331,7 @@ extern void cob_free_alloc (unsigned char **ptr1, unsigned char *ptr2);
 /* System routines */
 extern int CBL_ERROR_PROC (unsigned char *x, unsigned char *pptr);
 extern int CBL_EXIT_PROC (unsigned char *x, unsigned char *pptr);
-extern int SYSTEM (unsigned char *cmd);
+extern int SYSTEM (const unsigned char *cmd);
 extern int CBL_AND (unsigned char *data_1, unsigned char *data_2, const int length);
 extern int CBL_OR (unsigned char *data_1, unsigned char *data_2, const int length);
 extern int CBL_NOR (unsigned char *data_1, unsigned char *data_2, const int length);
@@ -355,13 +355,13 @@ extern int cob_acuw_justify (unsigned char *data, ...);
 #define cob_put_sign(f,s) if (COB_FIELD_HAVE_SIGN (f)) cob_real_put_sign (f, s)
 
 extern unsigned char *cob_external_addr (const char *exname, const int exlength);
-extern unsigned char *cob_get_pointer (unsigned char *srcptr);
-extern void *cob_get_prog_pointer (unsigned char *srcptr);
+extern unsigned char *cob_get_pointer (const unsigned char *srcptr);
+extern void *cob_get_prog_pointer (const unsigned char *srcptr);
 
 /* Switch */
 
-extern int cob_get_switch (int n);
-extern void cob_set_switch (int n, int flag);
+extern int cob_get_switch (const int n);
+extern void cob_set_switch (const int n, const int flag);
 
 /* Comparison */
 
@@ -369,7 +369,7 @@ extern int cob_cmp (cob_field *f1, cob_field *f2);
 
 /* Class check */
 
-extern int cob_is_omitted (cob_field *f);
+extern int cob_is_omitted (const cob_field *f);
 extern int cob_is_numeric (cob_field *f);
 extern int cob_is_alpha (const cob_field *f);
 extern int cob_is_upper (const cob_field *f);
@@ -377,9 +377,9 @@ extern int cob_is_lower (const cob_field *f);
 
 /* Table sort */
 
-extern void cob_table_sort_init (int nkeys, const unsigned char *collating_sequence);
-extern void cob_table_sort_init_key (int flag, cob_field *field, size_t offset);
-extern void cob_table_sort (cob_field *f, int n);
+extern void cob_table_sort_init (const int nkeys, const unsigned char *collating_sequence);
+extern void cob_table_sort_init_key (const int flag, cob_field *field, size_t offset);
+extern void cob_table_sort (cob_field *f, const int n);
 
 /* Run-time error checking */
 

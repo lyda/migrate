@@ -703,6 +703,7 @@ struct cb_label {
 	cb_tree			children;
 	const unsigned char	*orig_name;
 	int			is_section;
+	int			is_entry;
 	int			need_begin;
 	int			need_return;
 };

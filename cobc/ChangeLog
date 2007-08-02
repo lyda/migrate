@@ -1,3 +1,42 @@
+2007-08-01  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : If -fimplicit-init is specified, always
+		set up the cancel callback
+
+2007-07-30  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Allow unqualified names in the OCCURS KEY clause
+
+2007-07-26  Roger While <simrw@sim-basis.de>
+
+	* tree.h, parser.y, codegen.c : Trace improvements
+	* parser.y, error.c, codegen.c : Fix a problem with valid
+		duplicate paragraph names
+	* typeck.c : Optimize comparison of unsigned numeric display fields
+
+2007-07-24  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Reinstate aligned attribute
+
+2007-07-21  Roger While <simrw@sim-basis.de>
+
+	* cobc.h, typeck.c, codegen.c : Fixup for DEC Alpha alignment
+	* cobc.c : Use calloc instead of malloc
+
+2007-07-18  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix a leak of cob_decimal structures when doing CANCEL
+
+2007-07-09  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Fix debugging subscript check to report correct
+		field name
+	* tree.c, typeck.c : Optimize VARYING always
+
+2007-07-07  Roger While <simrw@sim-basis.de>
+
+	* parser.y, tree.c : Tighten checks on RECORD clause
+
 2007-07-05  Roger While <simrw@sim-basis.de>
 
 	* codegen.c : Fix wrong BY VALUE parameter generation

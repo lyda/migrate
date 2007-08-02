@@ -68,6 +68,7 @@ enum cb_storage			current_storage;
 static cb_tree			call_mode;
 
 static cb_tree			perform_stack = NULL;
+static cb_tree			qualifier = NULL;
 
 static int			next_label_id = 0;
 static int			current_linage = 0;
@@ -1156,18 +1157,30 @@ _records_or_characters: | RECORDS | CHARACTERS ;
 record_clause:
   RECORD _contains integer _characters
   {
-	current_file->record_max = cb_get_int ($3);
+	if (current_file->organization == COB_ORG_LINE_SEQUENTIAL) {
+		cb_error (_("RECORD clause invalid for LINE SEQUENTIAL"));
+	} else {
+		current_file->record_max = cb_get_int ($3);
+	}
   }
 | RECORD _contains integer TO integer _characters
   {
-	current_file->record_min = cb_get_int ($3);
-	current_file->record_max = cb_get_int ($5);
+	if (current_file->organization == COB_ORG_LINE_SEQUENTIAL) {
+		cb_error (_("RECORD clause invalid for LINE SEQUENTIAL"));
+	} else {
+		current_file->record_min = cb_get_int ($3);
+		current_file->record_max = cb_get_int ($5);
+	}
   }
 | RECORD _is VARYING _in _size opt_from_integer opt_to_integer _characters
   record_depending
   {
-	current_file->record_min = $6 ? cb_get_int ($6) : 0;
-	current_file->record_max = $7 ? cb_get_int ($7) : 0;
+	if (current_file->organization == COB_ORG_LINE_SEQUENTIAL) {
+		cb_error (_("RECORD clause invalid for LINE SEQUENTIAL"));
+	} else {
+		current_file->record_min = $6 ? cb_get_int ($6) : 0;
+		current_file->record_max = $7 ? cb_get_int ($7) : 0;
+	}
   }
 ;
 
@@ -1372,9 +1385,9 @@ level_number:
 ;
 
 entry_name:
-  /* empty */			{ $$ = cb_build_filler (); }
-| FILLER			{ $$ = cb_build_filler (); }
-| WORD				{ $$ = $1; }
+  /* empty */			{ $$ = cb_build_filler (); qualifier = NULL; }
+| FILLER			{ $$ = cb_build_filler (); qualifier = NULL; }
+| WORD				{ $$ = $1; qualifier = $1; }
 ;
 
 data_description_clause_sequence:
@@ -1573,6 +1586,10 @@ occurs_key_list:
 
 	for (l = $5; l; l = CB_CHAIN (l)) {
 		CB_PURPOSE (l) = $2;
+		if (!CB_REFERENCE(CB_VALUE(l))->chain &&
+		    strcasecmp(CB_NAME(CB_VALUE(l)), CB_NAME(qualifier))) {
+			CB_REFERENCE(CB_VALUE(l))->chain = qualifier;
+		}
 	}
 	$$ = cb_list_append ($1, $5);
   }
@@ -2132,6 +2149,16 @@ statement_list:
 ;
 
 statements:
+  {
+	cb_tree label;
+
+	if (!current_section && !current_paragraph) {
+		label = cb_build_reference ("MAIN SECTION");
+		current_section = CB_LABEL (cb_build_label (label, NULL));
+		current_section->is_section = 1;
+		emit_statement (CB_TREE (current_section));
+	}
+  }
   statement
 | statements statement
 ;
@@ -4842,6 +4869,7 @@ emit_entry (const char *name, const int encode, cb_tree using_list)
 		CB_LABEL (label)->orig_name = (unsigned char *)current_program->orig_source_name;
 	}
 	CB_LABEL (label)->need_begin = 1;
+	CB_LABEL (label)->is_entry = 1;
 	emit_statement (label);
 
 	parmnum = 1;

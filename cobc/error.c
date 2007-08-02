@@ -43,8 +43,10 @@ print_error (char *file, int line, const char *prefix, const char *fmt, va_list 
 			fprintf (stderr, _("%s: In paragraph '%s':\n"),
 				 file, current_paragraph->name);
 		} else {
-			fprintf (stderr, _("%s: In section '%s':\n"),
-				 file, current_section->name);
+			if (strcmp ((char *)(current_section->name), "MAIN SECTION")) {
+				fprintf (stderr, _("%s: In section '%s':\n"),
+					file, current_section->name);
+			}
 		}
 		last_section = current_section;
 		last_paragraph = current_paragraph;

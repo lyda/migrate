@@ -188,7 +188,9 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
 		s2 += size - count;
 	} else {
 		while (count-- > size) {
-			while (!isdigit (*s1++)) { ; }
+			while (!isdigit (*s1++)) {
+				;
+			}
 		}
 	}
 

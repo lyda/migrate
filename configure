@@ -25907,6 +25907,13 @@ _ACEOF
 		COB_CFLAGS="$COB_CFLAGS +ESlit -w"
 	fi
 	;;
+  aix*)
+	COB_EXPORT_DYN="-Wl,bexpfull"
+	if test "`basename $CC`" != "gcc"
+	then
+		COB_SHARED_OPT="-G"
+	fi
+	;;
 esac
 
 if test "`basename $CC`" = "gcc"
@@ -27627,23 +27634,3 @@ echo "  Use enhanced Berkeley DB (>= 4.1)            ${HAS_DB41}"
 echo "  Use fcntl for file locking:                  ${ac_cv_func_fcntl}"
 echo "  Use ncurses/pdcurses/curses for screen I/O:  ${USE_NCURSES}"
 echo ""
-
-case $LIBDB in
-  1) echo "NOTICE: You chose to link Berkeley DB 1.85, which is distributed"
-     echo "NOTICE: under the BSD license.  In accordance with the license,"
-     echo "NOTICE: all advertising materials mentioning features or use of"
-     echo "NOTICE: Berkeley DB must display the following acknowledgement:"
-     echo ""
-     echo "    This product includes software developed by the University"
-     echo "    of California, Berkeley and its contributors."
-     echo ""
-     ;;
-  3) echo "NOTICE: You chose to link Berkeley DB 3.0 or later, which is"
-     echo "NOTICE: distributed under their own open-source license.  In"
-     echo "NOTICE: accordance with the license, you must distribute the"
-     echo "NOTICE: source code of your software along with your software,"
-     echo "NOTICE: or you have to pay royalty to Sleepycat Software, Inc."
-     echo "NOTICE: See http://www.sleepycat.com/ for details."
-     echo ""
-     ;;
-esac

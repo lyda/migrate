@@ -221,13 +221,12 @@ cobc_malloc (const size_t size)
 {
 	void *mptr;
 
-	mptr = malloc (size);
+	mptr = calloc (1, size);
 	if (!mptr) {
 		fprintf (stderr, "Cannot acquire %d bytes of memory - Aborting\n", (int)size);
 		fflush (stderr);
 		(void)longjmp (cob_jmpbuf, 1);
 	}
-	memset (mptr, 0, size);
 	return mptr;
 }
 

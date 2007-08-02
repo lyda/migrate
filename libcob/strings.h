@@ -25,8 +25,8 @@
 
 extern void cob_inspect_init (cob_field *var, const int replacing);
 extern void cob_inspect_start (void);
-extern void cob_inspect_before (cob_field *str);
-extern void cob_inspect_after (cob_field *str);
+extern void cob_inspect_before (const cob_field *str);
+extern void cob_inspect_after (const cob_field *str);
 extern void cob_inspect_characters (cob_field *f1);
 extern void cob_inspect_all (cob_field *f1, cob_field *f2);
 extern void cob_inspect_leading (cob_field *f1, cob_field *f2);

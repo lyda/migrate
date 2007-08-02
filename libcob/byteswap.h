@@ -20,6 +20,7 @@
 /*
  * Extracted from glib/gtypes.h in GLIB-2.2.2.
  * Modified by Keisuke Nishida in 2003.
+ * Modified by Roger While
  */
 
 #ifndef COB_BYTESWAP_H
@@ -59,17 +60,6 @@
  */
 #if defined (__GNUC__) && (__GNUC__ >= 2)
 #  if defined (__i386__)
-#    define COB_BSWAP_16_IA32(val)				\
-       (__extension__						\
-	({ register unsigned short __v, __x = ((unsigned short) (val));	\
-	   if (__builtin_constant_p (__x))			\
-	     __v = COB_BSWAP_16_CONSTANT (__x);			\
-	   else							\
-	     __asm__ ("rorw $8, %w0"				\
-		      : "=r" (__v)				\
-		      : "0" (__x)				\
-		      : "cc");					\
-	    __v; }))
 #    define COB_BSWAP_32_IA32(val)				\
        (__extension__						\
 	({ register unsigned int __v, __x = ((unsigned int) (val));	\
@@ -93,8 +83,8 @@
 	       __r.__l[1] = COB_BSWAP_32 (__w.__l[0]);		\
 	     }							\
 	   __r.__ll; }))
-     /* Possibly just use the constant version and let gcc figure it out? */
-#    define COB_BSWAP_16(val) (COB_BSWAP_16_IA32 (val))
+     /* gcc seems to figure out optimal code for this on its own */
+#    define COB_BSWAP_16(val) (COB_BSWAP_16_CONSTANT (val))
 #    define COB_BSWAP_32(val) (COB_BSWAP_32_IA32 (val))
 #    define COB_BSWAP_64(val) (COB_BSWAP_64_IA32 (val))
 #  elif defined (__ia64__)

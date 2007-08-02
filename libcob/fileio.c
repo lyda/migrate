@@ -619,15 +619,17 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 
 #ifdef HAVE_FCNTL
 	/* lock the file */
-	own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
-	lock.l_type = (opt || mode == COB_OPEN_OUTPUT) ? F_WRLCK : F_RDLCK;
-	lock.l_whence = SEEK_SET;
-	lock.l_start = 0;
-	lock.l_len = 0;
-	if (fcntl (fileno (fp), F_SETLK, &lock) < 0) {
-		ret = errno;
-		fclose (fp);
-		return ret;
+	if (memcmp (filename, "/dev/", 5)) {
+		own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
+		lock.l_type = (opt || mode == COB_OPEN_OUTPUT) ? F_WRLCK : F_RDLCK;
+		lock.l_whence = SEEK_SET;
+		lock.l_start = 0;
+		lock.l_len = 0;
+		if (fcntl (fileno (fp), F_SETLK, &lock) < 0) {
+			ret = errno;
+			fclose (fp);
+			return ret;
+		}
 	}
 #endif
 
@@ -1526,6 +1528,7 @@ indexed_close (cob_file *f, int opt)
 	free (p->db);
 	free (p->last_readkey);
 	free (p->last_dupno);
+	free (p->rewrite_sec_key);
 #ifdef	USE_DB41
 	free (p->filename);
 	free (p->cursor);
@@ -1793,7 +1796,7 @@ indexed_read_next (cob_file *f, int read_opts)
 #ifdef	USE_DB41
 		ret = DB_SEQ (p->cursor[p->key_index], DB_SET);
 #else
-		ret = DB_GET (p->db[p->key_index], 0) ;
+		ret = DB_GET (p->db[p->key_index], 0);
 #endif
 		if (!ret && p->key_index > 0) {
 			if ( f->keys[p->key_index].flag) {
@@ -1821,7 +1824,7 @@ indexed_read_next (cob_file *f, int read_opts)
 			if (!ret) {
 				p->key.size = (cob_dbtsize_t) f->keys[0].field->size;
 				p->key.data = p->last_readkey[p->key_index + f->nkeys];
-				ret = DB_GET (p->db[0], 0) ;
+				ret = DB_GET (p->db[0], 0);
 			}
 		}
 		file_changed = ret;	
@@ -2067,7 +2070,7 @@ check_alt_keys (cob_file *f, int rewrite)
 	for (i = 1; i < f->nkeys; i++) {
 		if (!f->keys[i].flag) {
 			DBT_SET (p->key, f->keys[i].field);
-			ret = DB_GET (p->db[i], 0) ;
+			ret = DB_GET (p->db[i], 0);
 			if (ret == 0) {
 				if (rewrite) {
 					if (memcmp(p->data.data,f->keys[0].field->data,f->keys[0].field->size)) {
@@ -2737,7 +2740,7 @@ cob_read (cob_file *f, cob_field *key, cob_field *fnstatus, int read_opts)
 
 	f->flag_read_done = 0;
 
-	if (f->flag_nonexistent) {
+	if (unlikely(f->flag_nonexistent)) {
 		if (f->flag_first_read == 0) {
 			RETURN_STATUS (COB_STATUS_23_KEY_NOT_EXISTS);
 		}
@@ -2755,9 +2758,9 @@ cob_read (cob_file *f, cob_field *key, cob_field *fnstatus, int read_opts)
 		RETURN_STATUS (COB_STATUS_46_READ_ERROR);
 	}
 
-	if (f->open_mode == COB_OPEN_CLOSED
+	if (unlikely(f->open_mode == COB_OPEN_CLOSED
 	    || f->open_mode == COB_OPEN_OUTPUT
-	    || f->open_mode == COB_OPEN_EXTEND) {
+	    || f->open_mode == COB_OPEN_EXTEND)) {
 		RETURN_STATUS (COB_STATUS_47_INPUT_DENIED);
 	}
 
@@ -2856,7 +2859,8 @@ cob_rewrite (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus)
 
 	f->flag_read_done = 0;
 
-	if (f->open_mode == COB_OPEN_CLOSED || f->open_mode != COB_OPEN_I_O) {
+	if (unlikely(f->open_mode == COB_OPEN_CLOSED ||
+	    f->open_mode != COB_OPEN_I_O)) {
 		RETURN_STATUS (COB_STATUS_49_I_O_DENIED);
 	}
 
@@ -2899,7 +2903,8 @@ cob_delete (cob_file *f, cob_field *fnstatus)
 
 	f->flag_read_done = 0;
 
-	if (f->open_mode == COB_OPEN_CLOSED || f->open_mode != COB_OPEN_I_O) {
+	if (unlikely(f->open_mode == COB_OPEN_CLOSED ||
+	    f->open_mode != COB_OPEN_I_O)) {
 		RETURN_STATUS (COB_STATUS_49_I_O_DENIED);
 	}
 
@@ -3487,9 +3492,6 @@ sort_cmps (const unsigned char *s1, const unsigned char *s2, const size_t size,
 			}
 		}
 	} else {
-/* RXW
-		return memcmp (s1, s2, size);
-*/
 		for (i = 0; i < size; i++) {
 			if ((ret = s1[i] - s2[i]) != 0) {
 				return ret;

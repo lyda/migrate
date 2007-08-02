@@ -28,13 +28,14 @@ extern void *cob_resolve (const char *name);
 extern void *cob_resolve_1 (const char *name);
 extern const char *cob_resolve_error (void);
 
-extern void *cob_call_resolve (cob_field *f);
-extern void *cob_call_resolve_1 (cob_field *f);
+extern void *cob_call_resolve (const cob_field *f);
+extern void *cob_call_resolve_1 (const cob_field *f);
 #ifdef __GNUC__
 extern void cob_call_error (void) __attribute__ ((noreturn));
 #else
 extern void cob_call_error (void);
 #endif
-extern void cob_cancel (cob_field *f);
+extern void cob_cancel (const cob_field *f);
+extern void cob_c_cancel (const char *name);
 
 #endif /* COB_CALL_H */
