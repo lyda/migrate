@@ -27,9 +27,6 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_TESTDIR([tests])
 AC_CONFIG_MACRO_DIR([m4])
 
-# Hack to stop CXX/F77 checks - Any better way ?
-tagnames=
-
 # Note for SUN Solaris (gcc)
 # export/setenv CFLAGS "-m64 -mptr64"
 # export/setenv LDFLAGS "-m64 -mptr64 -L/usr/local/lib/sparcv9"
@@ -57,6 +54,8 @@ AM_MAINTAINER_MODE
 # Autoheader templates
 AH_TEMPLATE([WITH_DB], [Compile with the Berkeley DB library])
 AH_TEMPLATE([USE_DB41], [Use Berkeley DB library new features])
+AH_TEMPLATE([WITH_INDEX_EXTFH], [Compile with an external ISAM handler])
+AH_TEMPLATE([WITH_SEQRA_EXTFH], [Compile with an external SEQ/RAN handler])
 AH_TEMPLATE([WITH_LFS64], [Compile with large file system 64])
 AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
 AH_TEMPLATE([COB_EXPERIMENTAL], [Enable experimemental code (Developers only!)])
@@ -71,6 +70,7 @@ AH_TEMPLATE([WITH_VARSEQ], [Define variable sequential file format])
 # AH_TEMPLATE([DLLHIDDEN], [Has visibility attribute])
 AH_TEMPLATE([HAVE_PSIGN_OPT], [Has -Wno-pointer-sign])
 AH_TEMPLATE([HAVE_TIMEZONE], [Has timezone variable])
+AH_TEMPLATE([HAVE_MVGETNSTR], [Has mvgetnstr in curses library])
 AH_TEMPLATE([COB_EXEEXT], [Executable extension])
 AH_TEMPLATE([COB_EXTRA_FLAGS], [Extra Compiler Flags])
 AH_TEMPLATE([__USE_STRING_INLINES], [Compiler optimization])
@@ -102,11 +102,24 @@ AC_ARG_WITH(cc,
 #  AC_CHECK_PROG([COB_CC], [cc], [cc], AC_MSG_ERROR(cc is required))
 #fi
 
+AC_ARG_WITH(seqra-extfh,
+  [  --with-seqra-extfh      (OpenCOBOL) Use external SEQ/RAN file handler],
+  [ if test "$with_seqra_extfh" = "yes"
+    then
+	AC_DEFINE(WITH_SEQRA_EXTFH)
+    fi ], [])
+
 LIBDB=""
-AC_ARG_WITH(db1,
-  [  --with-db1              (OpenCOBOL) use Berkeley DB 1.85 (libdb-1.85)],
-  [ LIBDB="1"
-    AC_DEFINE(WITH_DB, 1) ],
+AC_ARG_WITH(index-extfh,
+  [  --with-index-extfh      (OpenCOBOL) Use external ISAM file handler],
+  [ if test "$with_index_extfh" = "yes"
+    then
+	AC_DEFINE(WITH_INDEX_EXTFH)
+    fi ],
+  [ AC_ARG_WITH(db1,
+   [  --with-db1              (OpenCOBOL) use Berkeley DB 1.85 (libdb-1.85)],
+   [ LIBDB="1"
+     AC_DEFINE(WITH_DB, 1) ],
 	[ AC_ARG_WITH(db,
 		[  --with-db               (OpenCOBOL) use Berkeley DB 3.0 or later (libdb)(default)],
 		[ if test "$with_db" = "yes"
@@ -115,7 +128,7 @@ AC_ARG_WITH(db1,
 		  AC_DEFINE(WITH_DB, 3)
 		  fi ],
 		[ LIBDB="3"
-		  AC_DEFINE(WITH_DB, 3) ]) ])
+		  AC_DEFINE(WITH_DB, 3) ]) ]) ])
 
 #AC_ARG_WITH(db,
 #  [  --with-db               (OpenCOBOL) use Berkeley DB 3.0 or later (libdb)],
@@ -148,15 +161,22 @@ GEN_DEBUG_OPT="no"
 
 AC_ARG_ENABLE(debug,
   [  --enable-debug          (OpenCOBOL) enable debugging options],
-  [ AC_DEFINE(COB_DEBUG) GEN_DEBUG_OPT="yes"])
+  [if test "$enable_debug" = "yes"; then
+	AC_DEFINE(COB_DEBUG)
+	GEN_DEBUG_OPT="yes"
+   fi])
 
 AC_ARG_ENABLE(experimental,
   [  --enable-experimental   (OpenCOBOL) enable experimental code (Developers only!)],
-  [ AC_DEFINE(COB_EXPERIMENTAL)])
+  [if test "$enable_experimental" = "yes"; then
+	AC_DEFINE(COB_EXPERIMENTAL)
+   fi])
 
 AC_ARG_ENABLE(param-check,
-  [  --disable-param-check   (OpenCOBOL) disable CALL parameter checking],,
-  [ AC_DEFINE(COB_PARAM_CHECK)])
+  [  --enable-param-check    (OpenCOBOL) enable CALL parameter checking],
+  [if test "$enable_param_check" = "yes"; then
+	AC_DEFINE(COB_PARAM_CHECK)
+   fi])
 
 PATCH_LEVEL=0
 AC_ARG_WITH(patch-level, [  --with-patch-level      (OpenCOBOL) define a patch level (default 0)],
@@ -203,8 +223,8 @@ AC_CHECK_FUNC([getopt_long_only],
 
 # Checks for gmp.
 AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
-# MYOLDLDFLAGS="$LDFLAGS"
-# LDFLAGS="$LDFLAGS -lgmp"
+# MYOLDLIBS="$LIBS"
+# LIBS="$LIBS -lgmp"
 # AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <gmp.h>]], [[
 #     mpz_t  myvar;
 #     mpz_init (myvar);
@@ -212,7 +232,7 @@ AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
 #   [],
 #   [AC_MSG_ERROR(GMP 3 or later is required)],
 #   [])
-# LDFLAGS="$MYOLDLDFLAGS"
+# LIBS="$MYOLDLIBS"
 AC_CHECK_LIB([gmp], [__gmp_randinit], , AC_MSG_ERROR(GMP 3 or later is required))
 LIBCOB_LIBS="$LIBCOB_LIBS -lgmp"
 
@@ -241,11 +261,19 @@ else
     if test "x$ac_cv_lib_curses_initscr" = "xyes"; then
       USE_NCURSES="yes"
       LIBCOB_LIBS="$LIBCOB_LIBS -lcurses"
+      AC_CHECK_LIB([curses], [mvgetnstr])
+      if test "x$ac_cv_lib_curses_mvgetnstr" = "xyes"; then
+	 AC_DEFINE(HAVE_MVGETNSTR,1)
+      fi
     fi
   fi
 fi
 
 # Checks for programs.
+# Stop the stupid tests for C++ and Fortran
+AC_PROVIDE([AC_PROG_F77])
+AC_PROVIDE([AC_PROG_CXX])
+with_tags=
 AC_PROG_LN_S
 AC_PROG_INSTALL
 AC_LIBTOOL_DLOPEN
@@ -510,7 +538,7 @@ then
 fi
 
 # Include CFLAGS in COB_CFLAGS without optimization/debug options
-cob_temp_flags=`echo "$CFLAGS " | sed -e 's/-O2 / /' | sed -e 's/-O / /' | sed -e 's/-g / /'`
+cob_temp_flags=`echo "$CFLAGS " | sed -e 's/[+-]O[0-9]//' | sed -e 's/-O / /' | sed -e 's/-g / /' | sed -e 's/$-O//' | sed -e 's/$-g//'`
 COB_CFLAGS="$COB_CFLAGS $cob_temp_flags"
 
 if test "$GEN_DEBUG_OPT" = "no"
@@ -563,12 +591,28 @@ case $host_os in
 	then
 		COB_SHARED_OPT="-b"
 		AC_DEFINE([_XOPEN_SOURCE_EXTENDED],1)
-		CFLAGS="$CFLAGS +ESlit -O"
-		COB_CFLAGS="$COB_CFLAGS +ESlit -w"
+		rm -f hptest*
+		echo 'int main() { return 0; }' > hptest.c
+		${CC} ${CFLAGS} +Olit=all -o hptest hptest.c > hptest.out 2>&1
+		if test $? -ne 0 -o -s hptest.out
+		then
+			CFLAGS="$CFLAGS +ESlit"
+			COB_CFLAGS="$COB_CFLAGS +ESlit -w"
+		else
+			CFLAGS="$CFLAGS +Olit=all"
+			COB_CFLAGS="$COB_CFLAGS +Olit=all -w"
+		fi
+		rm -f hptest*
 	fi
 	;;
   aix*)
-	COB_EXPORT_DYN="-Wl,bexpfull"
+	COB_EXPORT_DYN="-Wl,-bexpfull"
+	if test "`basename $CC`" != "gcc"
+	then
+		COB_SHARED_OPT="-Wc,-G"
+	fi
+	;;
+  solaris*)
 	if test "`basename $CC`" != "gcc"
 	then
 		COB_SHARED_OPT="-G"
@@ -652,8 +696,17 @@ else
 fi
 echo ""
 echo "  Use gettext for international messages:      ${USE_NLS}"
+if test "$with_seqra_extfh" = "yes"
+then
+echo "  Use external SEQ/RAN file handler            yes"
+fi
+if test "$with_index_extfh" = "yes"
+then
+echo "  Use external ISAM file handler               yes"
+else
 echo "  Use Berkeley DB for file I/O:                ${USE_DB}"
 echo "  Use enhanced Berkeley DB (>= 4.1)            ${HAS_DB41}"
+fi
 echo "  Use fcntl for file locking:                  ${ac_cv_func_fcntl}"
 echo "  Use ncurses/pdcurses/curses for screen I/O:  ${USE_NCURSES}"
 echo ""

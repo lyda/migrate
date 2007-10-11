@@ -202,18 +202,6 @@ cb_load_conf (const char *fname, int check_nodef)
 				} else {
 					goto invalid_value;
 				}
-			} else if (strcmp (name, "display-sign") == 0) {
-				if (strcmp (val, "ascii") == 0) {
-					cb_display_sign = COB_DISPLAY_SIGN_ASCII;
-				} else if (strcmp (val, "ebcdic") == 0) {
-					cb_display_sign = COB_DISPLAY_SIGN_EBCDIC;
-				} else if (strcmp (val, "ascii10") == 0) {
-					cb_display_sign = COB_DISPLAY_SIGN_ASCII10;
-				} else if (strcmp (val, "ascii20") == 0) {
-					cb_display_sign = COB_DISPLAY_SIGN_ASCII20;
-				} else {
-					goto invalid_value;
-				}
 			} else if (strcmp (name, "binary-size") == 0) {
 				if (strcmp (val, "2-4-8") == 0) {
 					cb_binary_size = CB_BINARY_SIZE_2_4_8;

@@ -533,30 +533,32 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	int		suppress_zero = 1;
 	int		sign_first = 0;
 	int		p_is_left = 0;
+	int		repeat;
+	int		n;
 	unsigned char	pad = ' ';
 	unsigned char	x;
 	unsigned char	c;
-	unsigned char	n;
 	unsigned char	sign_symbol = 0;
 	unsigned char	curr_symbol = 0;
 
 	/* count the number of digit places before decimal point */
-	for (p = COB_FIELD_PIC(f2); *p; p += 2) {
+	for (p = COB_FIELD_PIC (f2); *p; p += 5) {
 		c = p[0];
+		memcpy ((unsigned char *)&repeat, p + 1, sizeof(int));
 		if (c == '9' || c == 'Z' || c == '*') {
-			count += p[1];
+			count += repeat;
 			count_sign = 0;
 			count_curr = 0;
 		} else if (count_curr && c == cob_current_module->currency_symbol) {
-			count += p[1];
+			count += repeat;
 		} else if (count_sign && (c == '+' || c == '-')) {
-			count += p[1];
+			count += repeat;
 		} else if (c == 'P') {
 			if (count == 0) {
 				p_is_left = 1;
 				break;
 			} else {
-				count += p[1];
+				count += repeat;
 				count_sign = 0;
 				count_curr = 0;
 			}
@@ -570,9 +572,10 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	src = max - COB_FIELD_SCALE(f1) - count;
 	dst = f2->data;
 	end = f2->data + f2->size;
-	for (p = COB_FIELD_PIC(f2); *p;) {
+	for (p = COB_FIELD_PIC (f2); *p;) {
 		c = *p++;	/* PIC char */
-		n = *p++;	/* PIC char count */
+		memcpy ((unsigned char *)&n, p, sizeof(int));	/* PIC char count */
+		p += sizeof(int);
 		for (; n > 0; n--, dst++) {
 			switch (c) {
 			case '0':
@@ -753,6 +756,7 @@ cob_move_edited_to_display (cob_field *f1, cob_field *f2)
 	int		count = 0;
 	int		have_point = 0;
 	int		cp;
+	int		n;
 	unsigned char	*p;
 	const char	*p1;
 	unsigned char	c;
@@ -792,20 +796,21 @@ cob_move_edited_to_display (cob_field *f1, cob_field *f2)
 	}
 	/* count the number of digit places after decimal point in case of 'V', 'P' */
 	if (scale == 0) {
-		for (p1 = COB_FIELD_PIC(f1); *p1; p1 += 2) {
+		for (p1 = COB_FIELD_PIC (f1); *p1; p1 += 5) {
 			c = p1[0];
+			memcpy ((unsigned char *)&n, p1 + 1, sizeof(int));
 			if (c == '9'  || c == '0' || c == 'Z' || c == '*') {
 				if (have_point) {
-					scale += p1[1];
+					scale += n;
 				} else {
-					count += p1[1];
+					count += n;
 				}
 			} else if (c == 'P') {
 				if (count == 0) {
 					have_point = 1;
-					scale += p1[1];
+					scale += n;
 				} else {
-					scale -= p1[1];
+					scale -= n;
 				}
 			} else if (c == 'V') {
 				have_point = 1;
@@ -825,15 +830,16 @@ cob_move_alphanum_to_edited (cob_field *f1, cob_field *f2)
 	const char	*p;
 	unsigned char	*max, *src, *dst;
 	int		sign = cob_get_sign (f1);
+	int		n;
 	unsigned char	c;
-	unsigned char	n;
 
 	src = COB_FIELD_DATA (f1);
 	max = src + COB_FIELD_SIZE (f1);
 	dst = f2->data;
-	for (p = COB_FIELD_PIC(f2); *p;) {
+	for (p = COB_FIELD_PIC (f2); *p;) {
 		c = *p++;	/* PIC char */
-		n = *p++;	/* PIC char count */
+		memcpy ((unsigned char *)&n, p, sizeof(int));	/* PIC char count */
+		p += sizeof(int);
 		for (; n > 0; n--) {
 			switch (c) {
 			case 'A':
@@ -1249,7 +1255,7 @@ cob_set_int (cob_field *f, int n)
 	cob_field	temp;
 	cob_field_attr	attr;
 
-	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, 0);
+	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 9, 0, COB_FLAG_HAVE_SIGN, NULL);
 	temp.size = 4;
 	temp.data = (unsigned char *)&n;
 	temp.attr = &attr;

@@ -1,7 +1,48 @@
+2007-10-10  Roger While <simrw@sim-basis.de>
+
+	* fileio.[ch] : Change delete to fdelete (C++)
+
+2007-09-18  Roger While <simrw@sim-basis.de>
+
+	* screenio.c : Check for mvgetnstr in curses lib
+
+2007-09-12  Roger While <simrw@sim-basis.de>
+
+	* fileio.h : Add in CHANNEL definition
+
+2007-09-07  Roger While <simrw@sim-basis.de>
+
+	* General : unistd.h is not availiable on native Win
+	* move.c, termio.c : Cater for changed pic string representation
+
+2007-08-31  Roger While <simrw@sim-basis.de>
+
+	* fileio.[ch] : Move defines, change EXTFH interface
+		Linage is reduced to a pointer in the fileio struct
+		2 local defines moved from fileio.c to fileio.h for EXTFH
+
+2007-08-23  Roger While <simrw@sim-basis.de>
+
+	* General : Remove ASCII 10/20, fix up ascii/ebcdic on target
+		Note changes to module and file structures
+
+2007-08-14  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Implement method to use an external SEQ/RAN file handler
+	* fileio.h : Use spare byte in file struct as file version
+
+2007-08-12  Roger While <simrw@sim-basis.de>
+
+	* numeric.c : Fix for EBCDIC machines
+
+2007-08-09  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Implement method to use an external ISAM file handler
+
 2007-08-01  Roger While <simrw@sim-basis.de>
 
 	* call.c : Implement cob_c_cancel
-	* General : More contification
+	* General : More constification
 
 2007-07-26  Roger While <simrw@sim-basis.de>
 

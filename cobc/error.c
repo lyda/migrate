@@ -39,7 +39,8 @@ print_error (char *file, int line, const char *prefix, const char *fmt, va_list 
 
 	/* print the paragraph or section name */
 	if (current_section != last_section || current_paragraph != last_paragraph) {
-		if (current_paragraph) {
+		if (current_paragraph &&
+		    strcmp ((char *)(current_paragraph->name), "MAIN PARAGRAPH")) {
 			fprintf (stderr, _("%s: In paragraph '%s':\n"),
 				 file, current_paragraph->name);
 		} else {

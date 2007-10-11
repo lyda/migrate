@@ -141,7 +141,7 @@ static int literal_value (cb_tree x);
 %token LINAGE_COUNTER PROGRAM_POINTER CHAINING BLANK_SCREEN BLANK_LINE
 %token NOT_EXCEPTION SIZE_ERROR NOT_SIZE_ERROR NOT_OVERFLOW NOT_EOP
 %token INVALID_KEY NOT_INVALID_KEY COMMA_DELIM DISK NO_ADVANCING
-%token PREVIOUS UNLOCK ALLOCATE INITIALIZED FREE BASED
+%token PREVIOUS UNLOCK ALLOCATE INITIALIZED FREE BASED PARAGRAPH
 
 %left '+' '-'
 %left '*' '/'
@@ -769,6 +769,9 @@ assign_clause:
 
 _ext_clause:
 | EXTERNAL
+  {
+	current_file->external_assign = 1;
+  }
 | DYNAMIC
 ;
 
@@ -1070,7 +1073,7 @@ file_section:
   {
 	/* hack for MF compatibility */
 	if (cb_relaxed_syntax_check) {
-		cb_warning ("FILE SECTION header missing - assumed");
+		cb_warning (_("FILE SECTION header missing - assumed"));
 	} else {
 		cb_error (_("FILE SECTION header missing"));
 	}
@@ -1087,7 +1090,11 @@ file_description:
   file_type file_description_entry
   record_description_list
   {
-	finalize_file (current_file, CB_FIELD ($3));
+	if ($3 && $3 != cb_error_node) {
+		finalize_file (current_file, CB_FIELD ($3));
+	} else {
+		cb_error (_("RECORD description missing or invalid"));
+	}
   }
 ;
 
@@ -1095,7 +1102,11 @@ file_description_sequence_without_type:
   file_description_entry
   record_description_list
   {
-	finalize_file (current_file, CB_FIELD ($2));
+	if ($2 && $2 != cb_error_node) {
+		finalize_file (current_file, CB_FIELD ($2));
+	} else {
+		cb_error (_("RECORD description missing or invalid"));
+	}
   }
 | file_description_sequence_without_type file_description
 ;
@@ -1977,13 +1988,10 @@ procedure_division:
   {
 	current_section = NULL;
 	current_paragraph = NULL;
-
-	if (cb_device_predefine) {
-		cb_define_system_name ("CONSOLE");
-		cb_define_system_name ("SYSIN");
-		cb_define_system_name ("SYSOUT");
-		cb_define_system_name ("SYSERR");
-	}
+	cb_define_system_name ("CONSOLE");
+	cb_define_system_name ("SYSIN");
+	cb_define_system_name ("SYSOUT");
+	cb_define_system_name ("SYSERR");
   }
   procedure_declaratives
   {
@@ -1998,9 +2006,15 @@ procedure_division:
   procedure_list
   {
 	if (current_paragraph) {
+		if (current_paragraph->exit_label) {
+			emit_statement (current_paragraph->exit_label);
+		}
 		emit_statement (cb_build_perform_exit (current_paragraph));
 	}
 	if (current_section) {
+		if (current_section->exit_label) {
+			emit_statement (current_section->exit_label);
+		}
 		emit_statement (cb_build_perform_exit (current_section));
 	}
   }
@@ -2013,10 +2027,16 @@ procedure_declaratives:
   {
 	in_declaratives = 0;
 	if (current_paragraph) {
+		if (current_paragraph->exit_label) {
+			emit_statement (current_paragraph->exit_label);
+		}
 		emit_statement (cb_build_perform_exit (current_paragraph));
 		current_paragraph = NULL;
 	}
 	if (current_section) {
+		if (current_section->exit_label) {
+			emit_statement (current_section->exit_label);
+		}
 		emit_statement (cb_build_perform_exit (current_section));
 		current_section = NULL;
 	}
@@ -2069,9 +2089,15 @@ section_header:
 
 	/* Exit the last section */
 	if (current_paragraph) {
+		if (current_paragraph->exit_label) {
+			emit_statement (current_paragraph->exit_label);
+		}
 		emit_statement (cb_build_perform_exit (current_paragraph));
 	}
 	if (current_section) {
+		if (current_section->exit_label) {
+			emit_statement (current_section->exit_label);
+		}
 		emit_statement (cb_build_perform_exit (current_section));
 	}
 
@@ -2086,6 +2112,8 @@ section_header:
 paragraph_header:
   WORD '.'
   {
+	cb_tree label;
+
 	$$ = cb_build_section_name ($1, 1);
 	/* if ($1 == cb_error_node) */
 	if ($$ == cb_error_node) {
@@ -2094,10 +2122,19 @@ paragraph_header:
 
 	/* Exit the last paragraph */
 	if (current_paragraph) {
+		if (current_paragraph->exit_label) {
+			emit_statement (current_paragraph->exit_label);
+		}
 		emit_statement (cb_build_perform_exit (current_paragraph));
 	}
 
 	/* Begin a new paragraph */
+	if (!current_section) {
+		label = cb_build_reference ("MAIN SECTION");
+		current_section = CB_LABEL (cb_build_label (label, NULL));
+		current_section->is_section = 1;
+		emit_statement (CB_TREE (current_section));
+	}
 	current_paragraph = CB_LABEL (cb_build_label ($$, current_section));
 	if (current_section) {
 		current_section->children =
@@ -2152,11 +2189,18 @@ statements:
   {
 	cb_tree label;
 
-	if (!current_section && !current_paragraph) {
+	if (!current_section) {
 		label = cb_build_reference ("MAIN SECTION");
 		current_section = CB_LABEL (cb_build_label (label, NULL));
 		current_section->is_section = 1;
 		emit_statement (CB_TREE (current_section));
+	}
+	if (!current_paragraph) {
+		label = cb_build_reference ("MAIN PARAGRAPH");
+		current_paragraph = CB_LABEL (cb_build_label (label, NULL));
+		emit_statement (CB_TREE (current_paragraph));
+		current_section->children =
+			cb_cons (CB_TREE (current_paragraph), current_section->children);
 	}
   }
   statement
@@ -2907,14 +2951,14 @@ exit_body:
 | PERFORM
   {
 	struct cb_perform *p;
-	char name[256];
+	char name[64];
 
 	if (!perform_stack) {
 		cb_error (_("EXIT PERFORM is only valid with inline PERFORM"));
 	} else {
 		p = CB_PERFORM (CB_VALUE (perform_stack));
 		if (!p->exit_label) {
-			sprintf (name, "PERFORML-EXIT%d", cb_id);
+			sprintf (name, "EXIT PERFORM %d", cb_id);
 			p->exit_label = cb_build_reference (name);
 			CB_LABEL (cb_build_label (p->exit_label, 0))->need_begin = 1;
 		}
@@ -2924,18 +2968,54 @@ exit_body:
 | PERFORM CYCLE
   {
 	struct cb_perform *p;
-	char name[256];
+	char name[64];
 
 	if (!perform_stack) {
 		cb_error (_("EXIT PERFORM is only valid with inline PERFORM"));
 	} else {
 		p = CB_PERFORM (CB_VALUE (perform_stack));
-		if (!p->exit_label) {
-			sprintf (name, "PERFORML-CYCLE%d", cb_id);
+		if (!p->cycle_label) {
+			sprintf (name, "EXIT PERFORM CYCLE %d", cb_id);
 			p->cycle_label = cb_build_reference (name);
 			CB_LABEL (cb_build_label (p->cycle_label, 0))->need_begin = 1;
 		}
 		cb_emit_goto (cb_list (p->cycle_label), 0);
+	}
+  }
+| SECTION
+  {
+	cb_tree	plabel;
+	char	name[64];
+
+	if (!current_section) {
+		cb_error (_("EXIT SECTION is only valid with an active SECTION"));
+	} else {
+		if (!current_section->exit_label) {
+			sprintf (name, "EXIT SECTION %d", cb_id);
+			plabel = cb_build_reference(name);
+			current_section->exit_label = cb_build_label (plabel, NULL);
+			current_section->exit_label_ref = plabel;
+			CB_LABEL (current_section->exit_label)->need_begin = 1;
+		}
+		cb_emit_goto (cb_list (current_section->exit_label_ref), 0);
+	}
+  }
+| PARAGRAPH
+  {
+	cb_tree	plabel;
+	char	name[64];
+
+	if (!current_paragraph) {
+		cb_error (_("EXIT PARAGRAPH is only valid with an active PARAGRAPH"));
+	} else {
+		if (!current_paragraph->exit_label) {
+			sprintf (name, "EXIT PARAGRAPH %d", cb_id);
+			plabel = cb_build_reference(name);
+			current_paragraph->exit_label = cb_build_label (plabel, NULL);
+			current_paragraph->exit_label_ref = plabel;
+			CB_LABEL (current_paragraph->exit_label)->need_begin = 1;
+		}
+		cb_emit_goto (cb_list (current_paragraph->exit_label_ref), 0);
 	}
   }
 ;

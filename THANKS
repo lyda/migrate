@@ -28,3 +28,6 @@ Hans-Martin Rasch - Work on compiler syntax
 Michel Gouget - Work on syntax - IS
 Bill Klein - The mainstay for Cobol questions
 Frank Swarbrick - Work on compiler syntax
+Warren Gay - For testing systems that we did
+	known that we even support!
+	(eg. Old DEC Alpha sytems)

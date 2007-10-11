@@ -52,6 +52,8 @@ do {									      \
 #define CB_FORMAT_FIXED	2
 extern int	cb_source_format;
 
+extern int	cb_display_sign;
+
 extern struct cb_exception {
 	const int	code;			/* exception code */
 	const char	*name;			/* exception name */

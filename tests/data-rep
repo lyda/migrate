@@ -317,7 +317,7 @@ at_help_all='1;binary.at:23;BINARY: 2-4-8 big-endian;;
 6;binary.at:954;BINARY: 1--8 native;;
 7;binary.at:1144;BINARY: full-print;;
 8;display.at:22;DISPLAY: Sign ascii;;
-9;display.at:113;DISPLAY: Sign ascii10;;
+9;display.at:108;DISPLAY: Sign ebcdic;;
 10;packed.at:25;PACKED-DECIMAL dump;;
 11;packed.at:160;PACKED-DECIMAL display;;
 12;packed.at:199;PACKED-DECIMAL move;;
@@ -2890,13 +2890,6 @@ $at_traceon
       $at_traceon
 
 
-cat >test.conf <<'_ATEOF'
-
-include "cobol2002.conf"
-display-sign: ascii
-_ATEOF
-
-
 cat >prog.cob <<'_ATEOF'
 
        IDENTIFICATION   DIVISION.
@@ -2928,9 +2921,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "display.at:57: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo display.at:57 >$at_check_line_file
-( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
+echo "display.at:52: \${COMPILE} -fsign-ascii -o prog prog.cob"
+echo display.at:52 >$at_check_line_file
+( $at_traceon; ${COMPILE} -fsign-ascii -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -2941,7 +2934,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "display.at:57: exit code was $at_status, expected 0"
+   *) echo "display.at:52: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2953,8 +2946,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "display.at:70: ./prog"
-echo display.at:70 >$at_check_line_file
+echo "display.at:65: ./prog"
+echo display.at:65 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2977,7 +2970,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "display.at:70: exit code was $at_status, expected 0"
+   *) echo "display.at:65: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3027,9 +3020,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "display.at:107: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo display.at:107 >$at_check_line_file
-( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
+echo "display.at:102: \${COMPILE} -fsign-ascii  -o prog prog.cob"
+echo display.at:102 >$at_check_line_file
+( $at_traceon; ${COMPILE} -fsign-ascii  -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -3040,7 +3033,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "display.at:107: exit code was $at_status, expected 0"
+   *) echo "display.at:102: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3052,8 +3045,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "display.at:108: ./prog"
-echo display.at:108 >$at_check_line_file
+echo "display.at:103: ./prog"
+echo display.at:103 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -3065,7 +3058,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "display.at:108: exit code was $at_status, expected 0"
+   *) echo "display.at:103: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3083,21 +3076,14 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  9 ) # 9. display.at:113: DISPLAY: Sign ascii10
-    at_setup_line='display.at:113'
-    at_desc='DISPLAY: Sign ascii10'
-    $at_quiet $ECHO_N "  9: DISPLAY: Sign ascii10                        $ECHO_C"
+  9 ) # 9. display.at:108: DISPLAY: Sign ebcdic
+    at_setup_line='display.at:108'
+    at_desc='DISPLAY: Sign ebcdic'
+    $at_quiet $ECHO_N "  9: DISPLAY: Sign ebcdic                         $ECHO_C"
     at_xfail=no
     (
-      echo "9. display.at:113: testing ..."
+      echo "9. display.at:108: testing ..."
       $at_traceon
-
-
-cat >test.conf <<'_ATEOF'
-
-include "cobol2002.conf"
-display-sign: ascii10
-_ATEOF
 
 
 cat >prog.cob <<'_ATEOF'
@@ -3138,9 +3124,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "display.at:155: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo display.at:155 >$at_check_line_file
-( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
+echo "display.at:145: \${COMPILE} -fsign-ebcdic -o prog prog.cob"
+echo display.at:145 >$at_check_line_file
+( $at_traceon; ${COMPILE} -fsign-ebcdic -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -3151,7 +3137,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "display.at:155: exit code was $at_status, expected 0"
+   *) echo "display.at:145: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -3163,20 +3149,20 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "display.at:156: ./prog"
-echo display.at:156 >$at_check_line_file
+echo "display.at:146: ./prog"
+echo display.at:146 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
 $at_diff $at_devnull $at_stderr || at_failed=:
-echo >>$at_stdout; echo "0123456789@ABCDEFGHI" | $at_diff - $at_stdout || at_failed=:
+echo >>$at_stdout; echo "{ABCDEFGHI}JKLMNOPQR" | $at_diff - $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "display.at:156: exit code was $at_status, expected 0"
+   *) echo "display.at:146: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then

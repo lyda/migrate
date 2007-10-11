@@ -21,11 +21,6 @@
 
 AT_SETUP([DISPLAY: Sign ascii])
 
-AT_DATA([test.conf], [
-include "cobol2002.conf"
-display-sign: ascii
-])
-
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      prog.
@@ -54,7 +49,7 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
+AT_CHECK([${COMPILE} -fsign-ascii -o prog prog.cob])
 AT_CHECK([./prog], [0],
 [12340
 12340
@@ -104,18 +99,13 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
+AT_CHECK([${COMPILE} -fsign-ascii  -o prog prog.cob])
 AT_CHECK([./prog], [0], [0123456789pqrstuvwxy])
 
 AT_CLEANUP
 
 
-AT_SETUP([DISPLAY: Sign ascii10])
-
-AT_DATA([test.conf], [
-include "cobol2002.conf"
-display-sign: ascii10
-])
+AT_SETUP([DISPLAY: Sign ebcdic])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -152,7 +142,7 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
-AT_CHECK([./prog], [0], [0123456789@ABCDEFGHI])
+AT_CHECK([${COMPILE} -fsign-ebcdic -o prog prog.cob])
+AT_CHECK([./prog], [0], [{ABCDEFGHI}JKLMNOPQR])
 
 AT_CLEANUP

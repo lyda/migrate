@@ -26,7 +26,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef	HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <time.h>
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
@@ -271,7 +273,9 @@ const unsigned char	cob_e2a[256] = {
 };
 end comment */
 
+#ifdef	COB_PARAM_CHECK
 static const char	parm_msg[] = "CALL to %s requires %d parameters";
+#endif
 
 static const struct cob_exception	cob_exception_table[] = {
 	{0, NULL, 0},		/* COB_EC_ZERO */
@@ -577,6 +581,45 @@ cob_check_version (const char *prog, const char *packver, const int patchlev)
  * Sign
  */
 
+#ifdef	COB_EBCDIC_MACHINE
+static void
+cob_get_sign_ascii (unsigned char *p)
+{
+	switch (*p) {
+	case 'p':
+		*p = (unsigned char)'0';
+		return;
+	case 'q':
+		*p = (unsigned char)'1';
+		return;
+	case 'r':
+		*p = (unsigned char)'2';
+		return;
+	case 's':
+		*p = (unsigned char)'3';
+		return;
+	case 't':
+		*p = (unsigned char)'4';
+		return;
+	case 'u':
+		*p = (unsigned char)'5';
+		return;
+	case 'v':
+		*p = (unsigned char)'6';
+		return;
+	case 'w':
+		*p = (unsigned char)'7';
+		return;
+	case 'x':
+		*p = (unsigned char)'8';
+		return;
+	case 'y':
+		*p = (unsigned char)'9';
+		return;
+	}
+}
+#endif
+
 static int COB_NOINLINE
 cob_get_sign_ebcdic (unsigned char *p)
 {
@@ -751,24 +794,16 @@ cob_real_get_sign (cob_field *f)
 			if (*p >= '0' && *p <= '9') {
 				return 1;
 			}
-			switch (cob_current_module->display_sign) {
-			case COB_DISPLAY_SIGN_ASCII:
-				GET_SIGN_ASCII (*p);
-				break;
-			case COB_DISPLAY_SIGN_ASCII10:
-				GET_SIGN_ASCII10 (*p);
-				break;
-			case COB_DISPLAY_SIGN_ASCII20:
-				GET_SIGN_ASCII20 (*p);
-				break;
-			case COB_DISPLAY_SIGN_EBCDIC:
+			if (unlikely(cob_current_module->display_sign)) {
 				return cob_get_sign_ebcdic (p);
-			default:
-				cob_runtime_error ("Invalid display sign '%d'",
-						cob_current_module->display_sign);
-				cob_stop_run (1);
+			} else {
+#ifdef	COB_EBCDIC_MACHINE
+				cob_get_sign_ascii (p);
+#else
+				GET_SIGN_ASCII (*p);
+#endif
+				return -1;
 			}
-			return -1;
 		}
 	case COB_TYPE_NUMERIC_PACKED:
 		p = f->data + COB_FIELD_DIGITS(f) / 2;
@@ -799,24 +834,14 @@ cob_real_put_sign (cob_field *f, const int sign)
 			if (*p != c) {
 				*p = c;
 			}
-		} else if (unlikely(cob_current_module->display_sign == COB_DISPLAY_SIGN_EBCDIC)) {
+		} else if (unlikely(cob_current_module->display_sign)) {
 			cob_put_sign_ebcdic (p, sign);
 		} else if (sign < 0) {
-			switch (cob_current_module->display_sign) {
-			case COB_DISPLAY_SIGN_ASCII:
-				PUT_SIGN_ASCII (*p);
-				break;
-			case COB_DISPLAY_SIGN_ASCII10:
-				PUT_SIGN_ASCII10 (*p);
-				break;
-			case COB_DISPLAY_SIGN_ASCII20:
-				PUT_SIGN_ASCII20 (*p);
-				break;
-			default:
-				cob_runtime_error ("Invalid display sign '%d'",
-						cob_current_module->display_sign);
-				cob_stop_run (1);
-			}
+#ifdef	COB_EBCDIC_MACHINE
+			cob_put_sign_ascii (p);
+#else
+			PUT_SIGN_ASCII (*p);
+#endif
 		}
 		return;
 	case COB_TYPE_NUMERIC_PACKED:

@@ -86,15 +86,28 @@ cb_build_field_tree (cb_tree level, cb_tree name,
 	/* build the field */
 	r = CB_REFERENCE (name);
 	f = CB_FIELD (cb_build_field (name));
-	f->level = lv;
 	if (lv == 78) {
 		f->level = 01;
 		f->flag_item_78 = 1;
+	} else {
+		f->level = lv;
 	}
 	f->storage = storage;
 	if (f->level == 01 && storage == CB_STORAGE_FILE && fn->external) {
 		f->flag_external = 1;
 		has_external = 1;
+	}
+	if (last_field) {
+		if (last_field->flag_item_78 && f->level != 01 &&
+		    f->level != 77) {
+			cb_error_x (name, _("Level number must begin with 01 or 77"));
+			return cb_error_node;
+		}
+		if (last_field->level == 77 && f->level != 01 &&
+		    f->level != 77 && f->level != 66 && f->level != 88) {
+			cb_error_x (name, _("Level number must begin with 01 or 77"));
+			return cb_error_node;
+		}
 	}
 
 	/* checks for redefinition */
@@ -261,6 +274,7 @@ validate_field_1 (struct cb_field *f)
 	char		*name = cb_name (x);
 	struct cb_field *p;
 	char		*pp;
+	unsigned char	*pstr;
 	int		vorint;
 	int		need_picture;
 	char		pic[16];
@@ -548,14 +562,26 @@ validate_field_1 (struct cb_field *f)
 			case CB_CATEGORY_NUMERIC:
 				/* reconstruct the picture string */
 				if (f->pic->scale > 0) {
-					f->pic->str = cobc_malloc (8);
-					sprintf (f->pic->str, "9%cV%c9%c",
-						 f->pic->digits - f->pic->scale, 1,
-						 f->pic->scale);
+					f->pic->str = cobc_malloc (20);
+					pstr = (unsigned char *)(f->pic->str);
+					*pstr++ = '9';
+					vorint = f->pic->digits - f->pic->scale;
+					memcpy (pstr, (unsigned char *)&vorint, sizeof(int));
+					pstr += sizeof(int);
+					*pstr++ = 'V';
+					vorint = 1;
+					memcpy (pstr, (unsigned char *)&vorint, sizeof(int));
+					pstr += sizeof(int);
+					*pstr++ = '9';
+					vorint = f->pic->scale;
+					memcpy (pstr, (unsigned char *)&vorint, sizeof(int));
 					f->pic->size++;
 				} else {
-					f->pic->str = cobc_malloc (4);
-					sprintf (f->pic->str, "9%c", f->pic->digits);
+					f->pic->str = cobc_malloc (8);
+					pstr = (unsigned char *)(f->pic->str);
+					*pstr++ = '9';
+					vorint = f->pic->digits;
+					memcpy (pstr, (unsigned char *)&vorint, sizeof(int));
 				}
 				f->pic->category = CB_CATEGORY_NUMERIC_EDITED;
 				break;

@@ -25,7 +25,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef	HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -102,10 +104,9 @@ static char		*resolve_error = NULL;
 static char		*resolve_error_buff = NULL;
 static lt_dlhandle	mainhandle = NULL;
 
-#ifdef	_WIN32
+#if	defined (_WIN32) || !defined (RTLD_DEFAULT)
 struct struct_handle {
 	struct struct_handle	*next;
-	struct struct_handle	*prev;
 	lt_dlhandle		preload_handle;
 };
 
@@ -191,6 +192,19 @@ cob_set_library_path (const char *path)
 		resolve_path[i] = strtok (NULL, PATHSEPS);
 	}
 }
+
+#if	defined (_WIN32) || !defined (RTLD_DEFAULT)
+static void
+cache_handle (lt_dlhandle libhandle)
+{
+	struct struct_handle	*newhandle;
+
+	newhandle = cob_malloc (sizeof (struct struct_handle));
+	newhandle->preload_handle = libhandle;
+	newhandle->next = pre_handle;
+	pre_handle = newhandle;
+}
+#endif
 
 #ifndef	COB_ALT_HASH
 static COB_INLINE size_t
@@ -297,7 +311,7 @@ cob_resolve (const char *name)
 	lt_ptr_t		func;
 	lt_dlhandle		handle;
 	struct stat		st;
-#ifdef	_WIN32
+#if	defined (_WIN32) || !defined (RTLD_DEFAULT)
 	struct struct_handle	*chkhandle;
 #endif
 	unsigned char		buff[COB_SMALL_BUFF];
@@ -340,7 +354,7 @@ cob_resolve (const char *name)
 	}
 
 	/* Search preloaded modules */
-#ifdef	_WIN32
+#if	defined (_WIN32) || !defined (RTLD_DEFAULT)
 	for (chkhandle = pre_handle; chkhandle; chkhandle = chkhandle->next) {
 		if ((func = lt_dlsym (chkhandle->preload_handle, (char *)buff)) != NULL) {
 			insert (name, func, NULL);
@@ -365,11 +379,16 @@ cob_resolve (const char *name)
 			sprintf (filename, "%s/%s.%s", resolve_path[i], name, COB_MODULE_EXT);
 		}
 		if (stat (filename, &st) == 0) {
-			if ((handle = lt_dlopen (filename)) != NULL
-			    && (func = lt_dlsym (handle, (char *)buff)) != NULL) {
-				insert (name, func, NULL);
-				resolve_error = NULL;
-				return func;
+			if ((handle = lt_dlopen (filename)) != NULL) {
+#if	defined (_WIN32) || !defined (RTLD_DEFAULT)
+				/* Candidate for future calls */
+				cache_handle (handle);
+#endif
+				if ((func = lt_dlsym (handle, (char *)buff)) != NULL) {
+					insert (name, func, NULL);
+					resolve_error = NULL;
+					return func;
+				}
 			}
 			strcpy (resolve_error_buff, lt_dlerror ());
 			resolve_error = resolve_error_buff;
@@ -497,8 +516,7 @@ cob_init_call (void)
 	int			i;
 	struct stat		st;
 	struct system_table	*psyst;
-#ifdef	_WIN32
-	struct struct_handle	*newhandle;
+#if	defined (_WIN32) || !defined (RTLD_DEFAULT)
 	lt_dlhandle		libhandle;
 #endif
 	char			filename[COB_MEDIUM_BUFF];
@@ -527,20 +545,14 @@ cob_init_call (void)
 	s = getenv ("COB_PRE_LOAD");
 	if (s != NULL) {
 		p = cob_strdup (s);
-		s = strtok (p, ":");
-		for (; s; s = strtok (NULL, ":")) {
+		s = strtok (p, PATHSEPS);
+		for (; s; s = strtok (NULL, PATHSEPS)) {
 			for (i = 0; i < resolve_size; i++) {
 				sprintf (filename, "%s/%s.%s", resolve_path[i], s, COB_MODULE_EXT);
 				if (stat (filename, &st) == 0) {
-#ifdef	_WIN32
+#if	defined (_WIN32) || !defined (RTLD_DEFAULT)
 					if ((libhandle = lt_dlopen (filename)) != NULL) {
-						newhandle = cob_malloc (sizeof (struct struct_handle));
-						newhandle->preload_handle = libhandle;
-						newhandle->next = pre_handle;
-						if (pre_handle) {
-							pre_handle->prev = newhandle;
-						}
-						pre_handle = newhandle;
+						cache_handle (libhandle);
 #else
 					if (lt_dlopen (filename) != NULL) {
 #endif

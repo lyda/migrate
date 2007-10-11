@@ -28,7 +28,9 @@
 #ifdef	HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#ifdef	HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <sys/stat.h>
 #ifdef  HAVE_SIGNAL_H
 #include <signal.h>
@@ -73,6 +75,11 @@ enum cb_compile_level {
  */
 
 int cb_source_format = CB_FORMAT_FIXED;
+#ifdef	COB_EBCDIC_MACHINE
+int cb_display_sign = COB_DISPLAY_SIGN_EBCDIC;	/* 1 */
+#else
+int cb_display_sign = COB_DISPLAY_SIGN_ASCII;	/* 0 */
+#endif
 
 struct cb_exception cb_exception_table[] = {
 	{0, NULL, 0},		/* CB_EC_ZERO */
@@ -89,6 +96,12 @@ struct cb_exception cb_exception_table[] = {
 #undef CB_WARNDEF
 #define CB_WARNDEF(sig,var,name,wall,doc) int var = 0;
 #include "warning.def"
+
+#ifdef  _MSC_VER
+#define PATHSEPS ";"
+#else
+#define PATHSEPS ":"
+#endif
 
 int			cb_id = 1;
 int			cb_attr_id = 1;
@@ -299,6 +312,7 @@ static void
 terminate (const char *str)
 {
 	fprintf (stderr, "%s: ", program_name);
+	fflush (stderr);
 	perror (str);
 	cob_clean_up (1);
 	exit (1);
@@ -333,7 +347,6 @@ print_usage (void)
 		"                          mvs         MVS Compatible\n"
 		"                          bs2000      BS2000 Compatible\n"
 		"                          mf          Micro Focus Compatible\n"
-		"                          v023        Open Cobol V23 Compatible (deprecated)\n"
 		"                          default     When not specified\n"
 		"                        See config/default.conf and config/*.conf\n"
 		"  -free                 Use free source format\n"
@@ -507,6 +520,7 @@ process_command_line (int argc, char *argv[])
 #ifndef _MSC_VER
 			strcat (cob_cflags, " -g");
 #endif
+			cb_stack_check = 1;
 			break;
 
 		case '$':	/* -std */
@@ -528,6 +542,7 @@ process_command_line (int argc, char *argv[])
 				CB_EXCEPTION_ENABLE (i) = 1;
 			}
 			cb_flag_source_location = 1;
+			cb_stack_check = 1;
 			break;
 
 		case 't':
@@ -606,7 +621,7 @@ process_command_line (int argc, char *argv[])
 	}
 
 #ifdef	__GNUC__
-	strcat (cob_cflags, " -fsigned-char");
+	strcat (cob_cflags, " -Wno-unused -fsigned-char");
 #ifdef	HAVE_PSIGN_OPT
 	strcat (cob_cflags, " -Wno-pointer-sign");
 #endif
@@ -626,6 +641,34 @@ process_command_line (int argc, char *argv[])
 #endif
 
 	return optind;
+}
+
+static void 
+process_env_copy_path (void) 
+{
+	char	*cobcpy;
+	char	*value;
+	char	*token;
+
+	cobcpy = getenv ("COBCPY");
+	if (cobcpy == NULL || strlen (cobcpy) == 0) {
+		/* env. not defined: nothing to do */
+		return;
+	}
+	
+	/* cloning value to avoid memory corruption */
+	value = strdup (cobcpy);
+
+	/* tokenizing for path sep. */
+	token = strtok (value, PATHSEPS);
+	while (token) {
+		cb_include_list = cb_text_list_add (cb_include_list, token);
+		token = strtok (NULL, PATHSEPS);
+	}
+
+	/* releasing memory of clone(s) */
+	free (value);
+	return;
 }
 
 static void
@@ -1371,6 +1414,9 @@ main (int argc, char *argv[])
 		exit (1);
 	}
 
+	/* processes COBCPY environment variable */
+	process_env_copy_path ();
+	
 	file_list = NULL;
 
 	if (setjmp (cob_jmpbuf) != 0) {
@@ -1417,6 +1463,19 @@ main (int argc, char *argv[])
 	    (argc - i) > 1) {
 		fprintf (stderr, "%s: -o option invalid in this combination\n", program_name);
 		exit (1);
+	}
+	if (cb_flag_sign_ascii && cb_flag_sign_ebcdic) {
+		fprintf (stderr, "Only one of -fsign-ascii or -fsign-ebcdic may be specified\n");
+		exit (1);
+	}
+	if (cb_flag_sign_ascii) {
+		cb_display_sign = COB_DISPLAY_SIGN_ASCII;
+	}
+	if (cb_flag_sign_ebcdic) {
+		cb_display_sign = COB_DISPLAY_SIGN_EBCDIC;
+	}
+	if (cb_notrunc) {
+		cb_binary_truncate = 1;
 	}
 
 	while (i < argc) {

@@ -1,3 +1,78 @@
+2007-10-10  Roger While <simrw@sim-basis.de>
+
+	* field.c : More checking for 77/78 levels
+
+2007-09-20  Roger While <simrw@sim-basis.de>
+
+	* field.c : Fix up PIC string encoding
+
+2007-09-12  Roger While <simrw@sim-basis.de>
+
+	* tree.h, typeck.c, reserved.c : Add in definitions for channels
+
+2007-09-11  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix a PERFORM problem whereby the UNTIL was
+		comparing signed to unsigned.
+
+2007-09-10  Roger While <simrw@sim-basis.de>
+
+	* typeck.c, codegen.c : Fix unsafe optimization
+
+2007-09-08  Roger While <simrw@sim-basis.de>
+
+	* parser.y, error.c : Fixes for EXIT SECTION/PARAGRAPH
+	* flag.def, cobc.c : New option -fnotrunc ala MF
+
+2007-09-07  Roger While <simrw@sim-basis.de>
+
+	* General : unistd.h is not available on native Win
+	* codegen.c, tree.c, typeck.c : Fix up pic string creation
+	* reserved.c, parser.y : Implement EXIT SECTION/PARAGRAPH
+
+2007-08-31  Roger While <simrw@sim-basis.de>
+
+	* flags.def, codegen.c  : New option -fstack-check, autoset when
+		--debug or -g set, no longer reliant on a -O option
+
+	* All : 78 levels in ASSIGN
+	* typeck.c : Better checking for source moves
+	* codegen.c : Cater for changed fileio struct
+
+2007-08-23  Roger While <simrw@sim-basis.de>
+
+	* All : Remove ASCII 10/20, default display sign according
+		to target machine, allow -fsign-ascii, -fsign-ebcdic
+
+2007-08-20  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Fix a segfault with invalid expression
+
+2007-08-17  Roger While <simrw@sim-basis.de>
+
+	* cobc.h, codegen.c : Detect native EBCDIC machine.
+		Treat ALPHABET/COLLATING EBCDIC as native on EBCDIC machines.
+		ALPHABET/COLLATING STANDARD-1/2 must go through transaltion on
+		EBCDIC machines
+
+2007-08-14  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Set file version
+
+2007-08-12  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Fix for EBCDIC machines
+
+2007-08-10  Roger While <simrw@sim-basis.de>
+
+	* parser.y, typeck.c, tree.h, flag.def : Implement -fassign-external
+		This allows MF conform ASSIGN EXTERNAL filename mapping
+
+2007-08-09  Roger While <simrw@sim-basis.de>
+
+	* cobc.c : Allow environment variable COBCPY to specify
+		copy directories
+
 2007-08-01  Roger While <simrw@sim-basis.de>
 
 	* codegen.c : If -fimplicit-init is specified, always

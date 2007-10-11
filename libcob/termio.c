@@ -24,7 +24,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#ifdef	HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <time.h>
 
 #include "move.h"
@@ -73,14 +75,15 @@ static void
 pretty_display_numeric (cob_field *f, FILE *fp)
 {
 	unsigned char	*p;
+	unsigned char	*s;
 	int		i;
 	int		digits;
 	int		scale;
 	int		size;
 	cob_field_attr	attr;
 	cob_field	temp;
-	unsigned char	pic[16];
-	unsigned char	data[128];
+	unsigned char	pic[64];
+	unsigned char	data[256];
 
 /* RXW
 	if (COB_FIELD_TYPE(f) == COB_TYPE_NUMERIC_BINARY) {
@@ -102,14 +105,29 @@ pretty_display_numeric (cob_field *f, FILE *fp)
 	memset (pic, 0, sizeof (pic));
 	memset (data, 0, sizeof (data));
 	if (COB_FIELD_HAVE_SIGN (f)) {
-		p += sprintf ((char *)p, "+\001");
+		*p++ = '+';
+		i = 1;
+		memcpy (p, (unsigned char *)&i, sizeof(int));
+		p += sizeof(int);
 	}
 	if (scale > 0) {
-		p += sprintf ((char *)p, "9%c", digits - scale);
-		p += sprintf ((char *)p, "%c%c", cob_current_module->decimal_point, 1);
-		p += sprintf ((char *)p, "9%c", scale);
+		*p++ = '9';
+		i = digits - scale;
+		memcpy (p, (unsigned char *)&i, sizeof(int));
+		p += sizeof(int);
+		*p++ = cob_current_module->decimal_point;
+		i = 1;
+		memcpy (p, (unsigned char *)&i, sizeof(int));
+		p += sizeof(int);
+		*p++ = '9';
+		i = scale;
+		memcpy (p, (unsigned char *)&i, sizeof(int));
+		p += sizeof(int);
 	} else {
-		p += sprintf ((char *)p, "9%c", digits);
+		*p++ = '9';
+		i = digits;
+		memcpy (p, (unsigned char *)&i, sizeof(int));
+		p += sizeof(int);
 	}
 
 	cob_move (f, &temp);

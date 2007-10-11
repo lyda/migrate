@@ -47,7 +47,9 @@
 #ifdef	HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#ifdef	HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <sys/stat.h>
 
 #ifdef _WIN32
@@ -61,7 +63,7 @@
 #define	rmdir	_rmdir
 #endif
 
-#if HAVE_FCNTL_H
+#ifdef	HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
 
@@ -106,8 +108,8 @@
 #define ftell ftello
 #endif
 
-#if WITH_LFS64
-#if defined(_MSC_VER)
+#ifdef	WITH_LFS64
+#ifdef	_MSC_VER
 #define fseek _fseeki64
 #define ftell _ftelli64
 #define lseek _lseeki64
@@ -219,11 +221,6 @@ static struct file_list {
 
 static char		*cob_file_path;
 
-/* Need some value that does not conflict with errno for OPEN/LINAGE */
-#define	COB_LINAGE_INVALID	16384
-/* Need value that does not conflict with errno 30 (EROFS) for OPEN */
-#define	COB_NOT_CONFIGURED	32768
-
 #define RETURN_STATUS(x)	do { save_status (f, x, fnstatus); return; } while (0)
 
 static const int	status_exception[] = {
@@ -242,15 +239,19 @@ static const int	status_exception[] = {
 static const char	* const prefix[] = { "DD_", "dd_", "" };
 #define NUM_PREFIX	sizeof(prefix) / sizeof(char *)
 
+#ifdef	COB_PARAM_CHECK
 static const char	parm_msg[] = "CALL to %s requires %d parameters";
+#endif
 
 static int dummy_rnxt_del (cob_file *f);
 static int dummy_rewrite (cob_file *f, int opt);
 static int dummy_read (cob_file *f, cob_field *key, int read_opts);
 static int dummy_start (cob_file *f, int cond, cob_field *key);
-static int file_open (cob_file *f, char *filename, int mode, int opt);
-static int file_close (cob_file *f, int opt);
-static int file_write_opt (cob_file *f, const int opt);
+
+static int cob_file_open (cob_file *f, char *filename, int mode, int opt);
+static int cob_file_close (cob_file *f, int opt);
+static int cob_file_write_opt (cob_file *f, const int opt);
+
 static int sequential_read (cob_file *f, int read_opts);
 static int sequential_write (cob_file *f, int opt);
 static int sequential_rewrite (cob_file *f, int opt);
@@ -263,7 +264,7 @@ static int relative_write (cob_file *f, int opt);
 static int relative_rewrite (cob_file *f, int opt);
 static int relative_delete (cob_file *f);
 
-#if	defined(WITH_DB) || defined(WITH_CISAM) || defined(WITH_VBISAM)
+#if	defined(WITH_DB) || defined(WITH_CISAM) || defined(WITH_VBISAM) || defined(WITH_INDEX_EXTFH)
 
 #ifdef	WITH_DB
 #ifdef	USE_DB41
@@ -320,11 +321,14 @@ static int indexed_close (cob_file *f, int opt);
 static int indexed_start (cob_file *f, int cond, cob_field *key);
 static int indexed_read (cob_file *f, cob_field *key, int read_opts);
 static int indexed_read_next (cob_file *f, int read_opts);
-static int indexed_write_internal (cob_file *f, int rewrite, int opt);
 static int indexed_write (cob_file *f, int opt);
-static int indexed_delete_internal (cob_file *f, int rewrite);
 static int indexed_delete (cob_file *f);
 static int indexed_rewrite (cob_file *f, int opt);
+
+#ifndef	WITH_INDEX_EXTFH
+static int indexed_write_internal (cob_file *f, int rewrite, int opt);
+static int indexed_delete_internal (cob_file *f, int rewrite);
+#endif	/* WITH_INDEX_EXTFH */
 
 static const cob_fileio_funcs indexed_funcs = {
 	indexed_open,
@@ -337,7 +341,7 @@ static const cob_fileio_funcs indexed_funcs = {
 	indexed_delete
 };
 
-#else	/* WITH_DB || WITH_CISAM || WITH_VBISAM */
+#else	/* WITH_DB || WITH_CISAM || WITH_VBISAM || WITH_INDEX_EXTFH */
 
 static int
 dummy_open (cob_file *f, char *filename, int mode, int opt)
@@ -363,12 +367,12 @@ static cob_fileio_funcs indexed_funcs = {
 	dummy_rnxt_del
 };
 
-#endif	/* WITH_DB || WITH_CISAM || WITH_VBISAM */
+#endif	/* WITH_DB || WITH_CISAM || WITH_VBISAM || WITH_INDEX_EXTFH */
 
 
 static const cob_fileio_funcs sequential_funcs = {
-	file_open,
-	file_close,
+	cob_file_open,
+	cob_file_close,
 	dummy_start,
 	dummy_read,
 	sequential_read,
@@ -378,8 +382,8 @@ static const cob_fileio_funcs sequential_funcs = {
 };
 
 static const cob_fileio_funcs lineseq_funcs = {
-	file_open,
-	file_close,
+	cob_file_open,
+	cob_file_close,
 	dummy_start,
 	dummy_read,
 	lineseq_read,
@@ -389,8 +393,8 @@ static const cob_fileio_funcs lineseq_funcs = {
 };
 
 static const cob_fileio_funcs relative_funcs = {
-	file_open,
-	file_close,
+	cob_file_open,
+	cob_file_close,
 	relative_start,
 	relative_read,
 	relative_read_next,
@@ -406,6 +410,59 @@ static const cob_fileio_funcs	*fileio_funcs[COB_ORG_MAX] = {
 	&indexed_funcs,
 	NULL
 };
+
+#if	defined(WITH_INDEX_EXTFH) || defined (WITH_SEQRA_EXTFH)
+extern void	extfh_cob_init_fileio (const cob_fileio_funcs *seqfunc,
+		const cob_fileio_funcs *lsqfunc, const cob_fileio_funcs *relfunc,
+		int (*write_opt)());
+extern void	extfh_cob_exit_fileio (void);
+#endif
+
+#ifdef	WITH_INDEX_EXTFH
+extern int extfh_index_locate (cob_file *f, char *filename);
+extern int extfh_indexed_open (cob_file *f, char *filename, int mode, int flag);
+extern int extfh_indexed_close (cob_file *f, int opt);
+extern int extfh_indexed_start (cob_file *f, int cond, cob_field *key);
+extern int extfh_indexed_read (cob_file *f, cob_field *key, int read_opts);
+extern int extfh_indexed_read_next (cob_file *f, int read_opts);
+extern int extfh_indexed_write (cob_file *f, int opt);
+extern int extfh_indexed_delete (cob_file *f);
+extern int extfh_indexed_rewrite (cob_file *f, int opt);
+#endif
+
+#ifdef	WITH_SEQRA_EXTFH
+extern int extfh_seqra_locate (cob_file *f, char *filename);
+extern int extfh_cob_file_open (cob_file *f, char *filename, int mode, int opt);
+extern int extfh_cob_file_close (cob_file *f, int opt);
+extern int extfh_sequential_read (cob_file *f, int read_opts);
+extern int extfh_sequential_write (cob_file *f, int opt);
+extern int extfh_sequential_rewrite (cob_file *f, int opt);
+extern int extfh_relative_start (cob_file *f, int cond, cob_field *k);
+extern int extfh_relative_read (cob_file *f, cob_field *k, int read_opts);
+extern int extfh_relative_read_next (cob_file *f, int read_opts);
+extern int extfh_relative_write (cob_file *f, int opt);
+extern int extfh_relative_rewrite (cob_file *f, int opt);
+extern int extfh_relative_delete (cob_file *f);
+#endif
+
+#define FILE_WRITE_AFTER(f,opt)			\
+  if (opt & COB_WRITE_AFTER) {			\
+    int ret = cob_file_write_opt (f, opt);	\
+    if (ret) {					\
+       return ret;				\
+    }						\
+    f->flag_needs_nl = 1;			\
+  }
+
+#define FILE_WRITE_BEFORE(f,opt)		\
+  if (opt & COB_WRITE_BEFORE) {			\
+    int ret = cob_file_write_opt (f, opt);	\
+    if (ret) {					\
+       return ret;				\
+    }						\
+    f->flag_needs_nl = 0;			\
+  }
+
 
 static void COB_NOINLINE
 cob_sync (cob_file *f, int mode)
@@ -487,54 +544,36 @@ save_status (cob_file *f, int status, cob_field *fnstatus)
  * Regular file
  */
 
-#define FILE_WRITE_AFTER(f,opt)			\
-  if (opt & COB_WRITE_AFTER) {			\
-    int ret = file_write_opt (f, opt);		\
-    if (ret) {					\
-       return ret;				\
-    }						\
-    f->flag_needs_nl = 1;			\
-  }
-
-#define FILE_WRITE_BEFORE(f,opt)		\
-  if (opt & COB_WRITE_BEFORE) {			\
-    int ret = file_write_opt (f, opt);		\
-    if (ret) {					\
-       return ret;				\
-    }						\
-    f->flag_needs_nl = 0;			\
-  }
-
 static int COB_NOINLINE
 file_linage_check (cob_file *f)
 {
-	f->lin_lines = cob_get_int (f->linage);
-	if (f->lin_lines < 1) {
+	f->linptr->lin_lines = cob_get_int (f->linptr->linage);
+	if (f->linptr->lin_lines < 1) {
 		return COB_LINAGE_INVALID;
 	}
-	if (f->latfoot) {
-		f->lin_foot = cob_get_int (f->latfoot);
-		if (f->lin_foot < 1 || f->lin_foot > f->lin_lines) {
+	if (f->linptr->latfoot) {
+		f->linptr->lin_foot = cob_get_int (f->linptr->latfoot);
+		if (f->linptr->lin_foot < 1 || f->linptr->lin_foot > f->linptr->lin_lines) {
 			return COB_LINAGE_INVALID;
 		}
 	} else {
-		f->lin_foot = 0;
+		f->linptr->lin_foot = 0;
 	}
-	if (f->lattop) {
-		f->lin_top = cob_get_int (f->lattop);
-		if (f->lin_top < 0) {
+	if (f->linptr->lattop) {
+		f->linptr->lin_top = cob_get_int (f->linptr->lattop);
+		if (f->linptr->lin_top < 0) {
 			return COB_LINAGE_INVALID;
 		}
 	} else {
-		f->lin_top = 0;
+		f->linptr->lin_top = 0;
 	}
-	if (f->latbot) {
-		f->lin_bot = cob_get_int (f->latbot);
-		if (f->lin_bot < 0) {
+	if (f->linptr->latbot) {
+		f->linptr->lin_bot = cob_get_int (f->linptr->latbot);
+		if (f->linptr->lin_bot < 0) {
 			return COB_LINAGE_INVALID;
 		}
 	} else {
-		f->lin_bot = 0;
+		f->linptr->lin_bot = 0;
 	}
 	return 0;
 }
@@ -564,7 +603,7 @@ dummy_start (cob_file *f, int cond, cob_field *key)
 }
 
 static int COB_NOINLINE
-file_open (cob_file *f, char *filename, int mode, int opt)
+cob_file_open (cob_file *f, char *filename, int mode, int opt)
 {
 	FILE		*fp = NULL;
 #ifdef HAVE_FCNTL
@@ -634,19 +673,19 @@ file_open (cob_file *f, char *filename, int mode, int opt)
 #endif
 
 	f->file = fp;
-	if (f->linage) {
+	if (f->linptr) {
 		if (file_linage_check (f)) {
-			cob_set_int (f->linage_ctr, 0);
+			cob_set_int (f->linptr->linage_ctr, 0);
 			return COB_LINAGE_INVALID;
 		}
 		f->flag_needs_top = 1;
-		cob_set_int (f->linage_ctr, 1);
+		cob_set_int (f->linptr->linage_ctr, 1);
 	}
 	return 0;
 }
 
 static int COB_NOINLINE
-file_close (cob_file *f, int opt)
+cob_file_close (cob_file *f, int opt)
 {
 #ifdef HAVE_FCNTL
 	struct flock lock;
@@ -657,7 +696,7 @@ file_close (cob_file *f, int opt)
 	case COB_CLOSE_LOCK:
 	case COB_CLOSE_NO_REWIND:
 		if (f->organization == COB_ORG_LINE_SEQUENTIAL) {
-			if (f->flag_needs_nl && !f->linage) {
+			if (f->flag_needs_nl && !f->linptr) {
 				f->flag_needs_nl = 0;
 				putc ('\n', (FILE *)f->file);
 			}
@@ -685,63 +724,63 @@ file_close (cob_file *f, int opt)
 }
 
 static int
-file_write_opt (cob_file *f, const int opt)
+cob_file_write_opt (cob_file *f, const int opt)
 {
 	int	i, n;
 
 	if (unlikely(opt & COB_WRITE_PAGE)) {
-		if (unlikely(f->linage)) {
-			i = cob_get_int (f->linage_ctr);
+		if (unlikely(f->linptr)) {
+			i = cob_get_int (f->linptr->linage_ctr);
 			if (i == 0) {
 				return COB_STATUS_57_I_O_LINAGE;
 			}
-			n = f->lin_lines;
+			n = f->linptr->lin_lines;
 			for (; i < n; i++) {
 				putc ('\n', (FILE *)f->file);
 			}
-			for (i = 0; i < f->lin_bot; i++) {
+			for (i = 0; i < f->linptr->lin_bot; i++) {
 				putc ('\n', (FILE *)f->file);
 			}
 			if (file_linage_check (f)) {
-				cob_set_int (f->linage_ctr, 0);
+				cob_set_int (f->linptr->linage_ctr, 0);
 				return COB_STATUS_57_I_O_LINAGE;
 			}
-			for (i = 0; i < f->lin_top; i++) {
+			for (i = 0; i < f->linptr->lin_top; i++) {
 				putc ('\n', (FILE *)f->file);
 			}
-			cob_set_int (f->linage_ctr, 1);
+			cob_set_int (f->linptr->linage_ctr, 1);
 		} else {
 			putc ('\f', (FILE *)f->file);
 		}
 	} else if (opt & COB_WRITE_LINES) {
-		if (unlikely(f->linage)) {
-			n = cob_get_int (f->linage_ctr);
+		if (unlikely(f->linptr)) {
+			n = cob_get_int (f->linptr->linage_ctr);
 			if (n == 0) {
 				return COB_STATUS_57_I_O_LINAGE;
 			}
-			cob_add_int (f->linage_ctr, opt & COB_WRITE_MASK);
-			i = cob_get_int (f->linage_ctr);
-			if (cob_check_eop && f->lin_foot) {
-				if (i >= f->lin_foot) {
+			cob_add_int (f->linptr->linage_ctr, opt & COB_WRITE_MASK);
+			i = cob_get_int (f->linptr->linage_ctr);
+			if (cob_check_eop && f->linptr->lin_foot) {
+				if (i >= f->linptr->lin_foot) {
 					eop_status = 1;
 				}
 			}
-			if (i > f->lin_lines) {
+			if (i > f->linptr->lin_lines) {
 				if (cob_check_eop) {
 					eop_status = 1;
 				}
-				for (; n < f->lin_lines; n++) {
+				for (; n < f->linptr->lin_lines; n++) {
 					putc ('\n', (FILE *)f->file);
 				}
-				for (i = 0; i < f->lin_bot; i++) {
+				for (i = 0; i < f->linptr->lin_bot; i++) {
 					putc ('\n', (FILE *)f->file);
 				}
 				if (file_linage_check (f)) {
-					cob_set_int (f->linage_ctr, 0);
+					cob_set_int (f->linptr->linage_ctr, 0);
 					return COB_STATUS_57_I_O_LINAGE;
 				}
-				cob_set_int (f->linage_ctr, 1);
-				for (i = 0; i < f->lin_top; i++) {
+				cob_set_int (f->linptr->linage_ctr, 1);
+				for (i = 0; i < f->linptr->lin_top; i++) {
 					putc ('\n', (FILE *)f->file);
 				}
 			} else {
@@ -771,6 +810,14 @@ sequential_read (cob_file *f, int read_opts)
 		unsigned int	sint;
 	} recsize;
 #endif
+#ifdef	WITH_SEQRA_EXTFH
+	int	extfh_ret;
+
+	extfh_ret = extfh_sequential_read (f, read_opts);
+	if (extfh_ret != COB_NOT_CONFIGURED) {
+		return extfh_ret;
+	}
+#endif	/* WITH_SEQRA_EXTFH */
 
 	SEEK_INIT (f);
 
@@ -826,6 +873,14 @@ sequential_write (cob_file *f, int opt)
 		unsigned int	sint;
 	} recsize;
 #endif
+#ifdef	WITH_SEQRA_EXTFH
+	int	extfh_ret;
+
+	extfh_ret = extfh_sequential_write (f, opt);
+	if (extfh_ret != COB_NOT_CONFIGURED) {
+		return extfh_ret;
+	}
+#endif	/* WITH_SEQRA_EXTFH */
 
 	SEEK_INIT (f);
 
@@ -869,6 +924,14 @@ sequential_write (cob_file *f, int opt)
 static int
 sequential_rewrite (cob_file *f, int opt)
 {
+#ifdef	WITH_SEQRA_EXTFH
+	int	extfh_ret;
+
+	extfh_ret = extfh_sequential_rewrite (f, opt);
+	if (extfh_ret != COB_NOT_CONFIGURED) {
+		return extfh_ret;
+	}
+#endif	/* WITH_SEQRA_EXTFH */
 	if (fseek ((FILE *)f->file, -(off_t) f->record->size, SEEK_CUR)) {
 		return COB_STATUS_30_PERMANENT_ERROR;
 	}
@@ -888,6 +951,14 @@ lineseq_read (cob_file *f, int read_opts)
 	size_t		i = 0;
 	int		n;
 	unsigned char	*dataptr;
+#ifdef	WITH_SEQRA_EXTFH
+	int		extfh_ret;
+
+	extfh_ret = extfh_sequential_read (f, read_opts);
+	if (extfh_ret != COB_NOT_CONFIGURED) {
+		return extfh_ret;
+	}
+#endif	/* WITH_SEQRA_EXTFH */
 
 	dataptr = f->record->data;
 	for (; ;) {
@@ -923,6 +994,14 @@ lineseq_write (cob_file *f, int opt)
 {
 	int	i;
 	size_t	size;
+#ifdef	WITH_SEQRA_EXTFH
+	int	extfh_ret;
+
+	extfh_ret = extfh_sequential_write (f, opt);
+	if (extfh_ret != COB_NOT_CONFIGURED) {
+		return extfh_ret;
+	}
+#endif	/* WITH_SEQRA_EXTFH */
 
 	if (opt == 0) {
 		opt = COB_WRITE_BEFORE | COB_WRITE_LINES | 1;
@@ -936,9 +1015,9 @@ lineseq_write (cob_file *f, int opt)
 	}
 	size = i + 1;
 
-	if (unlikely(f->linage && f->flag_needs_top)) {
+	if (unlikely(f->linptr && f->flag_needs_top)) {
 		f->flag_needs_top = 0;
-		for (i = 0; i < f->lin_top; i++) {
+		for (i = 0; i < f->linptr->lin_top; i++) {
 			putc ('\n', (FILE *)f->file);
 		}
 	}
@@ -951,7 +1030,7 @@ lineseq_write (cob_file *f, int opt)
 		}
 	}
 
-	if (unlikely(f->linage)) {
+	if (unlikely(f->linptr)) {
 		putc ('\n', (FILE *)f->file);
 	}
 
@@ -975,6 +1054,14 @@ relative_start (cob_file *f, int cond, cob_field *k)
 	int	kindex;
 	size_t	relsize;
 	off_t	off;
+#ifdef	WITH_SEQRA_EXTFH
+	int	extfh_ret;
+
+	extfh_ret = extfh_relative_start (f, cond, k);
+	if (extfh_ret != COB_NOT_CONFIGURED) {
+		return extfh_ret;
+	}
+#endif	/* WITH_SEQRA_EXTFH */
 
 	/* get the index */
 	kindex = cob_get_int (k) - 1;
@@ -1023,6 +1110,14 @@ relative_read (cob_file *f, cob_field *k, int read_opts)
 	int	relnum;
 	size_t	relsize;
 	off_t	off;
+#ifdef	WITH_SEQRA_EXTFH
+	int	extfh_ret;
+
+	extfh_ret = extfh_relative_read (f, k, read_opts);
+	if (extfh_ret != COB_NOT_CONFIGURED) {
+		return extfh_ret;
+	}
+#endif	/* WITH_SEQRA_EXTFH */
 
 	SEEK_INIT (f);
 
@@ -1052,6 +1147,14 @@ relative_read_next (cob_file *f, int read_opts)
 	off_t	off;
 	size_t	relsize;
 	int	relnum;
+#ifdef	WITH_SEQRA_EXTFH
+	int	extfh_ret;
+
+	extfh_ret = extfh_relative_read_next (f, read_opts);
+	if (extfh_ret != COB_NOT_CONFIGURED) {
+		return extfh_ret;
+	}
+#endif	/* WITH_SEQRA_EXTFH */
 
 	SEEK_INIT (f);
 
@@ -1100,6 +1203,14 @@ relative_write (cob_file *f, int opt)
 	int	i;
 	int	kindex;
 	off_t	off;
+#ifdef	WITH_SEQRA_EXTFH
+	int	extfh_ret;
+
+	extfh_ret = extfh_relative_write (f, opt);
+	if (extfh_ret != COB_NOT_CONFIGURED) {
+		return extfh_ret;
+	}
+#endif	/* WITH_SEQRA_EXTFH */
 
 	SEEK_INIT (f);
 
@@ -1154,6 +1265,14 @@ relative_rewrite (cob_file *f, int opt)
 	size_t	relsize;
 	int	relnum;
 	off_t	off;
+#ifdef	WITH_SEQRA_EXTFH
+	int	extfh_ret;
+
+	extfh_ret = extfh_relative_rewrite (f, opt);
+	if (extfh_ret != COB_NOT_CONFIGURED) {
+		return extfh_ret;
+	}
+#endif	/* WITH_SEQRA_EXTFH */
 
 	if (f->access_mode == COB_ACCESS_SEQUENTIAL) {
 		fseek ((FILE *)f->file, -(off_t) f->record_max, SEEK_CUR);
@@ -1181,6 +1300,14 @@ relative_delete (cob_file *f)
 	size_t	relsize;
 	int	relnum;
 	off_t	off;
+#ifdef	WITH_SEQRA_EXTFH
+	int	extfh_ret;
+
+	extfh_ret = extfh_relative_delete (f);
+	if (extfh_ret != COB_NOT_CONFIGURED) {
+		return extfh_ret;
+	}
+#endif	/* WITH_SEQRA_EXTFH */
 
 	relnum = cob_get_int (f->keys[0].field) - 1;
 	relsize = f->record_max + sizeof (f->record->size);
@@ -1204,7 +1331,7 @@ relative_delete (cob_file *f)
  * INDEXED
  */
 
-#ifdef	WITH_DB
+#if	defined(WITH_DB) || defined(WITH_INDEX_EXTFH)
 
 #ifdef	USE_DB41
 static void
@@ -1311,6 +1438,9 @@ unlock_record (cob_file *f)
 static int
 indexed_open (cob_file *f, char *filename, int mode, int flag)
 {
+#ifdef	WITH_INDEX_EXTFH
+	return extfh_indexed_open (f, filename, mode, flag);
+#else	/* WITH_INDEX_EXTFH */
 	size_t			i, j;
 #ifdef	USE_DB41
 	int			flags = 0;
@@ -1497,11 +1627,15 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 	}
 
 	return 0;
+#endif	/* WITH_INDEX_EXTFH */
 }
 
 static int
 indexed_close (cob_file *f, int opt)
 {
+#ifdef	WITH_INDEX_EXTFH
+	return extfh_indexed_close (f, opt);
+#else	/* WITH_INDEX_EXTFH */
 	size_t			i;
 	struct indexed_file	*p = f->file;
 
@@ -1541,8 +1675,10 @@ indexed_close (cob_file *f, int opt)
 	free (p);
 
 	return COB_STATUS_00_SUCCESS;
+#endif	/* WITH_INDEX_EXTFH */
 }
 
+#ifndef	WITH_INDEX_EXTFH
 static int
 indexed_start_internal (cob_file *f, int cond, cob_field *key, int read_opts, int test_lock)
 {
@@ -1711,16 +1847,24 @@ indexed_start_internal (cob_file *f, int cond, cob_field *key, int read_opts, in
 
 	return (ret == 0) ? COB_STATUS_00_SUCCESS : COB_STATUS_23_KEY_NOT_EXISTS;
 }
+#endif	/* WITH_INDEX_EXTFH */
 
 static int
 indexed_start (cob_file *f, int cond, cob_field *key)
 {
-	return (indexed_start_internal (f, cond, key, 0, 0));
+#ifdef	WITH_INDEX_EXTFH
+	return extfh_indexed_start (f, cond, key);
+#else	/* WITH_INDEX_EXTFH */
+	return indexed_start_internal (f, cond, key, 0, 0);
+#endif	/* WITH_INDEX_EXTFH */
 }
 
 static int
 indexed_read (cob_file *f, cob_field *key, int read_opts)
 {
+#ifdef	WITH_INDEX_EXTFH
+	return extfh_indexed_read (f, key, read_opts);
+#else	/* WITH_INDEX_EXTFH */
 	struct indexed_file	*p = f->file;
 	int			ret;
 	int			test_lock = 0;
@@ -1741,11 +1885,15 @@ indexed_read (cob_file *f, cob_field *key, int read_opts)
 	own_memcpy (f->record->data, p->data.data, p->data.size);
 
 	return COB_STATUS_00_SUCCESS;
+#endif	/* WITH_INDEX_EXTFH */
 }
 
 static int
 indexed_read_next (cob_file *f, int read_opts)
 {
+#ifdef	WITH_INDEX_EXTFH
+	return extfh_indexed_read_next (f, read_opts);
+#else	/* WITH_INDEX_EXTFH */
 	struct indexed_file	*p = f->file;
 	int			ret;
 	int			read_nextprev;
@@ -2027,8 +2175,10 @@ indexed_read_next (cob_file *f, int read_opts)
 	own_memcpy (f->record->data, p->data.data, p->data.size);
 
 	return COB_STATUS_00_SUCCESS;
+#endif	/* WITH_INDEX_EXTFH */
 }
 
+#ifndef	WITH_INDEX_EXTFH
 /* get the next number in a set of duplicates */
 static unsigned int
 get_dupno(cob_file *f, int i)
@@ -2202,10 +2352,14 @@ indexed_write_internal (cob_file *f, int rewrite, int opt)
 #endif
 	return COB_STATUS_00_SUCCESS;
 }
+#endif	/* WITH_INDEX_EXTFH */
 
 static int
 indexed_write (cob_file *f, int opt)
 {
+#ifdef	WITH_INDEX_EXTFH
+	return extfh_indexed_write (f, opt);
+#else	/* WITH_INDEX_EXTFH */
 	struct indexed_file	*p = f->file;
 
 #ifdef	USE_DB41
@@ -2225,8 +2379,10 @@ indexed_write (cob_file *f, int opt)
 	own_memcpy (p->last_key, p->key.data, p->key.size);
 
 	return indexed_write_internal (f, 0, opt);
+#endif	/* WITH_INDEX_EXTFH */
 }
 
+#ifndef	WITH_INDEX_EXTFH
 static int
 indexed_delete_internal (cob_file *f, int rewrite)
 {
@@ -2354,16 +2510,24 @@ indexed_delete_internal (cob_file *f, int rewrite)
 #endif
 	return COB_STATUS_00_SUCCESS;
 }
+#endif	/* WITH_INDEX_EXTFH */
 
 static int
 indexed_delete (cob_file *f)
 {
+#ifdef	WITH_INDEX_EXTFH
+	return extfh_indexed_delete (f);
+#else	/* WITH_INDEX_EXTFH */
 	return indexed_delete_internal(f, 0);
+#endif	/* WITH_INDEX_EXTFH */
 }
 
 static int
 indexed_rewrite (cob_file *f, int opt)
 {
+#ifdef	WITH_INDEX_EXTFH
+	return extfh_indexed_rewrite (f, opt);
+#else	/* WITH_INDEX_EXTFH */
 	struct indexed_file *p = f->file;
 	int			ret;
 #ifdef	USE_DB41
@@ -2413,6 +2577,7 @@ indexed_rewrite (cob_file *f, int opt)
 	p->write_cursor_open = 0; 
 #endif
 	return ret;
+#endif	/* WITH_INDEX_EXTFH */
 }
 
 #ifdef	USE_DB41
@@ -2537,6 +2702,45 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 
 	/* obtain the file name */
 	cob_field_to_string (f->assign, filename);
+
+#ifdef	WITH_INDEX_EXTFH
+	if (f->organization == COB_ORG_INDEXED) {
+		int	ret;
+
+		ret = extfh_index_locate (f, filename);
+		switch (ret) {
+		case COB_NOT_CONFIGURED:
+			/* EXTFH requires OC to process the filename */
+			break;
+		case COB_STATUS_00_SUCCESS:
+			/* EXTFH recognized the file */
+			goto file_available;
+		default:
+			/* EXTFH detected an error */
+			RETURN_STATUS (ret);
+		}
+	}
+#endif	/* WITH_INDEX_EXTFH */
+
+#ifdef	WITH_SEQRA_EXTFH
+	if (f->organization != COB_ORG_INDEXED) {
+		int	ret;
+
+		ret = extfh_seqra_locate (f, filename);
+		switch (ret) {
+		case COB_NOT_CONFIGURED:
+			/* EXTFH requires OC to process the filename */
+			break;
+		case COB_STATUS_00_SUCCESS:
+			/* EXTFH recognized the file */
+			goto file_available;
+		default:
+			/* EXTFH detected an error */
+			RETURN_STATUS (ret);
+		}
+	}
+#endif	/* WITH_SEQRA_EXTFH */
+
 	if (cob_current_module->flag_filename_mapping) {
 		src = filename;
 		dst = buff;
@@ -2583,7 +2787,6 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 			}
 		}
 	}
-
 	/* check if the file exists */
 #ifdef	USE_DB41
 	if (f->organization == COB_ORG_INDEXED) {
@@ -2604,6 +2807,10 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 		}
 	}
 
+#if	defined(WITH_INDEX_EXTFH) || defined (WITH_SEQRA_EXTFH)
+file_available:
+#endif	/* WITH_INDEX_EXTFH || WITH_SEQRA_EXTFH */
+
 	cob_cache_file (f);
 
 	if (!cob_first_in) {
@@ -2612,6 +2819,28 @@ cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus)
 	}
 
 	/* open the file */
+#ifdef	WITH_SEQRA_EXTFH
+	if (f->organization != COB_ORG_INDEXED) {
+		int	ret;
+
+		ret = extfh_cob_file_open (f, filename, mode, opt);
+		switch (ret) {
+		case COB_STATUS_00_SUCCESS:
+			f->open_mode = mode;
+			break;
+		case COB_STATUS_35_NOT_EXISTS:
+			if (f->flag_optional) {
+				f->open_mode = mode;
+				f->flag_nonexistent = 1;
+				f->flag_end_of_file = 1;
+				f->flag_begin_of_file = 1;
+				RETURN_STATUS (COB_STATUS_05_SUCCESS_OPTIONAL);
+			}
+			break;
+		}
+		RETURN_STATUS (ret);
+	}
+#endif
 	switch (fileio_funcs[(int)f->organization]->open (f, filename, mode, opt)) {
 	case 0:
 		f->open_mode = mode;
@@ -2665,7 +2894,15 @@ cob_close (cob_file *f, int opt, cob_field *fnstatus)
 	if (f->flag_nonexistent) {
 		ret = COB_STATUS_00_SUCCESS;
 	} else {
-		ret = fileio_funcs[(int)f->organization]->close (f, opt);
+#ifdef	WITH_SEQRA_EXTFH
+		if (f->organization != COB_ORG_INDEXED) {
+			ret = extfh_cob_file_close (f, opt);
+		} else {
+#endif
+			ret = fileio_funcs[(int)f->organization]->close (f, opt);
+#ifdef	WITH_SEQRA_EXTFH
+		}
+#endif
 	}
 
 	if (ret == COB_STATUS_00_SUCCESS) {
@@ -2912,7 +3149,7 @@ cob_delete (cob_file *f, cob_field *fnstatus)
 		RETURN_STATUS (COB_STATUS_43_READ_NOT_DONE);
 	}
 
-	ret = fileio_funcs[(int)f->organization]->delete (f);
+	ret = fileio_funcs[(int)f->organization]->fdelete (f);
 
 	if (unlikely(cob_do_sync && ret == 0)) {
 		cob_sync (f, cob_do_sync);
@@ -3033,6 +3270,10 @@ cob_init_fileio (void)
 	record_lock_object = cob_malloc (1000);
 	rlo_size = 1000;
 #endif
+
+#if	defined(WITH_INDEX_EXTFH) || defined (WITH_SEQRA_EXTFH)
+	extfh_cob_init_fileio (&sequential_funcs, &lineseq_funcs, &relative_funcs, &cob_file_write_opt);
+#endif
 }
 
 void
@@ -3057,6 +3298,9 @@ cob_exit_fileio (void)
 		bdb_env->lock_id_free (bdb_env, bdb_lock_id);
 		bdb_env->close (bdb_env, 0);
 	}
+#endif
+#if	defined(WITH_INDEX_EXTFH) || defined (WITH_SEQRA_EXTFH)
+	extfh_cob_exit_fileio ();
 #endif
 }
 

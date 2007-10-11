@@ -55,6 +55,7 @@ static int last_line = 0;
 static int needs_exit_prog = 0;
 static int need_double = 0;
 static int gen_ebcdic = 0;
+static int gen_ebcdic_ascii = 0;
 static int gen_full_ebcdic = 0;
 static int gen_native = 0;
 static int gen_custom = 0;
@@ -81,6 +82,7 @@ static struct attr_list {
 	int			digits;
 	int			scale;
 	int			flags;
+	int			lenstr;
 	unsigned char		*pic;
 } *attr_cache = NULL;
 
@@ -491,7 +493,7 @@ again:
 }
 
 static int
-lookup_attr (int type, int digits, int scale, int flags, unsigned char *pic)
+lookup_attr (int type, int digits, int scale, int flags, unsigned char *pic, int lenstr)
 {
 	struct attr_list *l;
 
@@ -500,8 +502,8 @@ lookup_attr (int type, int digits, int scale, int flags, unsigned char *pic)
 		if (type == l->type
 		    && digits == l->digits
 		    && scale == l->scale && flags == l->flags
-		    && ((pic == l->pic) || (pic && l->pic
-		    && strcmp ((char *)pic, (char *)(l->pic)) == 0))) {
+		    && ((pic == l->pic) || (pic && l->pic && lenstr == l->lenstr
+		    && memcmp ((char *)pic, (char *)(l->pic), (size_t)lenstr) == 0))) {
 			return l->id;
 		}
 	}
@@ -516,6 +518,7 @@ lookup_attr (int type, int digits, int scale, int flags, unsigned char *pic)
 	l->scale = scale;
 	l->flags = flags;
 	l->pic = pic;
+	l->lenstr = lenstr;
 	l->next = attr_cache;
 	attr_cache = l;
 
@@ -541,12 +544,12 @@ output_attr (cb_tree x)
 				flags = COB_FLAG_HAVE_SIGN | COB_FLAG_SIGN_SEPARATE;
 			}
 			id = lookup_attr (COB_TYPE_NUMERIC_DISPLAY,
-					  l->size, l->scale, flags, NULL);
+					  l->size, l->scale, flags, NULL, 0);
 		} else {
 			if (l->all) {
-				id = lookup_attr (COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL);
+				id = lookup_attr (COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL, 0);
 			} else {
-				id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+				id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL, 0);
 			}
 		}
 		break;
@@ -556,15 +559,15 @@ output_attr (cb_tree x)
 		f = CB_FIELD (r->value);
 		flags = 0;
 		if (r->offset) {
-			id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+			id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL, 0);
 		} else {
 			switch (type) {
 			case COB_TYPE_GROUP:
 			case COB_TYPE_ALPHANUMERIC:
 				if (f->flag_justified) {
-					id = lookup_attr (type, 0, 0, COB_FLAG_JUSTIFIED, NULL);
+					id = lookup_attr (type, 0, 0, COB_FLAG_JUSTIFIED, NULL, 0);
 				} else {
-					id = lookup_attr (type, 0, 0, 0, NULL);
+					id = lookup_attr (type, 0, 0, 0, NULL, 0);
 				}
 				break;
 			default:
@@ -591,13 +594,13 @@ output_attr (cb_tree x)
 				}
 
 				id = lookup_attr (type, f->pic->digits, f->pic->scale,
-						  flags, (ucharptr) f->pic->str);
+						  flags, (ucharptr) f->pic->str, f->pic->lenstr);
 				break;
 			}
 		}
 		break;
 	case CB_TAG_ALPHABET_NAME:
-		id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+		id = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL, 0);
 		break;
 	default:
 		fprintf (stderr, "Unexpected tree tag %d\n", CB_TREE_TAG (x));
@@ -940,15 +943,25 @@ output_param (cb_tree x, int id)
 	case CB_TAG_ALPHABET_NAME:
 		abp = CB_ALPHABET_NAME (x);
 		switch (abp->type) {
-		case CB_ALPHABET_NATIVE:
 		case CB_ALPHABET_STANDARD_1:
 		case CB_ALPHABET_STANDARD_2:
+#ifdef	COB_EBCDIC_MACHINE
+			gen_ebcdic_ascii = 1;
+			output ("cob_ebcdic_ascii");
+			break;
+#endif
+		case CB_ALPHABET_NATIVE:
 			gen_native = 1;
 			output ("NULL");
 			break;
 		case CB_ALPHABET_EBCDIC:
+#ifdef	COB_EBCDIC_MACHINE
+			gen_native = 1;
+			output ("NULL");
+#else
 			gen_ebcdic = 1;
 			output ("cob_a2e");
+#endif
 			break;
 		case CB_ALPHABET_CUSTOM:
 			gen_custom = 1;
@@ -1023,15 +1036,25 @@ output_param (cb_tree x, int id)
 		if (CB_ALPHABET_NAME_P (r->value)) {
 			rbp = CB_ALPHABET_NAME (r->value);
 			switch (rbp->type) {
-			case CB_ALPHABET_NATIVE:
 			case CB_ALPHABET_STANDARD_1:
 			case CB_ALPHABET_STANDARD_2:
+#ifdef	COB_EBCDIC_MACHINE
+				gen_ebcdic_ascii = 1;
+				output ("&f_ebcdic_ascii");
+				break;
+#endif
+			case CB_ALPHABET_NATIVE:
 				gen_native = 1;
 				output ("&f_native");
 				break;
 			case CB_ALPHABET_EBCDIC:
+#ifdef	COB_EBCDIC_MACHINE
+				gen_native = 1;
+				output ("&f_native");
+#else
 				gen_full_ebcdic = 1;
 				output ("&f_ebcdic");
+#endif
 				break;
 			case CB_ALPHABET_CUSTOM:
 				gen_custom = 1;
@@ -1316,7 +1339,7 @@ output_cond (cb_tree x, int save_flag)
 		case '>':
 		case ']':
 		case '~':
-			output ("(");
+			output ("((int)");
 			output_cond (p->x, save_flag);
 			switch (p->op) {
 			case '=':
@@ -2269,7 +2292,7 @@ output_perform_call (struct cb_label *lb, struct cb_label *le)
 #endif
 
 	output_line ("/* PERFORM %s THRU %s */", lb->name, le->name);
-	if (optimize_flag) {
+	if (!cb_stack_check) {
 		output_line ("frame_index++;");
 	} else {
 		output_line ("if (unlikely(++frame_index >= COB_STACK_SIZE))");
@@ -2757,10 +2780,16 @@ output_file_initialization (struct cb_file *f)
 			     CB_PREFIX_FILE, f->cname, f->cname);
 		output_line ("if (cob_initial_external)");
 		output_indent ("{");
+		if (f->linage) {
+			output_line ("%s%s->linptr = cob_malloc (sizeof(struct linage_struct));", CB_PREFIX_FILE, f->cname);
+		}
 	} else {
 		output_line ("if (!%s%s)", CB_PREFIX_FILE, f->cname);
 		output_indent ("{");
 		output_line ("%s%s = cob_malloc (sizeof(cob_file));", CB_PREFIX_FILE, f->cname);
+		if (f->linage) {
+			output_line ("%s%s->linptr = cob_malloc (sizeof(struct linage_struct));", CB_PREFIX_FILE, f->cname);
+		}
 		output_indent ("}");
 	}
 	/* output RELATIVE/RECORD KEY's */
@@ -2804,11 +2833,6 @@ output_file_initialization (struct cb_file *f)
 		}
 	}
 
-	output_line ("%s%s->organization = %d;", CB_PREFIX_FILE, f->cname, f->organization);
-	output_line ("%s%s->access_mode = %d;", CB_PREFIX_FILE, f->cname, f->access_mode);
-	output_line ("%s%s->lock_mode = %d;", CB_PREFIX_FILE, f->cname, f->lock_mode);
-	output_line ("%s%s->open_mode = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s->flag_optional = %d;", CB_PREFIX_FILE, f->cname, f->optional);
 	output_line ("%s%s->select_name = (const char *)\"%s\";", CB_PREFIX_FILE, f->cname, f->name);
 	if (f->external && !f->file_status) {
 		output_line ("%s%s->file_status = cob_external_addr (\"%s%s_status\", 4);",
@@ -2832,7 +2856,11 @@ output_file_initialization (struct cb_file *f)
 	output (";\n");
 	output_prefix ();
 	output ("%s%s->record_size = ", CB_PREFIX_FILE, f->cname);
-	output_param (f->record_depending, -1);
+	if (f->record_depending) {
+		output_param (f->record_depending, -1);
+	} else {
+		output ("NULL");
+	}
 	output (";\n");
 	output_line ("%s%s->record_min = %d;", CB_PREFIX_FILE, f->cname, f->record_min);
 	output_line ("%s%s->record_max = %d;", CB_PREFIX_FILE, f->cname, f->record_max);
@@ -2845,62 +2873,65 @@ output_file_initialization (struct cb_file *f)
 		output_line ("%s%s->nkeys = 0;", CB_PREFIX_FILE, f->cname);
 		output_line ("%s%s->keys = NULL;", CB_PREFIX_FILE, f->cname);
 	}
-	output_line ("%s%s->special = %d;", CB_PREFIX_FILE, f->cname, f->special);
 	output_line ("%s%s->file = NULL;", CB_PREFIX_FILE, f->cname);
+
 	if (f->linage) {
 		output_prefix ();
-		output ("%s%s->linage = ", CB_PREFIX_FILE, f->cname);
+		output ("%s%s->linptr->linage = ", CB_PREFIX_FILE, f->cname);
 		output_param (f->linage, -1);
 		output (";\n");
 		output_prefix ();
-		output ("%s%s->linage_ctr = ", CB_PREFIX_FILE, f->cname);
+		output ("%s%s->linptr->linage_ctr = ", CB_PREFIX_FILE, f->cname);
 		output_param (f->linage_ctr, -1);
 		output (";\n");
 		if (f->latfoot) {
 			output_prefix ();
-			output ("%s%s->latfoot = ", CB_PREFIX_FILE, f->cname);
+			output ("%s%s->linptr->latfoot = ", CB_PREFIX_FILE, f->cname);
 			output_param (f->latfoot, -1);
 			output (";\n");
 		} else {
-			output_line ("%s%s->latfoot = NULL;", CB_PREFIX_FILE, f->cname);
+			output_line ("%s%s->linptr->latfoot = NULL;", CB_PREFIX_FILE, f->cname);
 		}
 		if (f->lattop) {
 			output_prefix ();
-			output ("%s%s->lattop = ", CB_PREFIX_FILE, f->cname);
+			output ("%s%s->linptr->lattop = ", CB_PREFIX_FILE, f->cname);
 			output_param (f->lattop, -1);
 			output (";\n");
 		} else {
-			output_line ("%s%s->lattop = NULL;", CB_PREFIX_FILE, f->cname);
+			output_line ("%s%s->linptr->lattop = NULL;", CB_PREFIX_FILE, f->cname);
 		}
 		if (f->latbot) {
 			output_prefix ();
-			output ("%s%s->latbot = ", CB_PREFIX_FILE, f->cname);
+			output ("%s%s->linptr->latbot = ", CB_PREFIX_FILE, f->cname);
 			output_param (f->latbot, -1);
 			output (";\n");
 		} else {
-			output_line ("%s%s->latbot = NULL;", CB_PREFIX_FILE, f->cname);
+			output_line ("%s%s->linptr->latbot = NULL;", CB_PREFIX_FILE, f->cname);
 		}
-	} else {
-		output_line ("%s%s->linage = NULL;", CB_PREFIX_FILE, f->cname);
-		output_line ("%s%s->linage_ctr = NULL;", CB_PREFIX_FILE, f->cname);
-		output_line ("%s%s->latfoot = NULL;", CB_PREFIX_FILE, f->cname);
-		output_line ("%s%s->lattop = NULL;", CB_PREFIX_FILE, f->cname);
-		output_line ("%s%s->latbot = NULL;", CB_PREFIX_FILE, f->cname);
+		output_line ("%s%s->linptr->lin_lines = 0;", CB_PREFIX_FILE, f->cname);
+		output_line ("%s%s->linptr->lin_foot = 0;", CB_PREFIX_FILE, f->cname);
+		output_line ("%s%s->linptr->lin_top = 0;", CB_PREFIX_FILE, f->cname);
+		output_line ("%s%s->linptr->lin_bot = 0;", CB_PREFIX_FILE, f->cname);
 	}
-	output_line ("%s%s->lin_lines = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s->lin_foot = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s->lin_top = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s->lin_bot = 0;", CB_PREFIX_FILE, f->cname);
+
+	output_line ("%s%s->organization = %d;", CB_PREFIX_FILE, f->cname, f->organization);
+	output_line ("%s%s->access_mode = %d;", CB_PREFIX_FILE, f->cname, f->access_mode);
+	output_line ("%s%s->lock_mode = %d;", CB_PREFIX_FILE, f->cname, f->lock_mode);
+	output_line ("%s%s->open_mode = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->flag_optional = %d;", CB_PREFIX_FILE, f->cname, f->optional);
 	output_line ("%s%s->last_open_mode = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->special = %d;", CB_PREFIX_FILE, f->cname, f->special);
 	output_line ("%s%s->flag_nonexistent = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_end_of_file = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_begin_of_file = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_first_read = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_read_done = 0;", CB_PREFIX_FILE, f->cname);
-	output_line ("%s%s->flag_has_status = %d;", CB_PREFIX_FILE, f->cname,
-		     f->file_status ? 1 : 0);
+	output_line ("%s%s->flag_select_features = %d;", CB_PREFIX_FILE, f->cname,
+		     ((f->file_status ? COB_SELECT_FILE_STATUS : 0) |
+		     (f->external_assign ? COB_SELECT_EXTERNAL : 0)));
 	output_line ("%s%s->flag_needs_nl = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_needs_top = 0;", CB_PREFIX_FILE, f->cname);
+	output_line ("%s%s->file_version = %d;", CB_PREFIX_FILE, f->cname, COB_FILE_VERSION);
 	if (f->external) {
 		output_indent ("}");
 	}
@@ -3202,8 +3233,8 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	}
 	output (", cob_user_parameters");
 
-	/* Note 2 spare bytes at end */
-	output (", %d, '%c', '%c', '%c', %d, %d, %d, 0, 0};\n",
+	/* Note spare byte at end */
+	output (", %d, '%c', '%c', '%c', %d, %d, %d, 0};\n",
 		cb_display_sign, prog->decimal_point, prog->currency_symbol,
 		prog->numeric_separator, cb_filename_mapping, cb_binary_truncate,
 		cb_pretty_display);
@@ -3304,7 +3335,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 			}
 		}
 		if (l == NULL) {
-			if (cb_sticky_linkage) {
+			if (cb_sticky_linkage || cb_flag_static_linkage) {
 				output_line ("static unsigned char *%s%d = NULL;  /* %s */",
 					     CB_PREFIX_BASE, f->id, f->name);
 			} else {
@@ -3578,7 +3609,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		}
 		output_line ("default:");
 		output_indent ("{");
-		output_line ("if (!cob_error_file->flag_has_status) {");
+		output_line ("if (!(cob_error_file->flag_select_features & COB_SELECT_FILE_STATUS)) {");
 		output_line ("	cob_default_error_handle ();");
 		output_line ("	cob_stop_run (1);");
 		output_line ("}");
@@ -3802,6 +3833,7 @@ codegen (struct cb_program *prog, int nested)
 	last_line = 0;
 	needs_exit_prog = 0;
 	gen_ebcdic = 0;
+	gen_ebcdic_ascii = 0;
 	gen_full_ebcdic = 0;
 	gen_native = 0;
 	gen_custom = 0;
@@ -3945,8 +3977,8 @@ codegen (struct cb_program *prog, int nested)
 	output_internal_function (prog, parameter_list);
 	output ("/* end function stuff */\n\n");
 
-	if (gen_native || gen_full_ebcdic || prog->alphabet_name_list) {
-		(void)lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+	if (gen_native || gen_full_ebcdic || gen_ebcdic_ascii || prog->alphabet_name_list) {
+		(void)lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL, 0);
 	}
 	output_target = cb_storage_file;
 	if (attr_cache) {
@@ -3960,8 +3992,9 @@ codegen (struct cb_program *prog, int nested)
 		output_storage ("{%d, %d, %d, %d, ", j->type, j->digits, j->scale, j->flags);
 		if (j->pic) {
 			output_storage ("\"");
-			for (s = j->pic; *s; s += 2) {
-				output_storage ("%c\\%03o", s[0], s[1]);
+			for (s = j->pic; *s; s += 5) {
+				output_storage ("%c\\%03o\\%03o\\%03o\\%03o",
+					s[0], s[1], s[2], s[3], s[4]);
 			}
 			output_storage ("\"");
 		} else {
@@ -4036,7 +4069,7 @@ codegen (struct cb_program *prog, int nested)
 		}
 		num_cob_genned = num_cob_fields;
 	}
-	i = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+	i = lookup_attr (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL, 0);
 	if (gen_ebcdic) {
 		output_storage ("/* EBCDIC translate table */\n");
 		output ("static const unsigned char\tcob_a2e[256] = {\n");
@@ -4148,6 +4181,46 @@ codegen (struct cb_program *prog, int nested)
 		output ("};\n");
 		output
 		    ("static cob_field f_ebcdic = { 256, (unsigned char *)cob_ebcdic, &%s%d };\n",
+		     CB_PREFIX_ATTR, i);
+		output_storage ("\n");
+	}
+	if (gen_ebcdic_ascii) {
+		output ("static const unsigned char\tcob_ebcdic_ascii[256] = {\n");
+		output ("\t0x00, 0x01, 0x02, 0x03, 0xEC, 0x09, 0xCA, 0x7F,\n");
+		output ("\t0xE2, 0xD2, 0xD3, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,\n");
+		output ("\t0x10, 0x11, 0x12, 0x13, 0xEF, 0xC5, 0x08, 0xCB,\n");
+		output ("\t0x18, 0x19, 0xDC, 0xD8, 0x1C, 0x1D, 0x1E, 0x1F,\n");
+		output ("\t0xB7, 0xB8, 0xB9, 0xBB, 0xC4, 0x0A, 0x17, 0x1B,\n");
+		output ("\t0xCC, 0xCD, 0xCF, 0xD0, 0xD1, 0x05, 0x06, 0x07,\n");
+		output ("\t0xD9, 0xDA, 0x16, 0xDD, 0xDE, 0xDF, 0xE0, 0x04,\n");
+		output ("\t0xE3, 0xE5, 0xE9, 0xEB, 0x14, 0x15, 0x9E, 0x1A,\n");
+		output ("\t0x20, 0xC9, 0x83, 0x84, 0x85, 0xA0, 0xF2, 0x86,\n");
+		output ("\t0x87, 0xA4, 0xD5, 0x2E, 0x3C, 0x28, 0x2B, 0xB3,\n");
+		output ("\t0x26, 0x82, 0x88, 0x89, 0x8A, 0xA1, 0x8C, 0x8B,\n");
+		output ("\t0x8D, 0xE1, 0x21, 0x24, 0x2A, 0x29, 0x3B, 0x5E,\n");
+		output ("\t0x2D, 0x2F, 0xB2, 0x8E, 0xB4, 0xB5, 0xB6, 0x8F,\n");
+		output ("\t0x80, 0xA5, 0x7C, 0x2C, 0x25, 0x5F, 0x3E, 0x3F,\n");
+		output ("\t0xBA, 0x90, 0xBC, 0xBD, 0xBE, 0xF3, 0xC0, 0xC1,\n");
+		output ("\t0xC2, 0x60, 0x3A, 0x23, 0x40, 0x27, 0x3D, 0x22,\n");
+		output ("\t0xC3, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,\n");
+		output ("\t0x68, 0x69, 0xAE, 0xAF, 0xC6, 0xC7, 0xC8, 0xF1,\n");
+		output ("\t0xF8, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, 0x70,\n");
+		output ("\t0x71, 0x72, 0xA6, 0xA7, 0x91, 0xCE, 0x92, 0xA9,\n");
+		output ("\t0xE6, 0x7E, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78,\n");
+		output ("\t0x79, 0x7A, 0xAD, 0xA8, 0xD4, 0x5B, 0xD6, 0xD7,\n");
+		output ("\t0x9B, 0x9C, 0x9D, 0xFA, 0x9F, 0xB1, 0xB0, 0xAC,\n");
+		output ("\t0xAB, 0xFC, 0xAA, 0xFE, 0xE4, 0x5D, 0xBF, 0xE7,\n");
+		output ("\t0x7B, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,\n");
+		output ("\t0x48, 0x49, 0xE8, 0x93, 0x94, 0x95, 0xA2, 0xED,\n");
+		output ("\t0x7D, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F, 0x50,\n");
+		output ("\t0x51, 0x52, 0xEE, 0x96, 0x81, 0x97, 0xA3, 0x98,\n");
+		output ("\t0x5C, 0xF0, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58,\n");
+		output ("\t0x59, 0x5A, 0xFD, 0xF5, 0x99, 0xF7, 0xF6, 0xF9,\n");
+		output ("\t0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,\n");
+		output ("\t0x38, 0x39, 0xDB, 0xFB, 0x9A, 0xF4, 0xEA, 0xFF\n");
+		output ("};\n");
+		output
+		    ("static cob_field f_ebcdic_ascii = { 256, (unsigned char *)cob_ebcdic_ascii, &%s%d };\n",
 		     CB_PREFIX_ATTR, i);
 		output_storage ("\n");
 	}

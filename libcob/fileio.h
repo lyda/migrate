@@ -23,6 +23,9 @@
 
 #include <libcob/common.h>
 
+/* File version */
+#define	COB_FILE_VERSION	0
+
 #define COB_EQ			1 	/* x == y */
 #define COB_LT			2 	/* x <  y */
 #define COB_LE			3 	/* x <= y */
@@ -49,6 +52,11 @@
 #define COB_ACCESS_SEQUENTIAL	1
 #define COB_ACCESS_DYNAMIC	2
 #define COB_ACCESS_RANDOM	3
+
+/* SELECT features */
+
+#define	COB_SELECT_FILE_STATUS	0x01
+#define	COB_SELECT_EXTERNAL	0x02
 
 /* Lock mode */
 
@@ -78,6 +86,7 @@
 #define COB_WRITE_MASK		0x0000ffff
 #define COB_WRITE_LINES		0x00010000
 #define COB_WRITE_PAGE		0x00020000
+#define COB_WRITE_CHANNEL	0x00040000
 #define COB_WRITE_AFTER		0x00100000
 #define COB_WRITE_BEFORE	0x00200000
 #define COB_WRITE_EOP		0x00400000
@@ -126,6 +135,12 @@
 #define COB_STATUS_57_I_O_LINAGE		57
 #define COB_STATUS_61_FILE_SHARING		61
 
+/* Special status */
+
+/* Need some value that does not conflict with errno for OPEN/LINAGE */
+#define	COB_LINAGE_INVALID	16384
+/* Need value that does not conflict with errno 30 (EROFS) for OPEN */
+#define	COB_NOT_CONFIGURED	32768
 
 /* File connector */
 
@@ -136,6 +151,18 @@ typedef struct {
 	size_t		offset;	/* Offset of field */
 } cob_file_key;
 
+struct linage_struct {
+	cob_field		*linage;		/* LINAGE */
+	cob_field		*linage_ctr;		/* LINAGE-COUNTER */
+	cob_field		*latfoot;		/* LINAGE FOOTING */
+	cob_field		*lattop;		/* LINAGE AT TOP */
+	cob_field		*latbot;		/* LINAGE AT BOTTOM */
+	int			lin_lines;		/* Current Linage */
+	int			lin_foot;		/* Current Footage */
+	int			lin_top;		/* Current Top */
+	int			lin_bot;		/* Current Bottom */
+};
+
 typedef struct {
 	const char		*select_name;		/* Name in SELECT */
 	unsigned char		*file_status;		/* FILE STATUS */
@@ -144,16 +171,9 @@ typedef struct {
 	cob_field		*record_size;		/* record size depending on */
 	cob_file_key		*keys;			/* RELATIVE/RECORD/SORT keys */
 	void			*file;			/* file specific data pointer */
-	cob_field		*linage;		/* LINAGE */
-	cob_field		*linage_ctr;		/* LINAGE-COUNTER */
-	cob_field		*latfoot;		/* LINAGE FOOTING */
-	cob_field		*lattop;		/* LINAGE AT TOP */
-	cob_field		*latbot;		/* LINAGE AT BOTTOM */
+	struct linage_struct	*linptr;		/* LINAGE pointer */
 	const unsigned char	*sort_collating;	/* SORT collating */
-	int			lin_lines;		/* Current Linage */
-	int			lin_foot;		/* Current Footage */
-	int			lin_top;		/* Current Top */
-	int			lin_bot;		/* Current Bottom */
+	void			*extfh_ptr;		/* For EXTFH usage */
 	size_t			record_min;		/* record min size */
 	size_t			record_max;		/* record max size */
 	size_t			nkeys;			/* the number of keys */
@@ -169,10 +189,10 @@ typedef struct {
 	char			flag_begin_of_file;	/* reached beginning of file */
 	char			flag_first_read;	/* first READ after OPEN/START */
 	char			flag_read_done;		/* last READ successfully done */
-	char			flag_has_status;	/* has FILE STATUS clause */
+	char			flag_select_features;	/* SELECT features */
 	char			flag_needs_nl;		/* LS file needs NL at close */
 	char			flag_needs_top;		/* Linage needs top */
-	char			spare;			/* Spare */
+	char			file_version;		/* File I/O version */
 } cob_file;
 
 /* File I-O functions */
@@ -185,7 +205,7 @@ typedef struct {
 	int	(*read_next) (cob_file *f, int read_opts);
 	int	(*write) (cob_file *f, int opt);
 	int	(*rewrite) (cob_file *f, int opt);
-	int	(*delete) (cob_file *f);
+	int	(*fdelete) (cob_file *f);
 } cob_fileio_funcs;
 
 DLL_EXPIMP extern cob_file	*cob_error_file;
@@ -230,7 +250,8 @@ extern int cob_acuw_file_delete (char *file_name, char *file_type);
 
 /* SORT */
 extern void	cob_file_sort_init (cob_file *f, int nkeys,
-			const unsigned char *collating_sequence, void *sort_return);
+			const unsigned char *collating_sequence,
+			void *sort_return);
 extern void	cob_file_sort_init_key (cob_file *f, int flag,
 			cob_field *field, size_t offset);
 extern void	cob_file_sort_close (cob_file *f);

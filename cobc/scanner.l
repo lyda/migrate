@@ -641,3 +641,16 @@ cb_add_78 (struct cb_field *f)
 	p78->next = lev78ptr;
 	lev78ptr = p78;
 }
+
+struct cb_field *
+check_level_78 (const char *name)
+{
+	struct cb_level_78	*p78;
+
+	for (p78 = lev78ptr; p78; p78 = p78->next) {
+		if (strcasecmp (name, p78->fld78->name) == 0) {
+			return p78->fld78;
+		}
+	}
+	return NULL;
+}

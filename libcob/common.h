@@ -70,6 +70,10 @@
 #define	COB_NOINLINE
 #endif
 
+#if	' ' == 0x40
+#define	COB_EBCDIC_MACHINE
+#endif
+
 typedef unsigned char *	ucharptr;
 
 #define	COB_SMALL_BUFF		1024
@@ -187,26 +191,8 @@ typedef struct {
 #define GET_SIGN_ASCII(x) x -= 0x40
 #define PUT_SIGN_ASCII(x) x += 0x40
 
-/*
- * positive: 0123456789
- * negative: @ABCDEFGHI
- */
-#define GET_SIGN_ASCII10(x) x -= 0x10
-#define PUT_SIGN_ASCII10(x) x += 0x10
-
-/*
- * positive: 0123456789
- * negative: PQRSTUVWXY
- */
-#define GET_SIGN_ASCII20(x) x -= 0x20
-#define PUT_SIGN_ASCII20(x) x += 0x20
-
-enum cob_display_sign {
-	COB_DISPLAY_SIGN_ASCII,
-	COB_DISPLAY_SIGN_EBCDIC,
-	COB_DISPLAY_SIGN_ASCII10,
-	COB_DISPLAY_SIGN_ASCII20
-};
+#define	COB_DISPLAY_SIGN_ASCII	0
+#define	COB_DISPLAY_SIGN_EBCDIC	1
 
 /*
  * Module
@@ -218,14 +204,13 @@ typedef struct __cob_module {
 	cob_field			*crt_status;
 	cob_field			*cursor_pos;
 	cob_field			**cob_procedure_parameters;
-	const enum cob_display_sign	display_sign;
+	const unsigned char		display_sign;
 	const unsigned char		decimal_point;
 	const unsigned char		currency_symbol;
 	const unsigned char		numeric_separator;
 	const unsigned char		flag_filename_mapping;
 	const unsigned char		flag_binary_truncate;
 	const unsigned char		flag_pretty_display;
-	const unsigned char		spare7;
 	const unsigned char		spare8;
 } cob_module;
 

@@ -182,7 +182,7 @@ make_constant_label (const char *name)
 	return CB_TREE (p);
 }
 
-static struct cb_literal *
+struct cb_literal *
 build_literal (enum cb_category category, const unsigned char *data, size_t size)
 {
 	struct cb_literal *p = make_tree (CB_TAG_LITERAL, category, sizeof (struct cb_literal));
@@ -759,23 +759,26 @@ cb_build_decimal (int id)
 cb_tree
 cb_build_picture (const char *str)
 {
-	struct cb_picture *pic =
+	struct cb_picture	*pic =
 	    make_tree (CB_TAG_PICTURE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_picture));
-	const char	*p;
-	int		category = 0;
-	size_t		idx = 0;
-	int		size = 0;
-	int		digits = 0;
-	int		scale = 0;
-	int		s_count = 0;
-	int		v_count = 0;
-	int		at_beginning;
-	int		at_end;
-	int		i;
-	int		n;
-	unsigned char	c;
-	unsigned char	buff[16384];
+	const char		*p;
+	int			category = 0;
+	size_t			idx = 0;
+	int			size = 0;
+	int			digits = 0;
+	int			scale = 0;
+	int			s_count = 0;
+	int			v_count = 0;
+	int			at_beginning;
+	int			at_end;
+	int			i;
+	int			n;
+	unsigned char		c;
+	unsigned char		buff[COB_SMALL_BUFF];
 
+	if (strlen (str) > 50) {
+		goto error;
+	}
 	memset (buff, 0, sizeof (buff));
 	for (p = str; *p; p++) {
 		n = 1;
@@ -943,11 +946,9 @@ repeat:
 		}
 
 		/* store in the buffer */
-		while (n > 0) {
-			buff[idx++] = c;
-			buff[idx++] = (unsigned char)((n < 256) ? n : 255);
-			n -= 255;
-		}
+		buff[idx++] = c;
+		memcpy (&buff[idx], (unsigned char *)&n, sizeof(int));
+		idx += sizeof(int);
 	}
 	buff[idx] = 0;
 
@@ -980,6 +981,7 @@ repeat:
 		pic->str = cobc_malloc (idx + 1);
 		memcpy (pic->str, buff, idx);
 		pic->category = CB_CATEGORY_NUMERIC_EDITED;
+		pic->lenstr = idx;
 		break;
 	case PIC_EDITED:
 	case PIC_ALPHABETIC_EDITED:
@@ -988,6 +990,7 @@ repeat:
 		pic->str = cobc_malloc (idx + 1);
 		memcpy (pic->str, buff, idx);
 		pic->category = CB_CATEGORY_ALPHANUMERIC_EDITED;
+		pic->lenstr = idx;
 		break;
 	default:
 		goto error;

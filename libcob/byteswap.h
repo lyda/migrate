@@ -154,6 +154,10 @@
 #    define COB_BSWAP_32(val) (COB_BSWAP_32_CONSTANT (val))
 #    define COB_BSWAP_64(val) (COB_BSWAP_64_CONSTANT (val))
 #  endif
+#  elif defined(_MSC_VER)
+#    define COB_BSWAP_16(val) (_byteswap_ushort (val))
+#    define COB_BSWAP_32(val) (_byteswap_ulong (val))
+#    define COB_BSWAP_64(val) (_byteswap_uint64 (val))
 #else /* generic */
 #  define COB_BSWAP_16(val) (COB_BSWAP_16_CONSTANT (val))
 #  define COB_BSWAP_32(val) (COB_BSWAP_32_CONSTANT (val))

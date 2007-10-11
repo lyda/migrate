@@ -33,6 +33,9 @@
 #define mvgetnstr(w, x, y, z)	mvgetstr(w, x, y)
 #elif HAVE_CURSES_H
 #include <curses.h>
+#ifndef HAVE_MVGETNSTR
+#define mvgetnstr(w, x, y, z)	mvgetstr(w, x, y)
+#endif
 #endif
 
 #include "move.h"

@@ -101,7 +101,19 @@ enum cb_device_name {
 };
 
 enum cb_feature_name {
-	CB_FEATURE_FORMFEED
+	CB_FEATURE_FORMFEED,
+	CB_FEATURE_C01,
+	CB_FEATURE_C02,
+	CB_FEATURE_C03,
+	CB_FEATURE_C04,
+	CB_FEATURE_C05,
+	CB_FEATURE_C06,
+	CB_FEATURE_C07,
+	CB_FEATURE_C08,
+	CB_FEATURE_C09,
+	CB_FEATURE_C10,
+	CB_FEATURE_C11,
+	CB_FEATURE_C12
 };
 
 enum cb_switch_name {
@@ -413,6 +425,7 @@ extern cb_tree cb_build_decimal (int id);
 struct cb_picture {
 	struct cb_tree_common	common;
 	int			size;		/* byte size */
+	int			lenstr;		/* length of picture string */
 	char			*orig;		/* original picture string */
 	char			*str;		/* packed picture string */
 	enum cb_category	category;	/* field category */
@@ -555,7 +568,7 @@ struct cb_file {
 	/* STANDARD ERROR PROCEDURE */
 	struct cb_label		*handler;		/* error handler */
 	int			special;		/* Special file */
-	int			spare;			/* Spare */
+	int			external_assign;	/* ASSIGN EXTERNAL */
 };
 
 #define CB_FILE(x)	(CB_TREE_CAST (CB_TAG_FILE, struct cb_file, x))
@@ -700,6 +713,8 @@ struct cb_label {
 	int			id;
 	const unsigned char	*name;
 	struct cb_label		*section;
+	cb_tree			exit_label;
+	cb_tree			exit_label_ref;
 	cb_tree			children;
 	const unsigned char	*orig_name;
 	int			is_section;
@@ -1138,6 +1153,8 @@ extern void level_redundant_error (cb_tree x, const char *clause);
 extern void level_require_error (cb_tree x, const char *clause);
 extern void level_except_error (cb_tree x, const char *clause);
 
+struct cb_literal *build_literal (enum cb_category category, const unsigned char *data, size_t size);
+
 /* field.c */
 extern cb_tree cb_build_field_tree (cb_tree level, cb_tree name, struct cb_field *last_field,
 				enum cb_storage storage, struct cb_file *fn);
@@ -1297,5 +1314,6 @@ extern void codegen (struct cb_program *prog, int nested);
 
 /* scanner.l */
 extern void cb_add_78 (struct cb_field *f);
+extern struct cb_field *check_level_78 (const char *name);
 
 #endif /* CB_TREE_H */
