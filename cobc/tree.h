@@ -258,9 +258,6 @@ extern cb_tree cb_int3;
 extern cb_tree cb_int4;
 extern cb_tree cb_i[8];
 extern cb_tree cb_error_node;
-extern cb_tree cb_return_code;
-extern cb_tree cb_call_params;
-extern cb_tree cb_sort_return;
 
 extern cb_tree cb_intr_whencomp;
 extern cb_tree cb_intr_pi;
@@ -1093,6 +1090,9 @@ struct cb_program {
 	cb_tree			class_name_list;
 	cb_tree			parameter_list;
 	cb_tree			locale_list;
+	cb_tree			cb_return_code;
+	cb_tree			cb_sort_return;
+	cb_tree			cb_call_params;
 	struct cb_field		*working_storage;
 	struct cb_field		*local_storage;
 	struct cb_field		*linkage_storage;

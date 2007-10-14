@@ -68,6 +68,7 @@ static FILE *output_target;
 static const char *excp_current_program_id = NULL;
 static const char *excp_current_section = NULL;
 static const char *excp_current_paragraph = NULL;
+static struct cb_program *current_prog;
 
 static struct label_list {
 	struct label_list	*next;
@@ -2118,11 +2119,11 @@ output_call (struct cb_call *p)
 			output_integer (p->name);
 			output (";\n");
 			output_prefix ();
-			output_integer (cb_return_code);
+			output_integer (current_prog->cb_return_code);
 			output (" = func");
 		} else {
 			/* static link */
-			output_integer (cb_return_code);
+			output_integer (current_prog->cb_return_code);
 			if (system_call) {
 				output (" = %s", system_call);
 			} else {
@@ -2161,7 +2162,7 @@ output_call (struct cb_call *p)
 			output_indent ("  {");
 		}
 		output_prefix ();
-		output_integer (cb_return_code);
+		output_integer (current_prog->cb_return_code);
 		output (" = func");
 	}
 
@@ -2224,7 +2225,7 @@ output_call (struct cb_call *p)
 	}
 	output (");\n");
 	if (p->returning) {
-		output_stmt (cb_build_move (cb_return_code, p->returning));
+		output_stmt (cb_build_move (current_prog->cb_return_code, p->returning));
 	}
 	if (p->stmt2) {
 		output_stmt (p->stmt2);
@@ -3434,7 +3435,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	/* initialization */
 	output_line ("if (unlikely(initialized == 0))");
 	output_indent ("  {");
-	/* output_stmt (cb_build_assign (cb_return_code, cb_int0)); */
+	/* output_stmt (cb_build_assign (current_prog->cb_return_code, cb_int0)); */
 	output_line ("if (!cob_initialized) {");
 	if (cb_implicit_init) {
 		output_line ("  cob_init (0,NULL);");
@@ -3553,7 +3554,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 
 	output_line ("/* initialize number of call params */");
 	output ("  ");
-	output_integer (cb_call_params);
+	output_integer (current_prog->cb_call_params);
 	output_line (" = cob_call_params;");
 	output_line ("cob_save_call_params = cob_call_params;");
 	output_newline ();
@@ -3588,7 +3589,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line ("cob_current_module = cob_current_module->next;");
 	output_prefix ();
 	output ("return ");
-	output_integer (cb_return_code);
+	output_integer (current_prog->cb_return_code);
 	output (";\n\n");
 
 	/* error handlers */
@@ -3824,6 +3825,7 @@ codegen (struct cb_program *prog, int nested)
 	cb_tree			l1;
 	cb_tree			l2;
 
+	current_prog = prog;
 	param_id = 0;
 	stack_id = 0;
 	num_cob_fields = 0;
@@ -3922,6 +3924,7 @@ codegen (struct cb_program *prog, int nested)
 		}
 	}
 
+	output_storage ("/* PROGRAM-ID : %s */\n\n", prog->orig_source_name);
 	/* class-names */
 	if (prog->class_name_list) {
 		output ("/* class-names */\n");
@@ -4278,7 +4281,7 @@ codegen (struct cb_program *prog, int nested)
 		output_storage ("\n");
 	}
 
-	output_storage ("/* ---------------------------------------------- */\n");
+	output_storage ("/* ---------------------------------------------- */\n\n");
 	output_target = yyout;
 	if (prog->next_program) {
 		codegen (prog->next_program, 1);

@@ -3877,7 +3877,7 @@ stop_statement:
 ;
 
 stop_returning:
-  /* empty */		{ $$ = cb_return_code; }
+  /* empty */		{ $$ = current_program->cb_return_code; }
 | RETURNING x		{ $$ = $2; }
 | GIVING x		{ $$ = $2; }
 ;

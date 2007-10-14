@@ -453,16 +453,16 @@ cb_build_registers (void)
 	char	buff[24];
 
 	/* RETURN-CODE */
-	cb_return_code = cb_build_index (cb_build_reference ("RETURN-CODE"));
-	CB_FIELD (cb_ref (cb_return_code))->values = cb_list (cb_zero);
+	current_program->cb_return_code = cb_build_index (cb_build_reference ("RETURN-CODE"));
+	CB_FIELD (cb_ref (current_program->cb_return_code))->values = cb_list (cb_zero);
 
 	/* SORT-RETURN */
-	cb_sort_return = cb_build_index (cb_build_reference ("SORT-RETURN"));
-	CB_FIELD (cb_ref (cb_sort_return))->values = cb_list (cb_zero);
+	current_program->cb_sort_return = cb_build_index (cb_build_reference ("SORT-RETURN"));
+	CB_FIELD (cb_ref (current_program->cb_sort_return))->values = cb_list (cb_zero);
 
 	/* NUMBER-OF-CALL-PARAMETERS */
-	cb_call_params = cb_build_index (cb_build_reference ("NUMBER-OF-CALL-PARAMETERS"));
-	CB_FIELD (cb_ref (cb_call_params))->values = cb_list (cb_zero);
+	current_program->cb_call_params = cb_build_index (cb_build_reference ("NUMBER-OF-CALL-PARAMETERS"));
+	CB_FIELD (cb_ref (current_program->cb_call_params))->values = cb_list (cb_zero);
 
 	/* TALLY */
 	/* 01 TALLY GLOBAL PICTURE 9(9) USAGE COMP-5 VALUE ZERO. */
@@ -516,7 +516,6 @@ cb_build_registers (void)
 	memset (buff, 0, sizeof (buff));
 	strcpy (buff, "271828182845904523");
 	cb_intr_e = cb_build_numeric_literal (0, (ucharptr)buff, 17);
-
 }
 
 char *
@@ -4743,7 +4742,7 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree col)
 		}
 		cb_emit (cb_build_funcall_4 ("cob_file_sort_init", cb_ref (name),
 					     cb_int (cb_list_length (keys)), col,
-					     cb_build_cast_address(cb_sort_return)));
+					     cb_build_cast_address(current_program->cb_sort_return)));
 		for (l = keys; l; l = CB_CHAIN (l)) {
 			cb_emit (cb_build_funcall_4 ("cob_file_sort_init_key", cb_ref (name),
 					CB_PURPOSE (l),

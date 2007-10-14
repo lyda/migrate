@@ -82,9 +82,6 @@ cb_tree cb_int3;
 cb_tree cb_int4;
 cb_tree cb_i[8];
 cb_tree cb_error_node;
-cb_tree cb_return_code;
-cb_tree cb_call_params;
-cb_tree cb_sort_return;
 
 cb_tree cb_intr_whencomp;
 cb_tree cb_intr_pi;

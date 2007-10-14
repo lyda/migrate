@@ -21,6 +21,8 @@
 #ifndef COB_LIBCOB_H
 #define COB_LIBCOB_H
 
+#include <gmp.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
