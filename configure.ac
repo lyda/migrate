@@ -609,7 +609,7 @@ case $host_os in
 	COB_EXPORT_DYN="-Wl,-bexpfull"
 	if test "`basename $CC`" != "gcc"
 	then
-		COB_SHARED_OPT="-Wc,-G"
+		COB_SHARED_OPT="-G"
 	fi
 	;;
   solaris*)
