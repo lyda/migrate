@@ -1,8 +1,12 @@
+2007-10-18  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Tighten up 88 level usage in conditions
+
 2007-10-12  Roger While <simrw@sim-basis.de>
 
-	* tree.[ch], typeck.c, codegen.c : The special registers RETURN-CODE, SORT-RETURN
-		and NUMBER-OF-CALL-PARAMETERS must be per module and not per
-		compilation unit.
+	* tree.[ch], typeck.c, codegen.c : The special registers RETURN-CODE,
+		SORT-RETURN and NUMBER-OF-CALL-PARAMETERS must be per module
+		and not per compilation unit.
 
 2007-10-10  Roger While <simrw@sim-basis.de>
 

@@ -486,8 +486,6 @@ cob_stop_run (const int status)
 {
 	struct exit_handlerlist	*h;
 
-	cob_screen_terminate ();
-	cob_exit_fileio ();
 	if (exit_hdlrs != NULL) {
 		h = exit_hdlrs;
 		while (h != NULL) {
@@ -495,6 +493,8 @@ cob_stop_run (const int status)
 			h = h->next;
 		}
 	}
+	cob_screen_terminate ();
+	cob_exit_fileio ();
 	exit (status);
 }
 
@@ -542,22 +542,21 @@ cob_runtime_error (const char *fmt, ...)
 void
 cob_fatal_error (const enum cob_enum_error fatal_error)
 {
-	fputs ("ERROR - ", stderr);
 	switch (fatal_error) {
 	case COB_FERROR_INITIALIZED:
-		fputs ("cob_init() has not been called\n", stderr);
+		cob_runtime_error ("cob_init() has not been called");
 		break;
 	case COB_FERROR_CODEGEN:
-		fputs ("Codegen error - Please report this\n", stderr);
+		cob_runtime_error ("Codegen error - Please report this");
 		break;
 	case COB_FERROR_CHAINING:
-		fputs ("ERROR - Recursive call of chained program\n", stderr);
+		cob_runtime_error ("ERROR - Recursive call of chained program");
 		break;
 	case COB_FERROR_STACK:
-		fputs ("Stack overflow, possible PERFORM depth exceeded\n", stderr);
+		cob_runtime_error ("Stack overflow, possible PERFORM depth exceeded");
 		break;
 	default:
-		fputs ("Unknown failure\n", stderr);
+		cob_runtime_error ("Unknown failure");
 		break;
 	}
 	cob_stop_run (1);
@@ -566,7 +565,7 @@ cob_fatal_error (const enum cob_enum_error fatal_error)
 void
 cob_check_version (const char *prog, const char *packver, const int patchlev)
 {
-	if (strcmp (packver, PACKAGE_VERSION) || patchlev != PATCH_LEVEL) {
+	if (strcmp (packver, PACKAGE_VERSION) || patchlev > PATCH_LEVEL) {
 		cob_runtime_error ("Error - Version mismatch");
 		cob_runtime_error ("%s has version/patch level %s/%d", prog, packver,
 				   patchlev);

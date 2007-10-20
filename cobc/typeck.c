@@ -1241,6 +1241,18 @@ expr_reduce (int token)
 					VALUE (-3) = cb_error_node;
 				} else {
 					expr_lh = VALUE (-3);
+					if (CB_REFERENCE_P(expr_lh) || CB_FIELD_P(expr_lh)) {
+						if (cb_field(expr_lh)->level == 88) {
+							VALUE (-3) = cb_error_node;
+							return -1;
+						}
+					}
+					if (CB_REFERENCE_P(VALUE(-1)) || CB_FIELD_P(VALUE(-1))) {
+						if (cb_field(VALUE(-1))->level == 88) {
+							VALUE (-3) = cb_error_node;
+							return -1;
+						}
+					}
 					expr_op = op;
 					TOKEN (-3) = 'x';
 					if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN) {

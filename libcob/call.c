@@ -151,16 +151,7 @@ cob_strdup (const void *stptr)
 	void	*mptr;
 	size_t	len;
 
-	if (unlikely(!stptr)) {
-		cob_runtime_error ("cob_strdup called with NULL pointer");
-		cob_stop_run (1);
-	}
-	len = strlen (stptr);
-	if (unlikely(len < 1 || len > 2147483647)) {
-		cob_runtime_error ("cob_strdup called with invalid string");
-		cob_stop_run (1);
-	}
-	len++;
+	len = strlen (stptr) + 1;
 	mptr = cob_malloc (len);
 	memcpy (mptr, stptr, len);
 	return mptr;
@@ -191,6 +182,30 @@ cob_set_library_path (const char *path)
 	for (i = 1; i < resolve_size; i++) {
 		resolve_path[i] = strtok (NULL, PATHSEPS);
 	}
+}
+
+static void *
+cob_get_buff (size_t buffsize)
+{
+	static size_t	lastsize = 0;
+	static void	*buffer = NULL;
+
+	if (!buffer) {
+		if (buffsize <= COB_SMALL_BUFF) {
+			buffer = cob_malloc (COB_SMALL_BUFF);
+			lastsize = COB_SMALL_BUFF;
+		} else {
+			buffer = cob_malloc (buffsize);
+			lastsize = buffsize;
+		}
+	} else {
+		if (buffsize > lastsize) {
+			free (buffer);
+			buffer = cob_malloc (buffsize);
+			lastsize = buffsize;
+		}
+	}
+	return buffer;
 }
 
 #if	defined (_WIN32) || !defined (RTLD_DEFAULT)
@@ -256,9 +271,27 @@ lookup (const char *name)
 	return NULL;
 }
 
-/*
- * C interface
- */
+const char *
+cob_resolve_error (void)
+{
+	const char	*p = resolve_error;
+
+	resolve_error = NULL;
+	return p;
+}
+
+void
+cob_call_error (void)
+{
+	const char	*s;
+
+	s = cob_resolve_error ();
+	if (!s) {
+		s = "Unknown error";
+	}
+	cob_runtime_error ("%s", s);
+	cob_stop_run (1);
+}
 
 void
 cob_set_cancel (const char *name, void *entry, void *cancel)
@@ -276,30 +309,6 @@ cob_set_cancel (const char *name, void *entry, void *cancel)
 		}
 	}
 	insert (name, entry, cancel);
-}
-
-void *
-cob_resolve_1 (const char *name)
-{
-	void	*p;
-
-	p = cob_resolve (name);
-	if (unlikely(!p)) {
-		cob_call_error ();
-	}
-	return p;
-}
-
-void *
-cob_call_resolve_1 (const cob_field *f)
-{
-	void	*p;
-
-	p = cob_call_resolve (f);
-	if (unlikely(!p)) {
-		cob_call_error ();
-	}
-	return p;
 }
 
 void *
@@ -402,41 +411,16 @@ cob_resolve (const char *name)
 	return NULL;
 }
 
-const char *
-cob_resolve_error (void)
+void *
+cob_resolve_1 (const char *name)
 {
-	const char	*p = resolve_error;
+	void	*p;
 
-	resolve_error = NULL;
-	return p;
-}
-
-/*
- * COBOL interface
- */
-
-static void *
-cob_get_buff (size_t buffsize)
-{
-	static size_t	lastsize = 0;
-	static void	*buffer = NULL;
-
-	if (!buffer) {
-		if (buffsize <= COB_SMALL_BUFF) {
-			buffer = cob_malloc (COB_SMALL_BUFF);
-			lastsize = COB_SMALL_BUFF;
-		} else {
-			buffer = cob_malloc (buffsize);
-			lastsize = buffsize;
-		}
-	} else {
-		if (buffsize > lastsize) {
-			free (buffer);
-			buffer = cob_malloc (buffsize);
-			lastsize = buffsize;
-		}
+	p = cob_resolve (name);
+	if (unlikely(!p)) {
+		cob_call_error ();
 	}
-	return buffer;
+	return p;
 }
 
 void *
@@ -449,17 +433,16 @@ cob_call_resolve (const cob_field *f)
 	return cob_resolve (buff);
 }
 
-void
-cob_call_error (void)
+void *
+cob_call_resolve_1 (const cob_field *f)
 {
-	const char	*s;
+	void	*p;
 
-	s = cob_resolve_error ();
-	if (!s) {
-		s = "Unknown error";
+	p = cob_call_resolve (f);
+	if (unlikely(!p)) {
+		cob_call_error ();
 	}
-	cob_runtime_error ("%s", s);
-	cob_stop_run (1);
+	return p;
 }
 
 void

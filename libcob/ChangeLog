@@ -1,3 +1,13 @@
+2007-10-20  Roger While <simrw@sim-basis.de>
+
+	* call.c : Clean up
+
+2007-10-17  Roger While <simrw@sim-basis.de>
+
+	* common.c : User defined exit routines must be called before
+			the OC clean up routines.
+		     Fix missing call to user defined error routines.
+
 2007-10-10  Roger While <simrw@sim-basis.de>
 
 	* fileio.[ch] : Change delete to fdelete (C++)

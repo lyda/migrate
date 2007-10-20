@@ -62,10 +62,10 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libcob_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_libcob_la_OBJECTS = libcob_la-common.lo libcob_la-move.lo \
-	libcob_la-numeric.lo libcob_la-intrinsic.lo \
-	libcob_la-termio.lo libcob_la-fileio.lo libcob_la-screenio.lo \
-	libcob_la-strings.lo libcob_la-call.lo
+am_libcob_la_OBJECTS = libcob_la-common.lo libcob_la-call.lo \
+	libcob_la-strings.lo libcob_la-move.lo libcob_la-numeric.lo \
+	libcob_la-intrinsic.lo libcob_la-fileio.lo libcob_la-termio.lo \
+	libcob_la-screenio.lo
 libcob_la_OBJECTS = $(am_libcob_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -212,8 +212,8 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libcob.la
-libcob_la_SOURCES = common.c move.c numeric.c intrinsic.c \
-	termio.c fileio.c screenio.c strings.c call.c
+libcob_la_SOURCES = common.c call.c strings.c move.c numeric.c \
+	intrinsic.c fileio.c termio.c screenio.c
 
 AM_CFLAGS = -DSUPER_OPTIMIZE
 libcob_la_CFLAGS = $(AM_CFLAGS) $(LIBCOB_CFLAGS) -I$(top_srcdir)
@@ -332,6 +332,20 @@ libcob_la-common.lo: common.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-common.lo `test -f 'common.c' || echo '$(srcdir)/'`common.c
 
+libcob_la-call.lo: call.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -MT libcob_la-call.lo -MD -MP -MF "$(DEPDIR)/libcob_la-call.Tpo" -c -o libcob_la-call.lo `test -f 'call.c' || echo '$(srcdir)/'`call.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcob_la-call.Tpo" "$(DEPDIR)/libcob_la-call.Plo"; else rm -f "$(DEPDIR)/libcob_la-call.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='call.c' object='libcob_la-call.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-call.lo `test -f 'call.c' || echo '$(srcdir)/'`call.c
+
+libcob_la-strings.lo: strings.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -MT libcob_la-strings.lo -MD -MP -MF "$(DEPDIR)/libcob_la-strings.Tpo" -c -o libcob_la-strings.lo `test -f 'strings.c' || echo '$(srcdir)/'`strings.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcob_la-strings.Tpo" "$(DEPDIR)/libcob_la-strings.Plo"; else rm -f "$(DEPDIR)/libcob_la-strings.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strings.c' object='libcob_la-strings.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-strings.lo `test -f 'strings.c' || echo '$(srcdir)/'`strings.c
+
 libcob_la-move.lo: move.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -MT libcob_la-move.lo -MD -MP -MF "$(DEPDIR)/libcob_la-move.Tpo" -c -o libcob_la-move.lo `test -f 'move.c' || echo '$(srcdir)/'`move.c; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcob_la-move.Tpo" "$(DEPDIR)/libcob_la-move.Plo"; else rm -f "$(DEPDIR)/libcob_la-move.Tpo"; exit 1; fi
@@ -353,13 +367,6 @@ libcob_la-intrinsic.lo: intrinsic.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-intrinsic.lo `test -f 'intrinsic.c' || echo '$(srcdir)/'`intrinsic.c
 
-libcob_la-termio.lo: termio.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -MT libcob_la-termio.lo -MD -MP -MF "$(DEPDIR)/libcob_la-termio.Tpo" -c -o libcob_la-termio.lo `test -f 'termio.c' || echo '$(srcdir)/'`termio.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcob_la-termio.Tpo" "$(DEPDIR)/libcob_la-termio.Plo"; else rm -f "$(DEPDIR)/libcob_la-termio.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='termio.c' object='libcob_la-termio.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-termio.lo `test -f 'termio.c' || echo '$(srcdir)/'`termio.c
-
 libcob_la-fileio.lo: fileio.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -MT libcob_la-fileio.lo -MD -MP -MF "$(DEPDIR)/libcob_la-fileio.Tpo" -c -o libcob_la-fileio.lo `test -f 'fileio.c' || echo '$(srcdir)/'`fileio.c; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcob_la-fileio.Tpo" "$(DEPDIR)/libcob_la-fileio.Plo"; else rm -f "$(DEPDIR)/libcob_la-fileio.Tpo"; exit 1; fi
@@ -367,26 +374,19 @@ libcob_la-fileio.lo: fileio.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-fileio.lo `test -f 'fileio.c' || echo '$(srcdir)/'`fileio.c
 
+libcob_la-termio.lo: termio.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -MT libcob_la-termio.lo -MD -MP -MF "$(DEPDIR)/libcob_la-termio.Tpo" -c -o libcob_la-termio.lo `test -f 'termio.c' || echo '$(srcdir)/'`termio.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcob_la-termio.Tpo" "$(DEPDIR)/libcob_la-termio.Plo"; else rm -f "$(DEPDIR)/libcob_la-termio.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='termio.c' object='libcob_la-termio.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-termio.lo `test -f 'termio.c' || echo '$(srcdir)/'`termio.c
+
 libcob_la-screenio.lo: screenio.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -MT libcob_la-screenio.lo -MD -MP -MF "$(DEPDIR)/libcob_la-screenio.Tpo" -c -o libcob_la-screenio.lo `test -f 'screenio.c' || echo '$(srcdir)/'`screenio.c; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcob_la-screenio.Tpo" "$(DEPDIR)/libcob_la-screenio.Plo"; else rm -f "$(DEPDIR)/libcob_la-screenio.Tpo"; exit 1; fi
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='screenio.c' object='libcob_la-screenio.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-screenio.lo `test -f 'screenio.c' || echo '$(srcdir)/'`screenio.c
-
-libcob_la-strings.lo: strings.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -MT libcob_la-strings.lo -MD -MP -MF "$(DEPDIR)/libcob_la-strings.Tpo" -c -o libcob_la-strings.lo `test -f 'strings.c' || echo '$(srcdir)/'`strings.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcob_la-strings.Tpo" "$(DEPDIR)/libcob_la-strings.Plo"; else rm -f "$(DEPDIR)/libcob_la-strings.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strings.c' object='libcob_la-strings.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-strings.lo `test -f 'strings.c' || echo '$(srcdir)/'`strings.c
-
-libcob_la-call.lo: call.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -MT libcob_la-call.lo -MD -MP -MF "$(DEPDIR)/libcob_la-call.Tpo" -c -o libcob_la-call.lo `test -f 'call.c' || echo '$(srcdir)/'`call.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libcob_la-call.Tpo" "$(DEPDIR)/libcob_la-call.Plo"; else rm -f "$(DEPDIR)/libcob_la-call.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='call.c' object='libcob_la-call.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcob_la_CFLAGS) $(CFLAGS) -c -o libcob_la-call.lo `test -f 'call.c' || echo '$(srcdir)/'`call.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

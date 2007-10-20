@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libcob.la
-libcob_la_SOURCES = common.c move.c numeric.c intrinsic.c \
-	termio.c fileio.c screenio.c strings.c call.c
+libcob_la_SOURCES = common.c call.c strings.c move.c numeric.c \
+	intrinsic.c fileio.c termio.c screenio.c
 
 AM_CFLAGS = -DSUPER_OPTIMIZE
 libcob_la_CFLAGS = $(AM_CFLAGS) $(LIBCOB_CFLAGS) -I$(top_srcdir)

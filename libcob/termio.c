@@ -75,7 +75,6 @@ static void
 pretty_display_numeric (cob_field *f, FILE *fp)
 {
 	unsigned char	*p;
-	unsigned char	*s;
 	int		i;
 	int		digits;
 	int		scale;
