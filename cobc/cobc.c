@@ -1475,7 +1475,8 @@ main (int argc, char *argv[])
 		cb_display_sign = COB_DISPLAY_SIGN_EBCDIC;
 	}
 	if (cb_notrunc) {
-		cb_binary_truncate = 1;
+		cb_binary_truncate = 0;
+		cb_pretty_display = 0;
 	}
 
 	while (i < argc) {

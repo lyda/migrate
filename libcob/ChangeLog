@@ -1,6 +1,11 @@
+2007-10-22  Roger While <simrw@sim-basis.de>
+
+	* numeric.c : Fix 36 digit numerics
+
 2007-10-20  Roger While <simrw@sim-basis.de>
 
 	* call.c : Clean up
+	* codegen.h : Fix up signed/unsigned comparison
 
 2007-10-17  Roger While <simrw@sim-basis.de>
 

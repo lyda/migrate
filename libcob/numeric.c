@@ -862,7 +862,7 @@ cob_decimal_div (cob_decimal *d1, cob_decimal *d2)
 	}
 
 	d1->scale -= d2->scale;
-	shift_decimal (d1, 19 + ((d1->scale < 0) ? -d1->scale : 0));
+	shift_decimal (d1, 37 + ((d1->scale < 0) ? -d1->scale : 0));
 	mpz_tdiv_q (d1->value, d1->value, d2->value);
 }
 
