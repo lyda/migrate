@@ -1589,9 +1589,15 @@ cb_build_funcall (const char *name, int argc, cb_tree a1, cb_tree a2, cb_tree a3
 cb_tree
 cb_build_cast (enum cb_cast_type type, cb_tree val)
 {
-	enum cb_category category = (type == CB_CAST_INTEGER) ? CB_CATEGORY_NUMERIC : CB_CATEGORY_UNKNOWN;
-	struct cb_cast *p = make_tree (CB_TAG_CAST, category, sizeof (struct cb_cast));
+	struct cb_cast		*p;
+	enum cb_category	category;
 
+	if (type == CB_CAST_INTEGER) {
+		category = CB_CATEGORY_NUMERIC;
+	} else {
+		category = CB_CATEGORY_UNKNOWN;
+	}
+	p = make_tree (CB_TAG_CAST, category, sizeof (struct cb_cast));
 	p->type = type;
 	p->val = val;
 	return CB_TREE (p);

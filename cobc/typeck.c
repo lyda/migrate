@@ -308,7 +308,7 @@ static const char	* const align_bin_sub_funcs[] = {
 };
 
 static void cb_expr_shift_class (const char *name);
-static void cb_expr_shift_sign (int op);
+static void cb_expr_shift_sign (const int op);
 
 #define START_STACK_SIZE	16
 #define TOKEN(offset)	(expr_stack[expr_index + offset].token)
@@ -450,7 +450,7 @@ cb_build_registers (void)
 	long	contz;
 #endif
 	time_t	t;
-	char	buff[24];
+	char	buff[48];
 
 	/* RETURN-CODE */
 	current_program->cb_return_code = cb_build_index (cb_build_reference ("RETURN-CODE"));
@@ -509,13 +509,13 @@ cb_build_registers (void)
 
 	/* FUNCTION PI */
 	memset (buff, 0, sizeof (buff));
-	strcpy (buff, "314159265358979323");
-	cb_intr_pi = cb_build_numeric_literal (0, (ucharptr)buff, 17);
+	strcpy (buff, "31415926535897932384626433832795029");
+	cb_intr_pi = cb_build_numeric_literal (0, (ucharptr)buff, 35);
 
 	/* FUNCTION E */
 	memset (buff, 0, sizeof (buff));
-	strcpy (buff, "271828182845904523");
-	cb_intr_e = cb_build_numeric_literal (0, (ucharptr)buff, 17);
+	strcpy (buff, "27182818284590452360287471352662497");
+	cb_intr_e = cb_build_numeric_literal (0, (ucharptr)buff, 35);
 }
 
 char *
@@ -1187,8 +1187,10 @@ expr_reduce (int token)
 				return -1;
 			}
 			/* 'x' '=' 'x' '|' '!' 'x' */
-			if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN) {
-				VALUE (-1) = cb_build_binary_op (expr_lh, expr_op, VALUE (-1));
+			if (expr_lh) {
+				if (CB_TREE_CLASS (VALUE (-1)) != CB_CLASS_BOOLEAN) {
+					VALUE (-1) = cb_build_binary_op (expr_lh, expr_op, VALUE (-1));
+				}
 			}
 			TOKEN (-2) = 'x';
 			VALUE (-2) = cb_build_negation (VALUE (-1));
@@ -1848,9 +1850,18 @@ static cb_tree
 cb_build_optim_cond (struct cb_binary_op *p)
 {
 	struct cb_field	*f;
-	size_t		n;
+	struct cb_field	*fy;
 	const char	*s;
+	size_t		n;
 
+	if (CB_REFERENCE_P (p->y) || CB_FIELD_P (p->y)) {
+		fy = cb_field (p->y);
+		if (!fy->pic->have_sign && (fy->usage == CB_USAGE_BINARY ||
+		    fy->usage == CB_USAGE_COMP_5 ||
+		    fy->usage == CB_USAGE_COMP_X)) {
+			return cb_build_funcall_2 ("cob_cmp_uint", p->x, cb_build_cast_integer (p->y));
+		}
+	}
 	if (CB_REFERENCE_P (p->x) || CB_FIELD_P (p->x)) {
 		f = cb_field (p->x);
 		if (!f->pic->scale && f->usage == CB_USAGE_PACKED) {
@@ -1894,6 +1905,8 @@ cb_build_optim_cond (struct cb_binary_op *p)
 		}
 		if (!f->pic->scale && (f->usage == CB_USAGE_BINARY ||
 		    f->usage == CB_USAGE_COMP_5 ||
+/* RXW */
+		    f->usage == CB_USAGE_INDEX ||
 		    f->usage == CB_USAGE_COMP_X)) {
 			n = (f->size - 1) + (8 * (f->pic->have_sign ? 1 : 0)) +
 				(16 * (f->flag_binary_swap ? 1 : 0));
@@ -1906,7 +1919,8 @@ cb_build_optim_cond (struct cb_binary_op *p)
 #endif
 			case 4:
 			case 8:
-				if (f->indexes == 0 && (f->offset % f->size) == 0) {
+				if (f->storage != CB_STORAGE_LINKAGE &&
+				    f->indexes == 0 && (f->offset % f->size) == 0) {
 					s = align_bin_compare_funcs[n];
 				} else {
 					s = bin_compare_funcs[n];
@@ -1917,17 +1931,6 @@ cb_build_optim_cond (struct cb_binary_op *p)
 				break;
 			}
 #else
-			if (f->usage == CB_USAGE_COMP_5) {
-				switch (f->size) {
-/* RXW
-				case 1:
-				case 2:
-*/
-				case 4:
-				case 8:
-					return cb_build_binary_op (p->x, '-', p->y);
-				}
-			}
 			s = bin_compare_funcs[n];
 #endif
 			if (s) {
@@ -2049,6 +2052,9 @@ cb_build_cond (cb_tree x)
 		case '|':
 			return cb_build_binary_op (cb_build_cond (p->x), p->op, cb_build_cond (p->y));
 		default:
+/* RXW
+			if ( CB_TREE_CLASS (p->x) == CB_CLASS_POINTER
+*/
 			if (CB_INDEX_P (p->x) || CB_INDEX_P (p->y)
 			    || CB_TREE_CLASS (p->x) == CB_CLASS_POINTER
 			    || CB_TREE_CLASS (p->y) == CB_CLASS_POINTER) {
@@ -2151,7 +2157,8 @@ cb_build_optim_add (cb_tree v, cb_tree n)
 #endif
 			case 4:
 			case 8:
-				if (f->indexes == 0 && (f->offset % f->size) == 0) {
+				if (f->storage != CB_STORAGE_LINKAGE &&
+				    f->indexes == 0 && (f->offset % f->size) == 0) {
 					s = align_bin_add_funcs[z];
 				} else {
 					s = bin_add_funcs[z];
@@ -2211,7 +2218,8 @@ cb_build_optim_sub (cb_tree v, cb_tree n)
 #endif
 			case 4:
 			case 8:
-				if (f->indexes == 0 && (f->offset % f->size) == 0) {
+				if (f->storage != CB_STORAGE_LINKAGE &&
+				    f->indexes == 0 && (f->offset % f->size) == 0) {
 					s = align_bin_sub_funcs[z];
 				} else {
 					s = bin_sub_funcs[z];
@@ -3412,7 +3420,7 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 				}
 			}
 			if (i != l->size) {
-				most_significant = l->size - l->scale - i - 1;
+				most_significant = (int) (l->size - l->scale - i - 1);
 			}
 
 			/* compute the least significant figure place */
@@ -3422,7 +3430,7 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 				}
 			}
 			if (i != l->size) {
-				least_significant = -l->scale + i;
+				least_significant = (int) (-l->scale + i);
 			}
 
 			/* value check */
@@ -3726,14 +3734,16 @@ cb_build_move_num_zero (cb_tree x)
 			return cb_build_assign (x, cb_int0);
 		case 2:
 #ifdef	COB_SHORT_BORK
-			if (f->indexes == 0 && (f->offset % 4 == 0)) {
+			if (f->storage != CB_STORAGE_LINKAGE && f->indexes == 0 &&
+			   (f->offset % 4 == 0)) {
 				return cb_build_assign (x, cb_int0);
 			}
 			break;
 #endif
 		case 4:
 		case 8:
-			if (f->indexes == 0 && (f->offset % f->size == 0)) {
+			if (f->storage != CB_STORAGE_LINKAGE && f->indexes == 0 &&
+			   (f->offset % f->size == 0)) {
 				return cb_build_assign (x, cb_int0);
 			}
 			break;
@@ -3986,9 +3996,9 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 		    && f->usage == CB_USAGE_DISPLAY
 		    && f->pic->scale == l->scale && !f->flag_sign_leading && !f->flag_sign_separate)
 		   || ((cat == CB_CATEGORY_ALPHABETIC || cat == CB_CATEGORY_ALPHANUMERIC)
-		       && f->size < l->size + 16 && !cb_field_variable_size (f))) {
+		       && f->size < (int) (l->size + 16) && !cb_field_variable_size (f))) {
 		buff = cobc_malloc (f->size);
-		diff = f->size - l->size;
+		diff = (int) (f->size - l->size);
 		if (cat == CB_CATEGORY_NUMERIC) {
 			if (diff <= 0) {
 				memcpy (buff, l->data - diff, (size_t)f->size);
@@ -4071,7 +4081,8 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 		switch (f->size) {
 		case 2:
 #ifdef	COB_SHORT_BORK
-			if (f->indexes == 0 && (f->offset % 4 == 0)) {
+			if (f->storage != CB_STORAGE_LINKAGE && f->indexes == 0 &&
+			   (f->offset % 4 == 0)) {
 				return cb_build_assign (dst, cb_int (val));
 			}
 			break;
@@ -4079,7 +4090,8 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 		case 4:
 		case 8:
 #ifdef	COB_NON_ALIGNED
-			if (f->indexes == 0 && (f->offset % f->size == 0)) {
+			if (f->storage != CB_STORAGE_LINKAGE && f->indexes == 0 &&
+			   (f->offset % f->size == 0)) {
 				return cb_build_assign (dst, cb_int (val));
 			}
 			break;

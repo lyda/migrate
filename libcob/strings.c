@@ -70,6 +70,9 @@ static int			unstring_offset;
 static int			unstring_count;
 static int			unstring_ndlms;
 
+static cob_field_attr		alpha_attr = { COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL };
+static cob_field		alpha_fld = { 0, NULL, &alpha_attr };
+
 static COB_INLINE int
 cob_min_int (const int x, const int y)
 {
@@ -79,18 +82,60 @@ cob_min_int (const int x, const int y)
 	return y;
 }
 
+static void COB_NOINLINE
+alloc_figurative (const size_t fldsize, const int memval)
+{
+	static unsigned char	*figptr = NULL;
+	static size_t		figsize = 0;
+
+	if (fldsize > figsize) {
+		if (figptr) {
+			free (figptr);
+		}
+		figptr = cob_malloc (fldsize);
+		figsize = fldsize;
+	}
+	memset (figptr, memval, fldsize);
+	alpha_fld.size = fldsize;
+	alpha_fld.data = figptr;
+}
+
 static void
 inspect_common (cob_field *f1, cob_field *f2, const int type)
 {
-	size_t	n = 0;
-	size_t	j;
-	int	i;
-	int	len = (int)(inspect_end - inspect_start);
-	int	*mark = &inspect_mark[inspect_start - inspect_data];
+	size_t		n = 0;
+	size_t		j;
+	int		i;
+	int		len = (int)(inspect_end - inspect_start);
+	int		*mark = &inspect_mark[inspect_start - inspect_data];
 
-	if (inspect_replacing && f1->size != f2->size) {
-		cob_set_exception (COB_EC_RANGE_INSPECT_SIZE);
-		return;
+	if (unlikely(!f1)) {
+		f1 = &cob_low;
+	}
+	if (unlikely(!f2)) {
+		f2 = &cob_low;
+	}
+
+	if (unlikely(inspect_replacing && f1->size != f2->size)) {
+		if (f1 == &cob_low) {
+			alloc_figurative (f2->size, 0);
+			f1 = &alpha_fld;
+		} else if (f1 == &cob_space) {
+			alloc_figurative (f2->size, ' ');
+			f1 = &alpha_fld;
+		} else if (f1 == &cob_zero) {
+			alloc_figurative (f2->size, '0');
+			f1 = &alpha_fld;
+		} else if (f1 == &cob_quote) {
+			alloc_figurative (f2->size, '"');
+			f1 = &alpha_fld;
+		} else if (f1 == &cob_high) {
+			alloc_figurative (f2->size, 255);
+			f1 = &alpha_fld;
+		} else {
+			cob_set_exception (COB_EC_RANGE_INSPECT_SIZE);
+			return;
+		}
 	}
 
 	if (type == INSPECT_TRAILING) {

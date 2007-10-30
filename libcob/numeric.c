@@ -1150,6 +1150,15 @@ cob_cmp_int (cob_field *f1, const int n)
 }
 
 int
+cob_cmp_uint (cob_field *f1, const unsigned int n)
+{
+	cob_decimal_set_field (&cob_d1, f1);
+	mpz_set_ui (cob_d2.value, n);
+	cob_d2.scale = 0;
+	return cob_decimal_cmp (&cob_d1, &cob_d2);
+}
+
+int
 cob_numeric_cmp (cob_field *f1, cob_field *f2)
 {
 	cob_decimal_set_field (&cob_d1, f1);

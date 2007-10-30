@@ -1,6 +1,22 @@
+2007-10-30  Roger While <simrw@sim-basis.de>
+
+	* cobc.c, codegen.c : Fix size_t <-> int casts
+	* typeck.c, codegen.c : Fix binary alignment on non-tolerant machines
+	* typeck.c : Fix abort with invalid condition syntax
+
+2007-10-24  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Fix unsigned comparison
+
+2007-10-23  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Check HAVE_ATTRIBUTE_ALIGNED
+	* typeck.c : Fix C-5 comparison
+
 2007-10-22  Roger While <simrw@sim-basis.de>
 
 	* cobc.c : Fix -fnotrunc
+	* typeck.c : Enumerate PI and E to 35 digits
 
 2007-10-18  Roger While <simrw@sim-basis.de>
 

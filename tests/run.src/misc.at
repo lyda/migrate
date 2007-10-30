@@ -560,7 +560,7 @@ AT_CHECK([./prog], [0], [   1])
 
 AT_CLEANUP
 
-AT_SETUP([INSPECT: no repeat conversion check])
+AT_SETUP([INSPECT: No repeat conversion check])
 
 AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
@@ -576,6 +576,26 @@ AT_DATA([prog.cob], [
 
 AT_CHECK([${COMPILE} prog.cob])
 AT_CHECK([./prog], [0], [CDB])
+
+AT_CLEANUP
+
+
+AT_SETUP([INSPECT: REPLACING figurative constant])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X(3) VALUE "BCA".
+       PROCEDURE        DIVISION.
+           INSPECT X REPLACING ALL "BC" BY SPACE.
+           DISPLAY X NO ADVANCING.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0], [  A])
 
 AT_CLEANUP
 

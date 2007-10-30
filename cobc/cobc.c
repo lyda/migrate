@@ -845,7 +845,7 @@ process (const char *cmd)
 		}
 		return system (cmd);
 	}
-	clen = strlen (cmd) + 32;
+	clen = (int) strlen (cmd) + 32;
 	if (clen > COB_MEDIUM_BUFF) {
 		buffptr = cobc_malloc (clen);
 	} else {
@@ -1201,7 +1201,7 @@ process_library (struct filename *l)
 
 	bufflen = 0;
 	for (f = l; f; f = f->next) {
-		bufflen += strlen (f->object) + 2;
+		bufflen += (int) strlen (f->object) + 2;
 	}
 	if (bufflen >= COB_MEDIUM_BUFF) {
 		objsptr = cobc_malloc (bufflen);
@@ -1229,10 +1229,10 @@ process_library (struct filename *l)
 #endif
 	}
 
-	bufflen = strlen (cob_cc) + strlen (cob_ldflags)
+	bufflen = (int) (strlen (cob_cc) + strlen (cob_ldflags)
 			+ strlen (COB_EXPORT_DYN) + strlen (COB_SHARED_OPT)
 			+ strlen (name) + strlen (objsptr) + strlen (cob_libs)
-			+ strlen (COB_PIC_FLAGS) + 16;
+			+ strlen (COB_PIC_FLAGS) + 16);
 	if (bufflen >= COB_MEDIUM_BUFF) {
 		buffptr = cobc_malloc (bufflen);
 	} else {
@@ -1281,7 +1281,7 @@ process_link (struct filename *l)
 
 	bufflen = 0;
 	for (f = l; f; f = f->next) {
-		bufflen += strlen (f->object) + 2;
+		bufflen += (int) strlen (f->object) + 2;
 	}
 	if (bufflen >= COB_MEDIUM_BUFF) {
 		objsptr = cobc_malloc (bufflen);
@@ -1299,9 +1299,9 @@ process_link (struct filename *l)
 		file_basename (l->source, name);
 	}
 
-	bufflen = strlen (cob_cc) + strlen (cob_ldflags) + strlen (COB_EXPORT_DYN)
+	bufflen = (int) (strlen (cob_cc) + strlen (cob_ldflags) + strlen (COB_EXPORT_DYN)
 			+ strlen (name) + strlen (objsptr) + strlen (cob_libs)
-			+ 16;
+			+ 16);
 	if (bufflen >= COB_MEDIUM_BUFF) {
 		buffptr = cobc_malloc (bufflen);
 	} else {

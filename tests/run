@@ -303,7 +303,7 @@ at_times_file=$at_suite_dir/at-times
 # List of the tested programs.
 at_tested='cobc'
 # List of the all the test groups.
-at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144 145 146 147 148 149 150 151 152 153 154 155 156 157'
+at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144 145 146 147 148 149 150 151 152 153 154 155 156 157 158'
 # As many dots as there are digits in the last test group number.
 # Used to normalize the test group numbers so that `ls' lists them in
 # numerical order.
@@ -358,114 +358,115 @@ at_help_all='1;fundamental.at:23;DISPLAY literals;;
 47;misc.at:446;CALL m1. CALL m2. CALL m1.;;
 48;misc.at:492;CALL binary literal parameter/LENGTH OF;;
 49;misc.at:544;INSPECT REPLACING LEADING ZEROS BY SPACES;;
-50;misc.at:563;INSPECT: no repeat conversion check;;
-51;misc.at:583;INSPECT: TALLYING BEFORE;;
-52;misc.at:611;INSPECT: TALLYING AFTER;;
-53;misc.at:638;INSPECT REPLACING TRAILING ZEROS BY SPACES;;
-54;misc.at:657;INSPECT REPLACING complex;;
-55;misc.at:678;SWITCHES;;
-56;misc.at:728;Nested PERFORM;;
-57;misc.at:752;EXIT PERFORM;;
-58;misc.at:774;EXIT PERFORM CYCLE;;
-59;misc.at:794;88 with FILLER;;
-60;misc.at:819;Non-overflow after overflow;;
-61;misc.at:843;PERFORM ... CONTINUE;;
-62;misc.at:859;STRING with subscript reference;;
-63;misc.at:880;UNSTRING DELIMITED ALL LOW-VALUE;;
-64;misc.at:910;READ INTO AT-END sequence;;
-65;misc.at:943;First READ on empty SEQUENTIAL INDEXED file;;
-66;misc.at:977;REWRITE a RELATIVE file with RANDOM access;;
-67;misc.at:1023;SORT: table sort;;
-68;misc.at:1056;SORT: EBCDIC table sort;;
-69;misc.at:1096;SORT nonexistent file;;
-70;misc.at:1130;PIC ZZZ-, ZZZ+;;
-71;misc.at:1162;Larger REDEFINES lengths;;
-72;misc.at:1197;PERFORM type OSVS;;
-73;misc.at:1237;Sticky LINKAGE;;
-74;misc.at:1284;COB_PRE_LOAD test;;
-75;misc.at:1306;88 level with FALSE IS clause;;
-76;misc.at:1330;ALLOCATE/FREE with BASED item;;
-77;misc.at:1353;CALL with OMITTED parameter;;
-78;extensions.at:24;COMP-5;;
-79;extensions.at:69;Hexadecimal numeric literal;;
-80;extensions.at:95;Semi-parenthesized condition;;
-81;extensions.at:115;ADDRESS OF;;
-82;extensions.at:170;LENGTH OF;;
-83;extensions.at:201;WHEN-COMPILED;;
-84;extensions.at:223;Complex OCCURS DEPENDING ON;;
-85;extensions.at:250;MOVE NON-INTEGER TO ALPHA-NUMERIC;;
-86;extensions.at:333;CALL USING file-name;;
-87;extensions.at:374;CALL unusual program-id.;;
-88;extensions.at:428;ASSIGN MF;;
-89;extensions.at:458;ASSIGN IBM;;
-90;extensions.at:488;ASSIGN mapping;;
-91;extensions.at:524;ASSIGN expansion;;
-92;extensions.at:554;ASSIGN with COB_FILE_PATH;;
-93;extensions.at:587;NUMBER-OF-CALL-PARAMETERS;;
-94;extensions.at:637;PROCEDURE DIVISION USING BY ...;;
-95;extensions.at:682;PROCEDURE DIVISION CHAINING ...;;
-96;extensions.at:708;STOP RUN RETURNING;;
-97;extensions.at:725;ENTRY;;
-98;extensions.at:768;LINE SEQUENTIAL write;;
-99;extensions.at:804;LINE SEQUENTIAL read;;
-100;extensions.at:852;ASSIGN to KEYBOARD/DISPLAY;;
-101;extensions.at:907;Environment/Argument variable;;
-102;return-code.at:23;RETURN-CODE moving;;
-103;return-code.at:46;RETURN-CODE passing;;
-104;functions.at:22;FUNCTION ABS;;
-105;functions.at:42;FUNCTION ACOS;;
-106;functions.at:69;FUNCTION ANNUITY;;
-107;functions.at:97;FUNCTION ASIN;;
-108;functions.at:124;FUNCTION ATAN;;
-109;functions.at:151;FUNCTION CHAR;;
-110;functions.at:171;FUNCTION COS;;
-111;functions.at:198;FUNCTION DATE-OF-INTEGER;;
-112;functions.at:217;FUNCTION DATE-TO-YYYYMMDD;;
-113;functions.at:236;FUNCTION DAY-OF-INTEGER;;
-114;functions.at:255;FUNCTION DAY-TO-YYYYDDD;;
-115;functions.at:274;FUNCTION EXCEPTION-FILE;;
-116;functions.at:303;FUNCTION EXCEPTION-LOCATION;;
-117;functions.at:336;FUNCTION EXCEPTION-STATEMENT;;
-118;functions.at:365;FUNCTION EXCEPTION-STATUS;;
-119;functions.at:394;FUNCTION EXP;;
-120;functions.at:420;FUNCTION FACTORIAL;;
-121;functions.at:439;FUNCTION FRACTION-PART;;
-122;functions.at:460;FUNCTION INTEGER;;
-123;functions.at:480;FUNCTION INTEGER-OF-DATE;;
-124;functions.at:499;FUNCTION INTEGER-OF-DAY;;
-125;functions.at:518;FUNCTION INTEGER-PART;;
-126;functions.at:538;FUNCTION LENGTH;;
-127;functions.at:558;FUNCTION LOCALE-DATE;;
-128;functions.at:581;FUNCTION LOCALE-TIME;;
-129;functions.at:604;FUNCTION LOG;;
-130;functions.at:631;FUNCTION LOG10;;
-131;functions.at:658;FUNCTION LOWER-CASE;;
-132;functions.at:678;FUNCTION MAX;;
-133;functions.at:697;FUNCTION MEAN;;
-134;functions.at:716;FUNCTION MEDIAN;;
-135;functions.at:735;FUNCTION MIDRANGE;;
-136;functions.at:754;FUNCTION MIN;;
-137;functions.at:773;FUNCTION MOD;;
-138;functions.at:792;FUNCTION NUMVAL;;
-139;functions.at:812;FUNCTION NUMVAL-C;;
-140;functions.at:832;FUNCTION ORD;;
-141;functions.at:851;FUNCTION ORD-MAX;;
-142;functions.at:870;FUNCTION ORD-MIN;;
-143;functions.at:889;FUNCTION PRESENT-VALUE;;
-144;functions.at:908;FUNCTION RANGE;;
-145;functions.at:927;FUNCTION REM;;
-146;functions.at:946;FUNCTION REVERSE;;
-147;functions.at:966;FUNCTION SECONDS-FROM-FORMATTED-TIME;;
-148;functions.at:993;FUNCTION SECONDS-PAST-MIDNIGHT;;
-149;functions.at:1018;FUNCTION SIGN;;
-150;functions.at:1043;FUNCTION SIN;;
-151;functions.at:1070;FUNCTION SQRT;;
-152;functions.at:1097;FUNCTION STANDARD-DEVIATION;;
-153;functions.at:1123;FUNCTION STORED-CHAR-LENGTH;;
-154;functions.at:1144;FUNCTION TAN;;
-155;functions.at:1171;FUNCTION TRIM;;
-156;functions.at:1193;FUNCTION UPPER-CASE;;
-157;functions.at:1213;FUNCTION VARIANCE;;
+50;misc.at:563;INSPECT: No repeat conversion check;;
+51;misc.at:583;INSPECT: REPLACING figurative constant;;
+52;misc.at:603;INSPECT: TALLYING BEFORE;;
+53;misc.at:631;INSPECT: TALLYING AFTER;;
+54;misc.at:658;INSPECT REPLACING TRAILING ZEROS BY SPACES;;
+55;misc.at:677;INSPECT REPLACING complex;;
+56;misc.at:698;SWITCHES;;
+57;misc.at:748;Nested PERFORM;;
+58;misc.at:772;EXIT PERFORM;;
+59;misc.at:794;EXIT PERFORM CYCLE;;
+60;misc.at:814;88 with FILLER;;
+61;misc.at:839;Non-overflow after overflow;;
+62;misc.at:863;PERFORM ... CONTINUE;;
+63;misc.at:879;STRING with subscript reference;;
+64;misc.at:900;UNSTRING DELIMITED ALL LOW-VALUE;;
+65;misc.at:930;READ INTO AT-END sequence;;
+66;misc.at:963;First READ on empty SEQUENTIAL INDEXED file;;
+67;misc.at:997;REWRITE a RELATIVE file with RANDOM access;;
+68;misc.at:1043;SORT: table sort;;
+69;misc.at:1076;SORT: EBCDIC table sort;;
+70;misc.at:1116;SORT nonexistent file;;
+71;misc.at:1150;PIC ZZZ-, ZZZ+;;
+72;misc.at:1182;Larger REDEFINES lengths;;
+73;misc.at:1217;PERFORM type OSVS;;
+74;misc.at:1257;Sticky LINKAGE;;
+75;misc.at:1304;COB_PRE_LOAD test;;
+76;misc.at:1326;88 level with FALSE IS clause;;
+77;misc.at:1350;ALLOCATE/FREE with BASED item;;
+78;misc.at:1373;CALL with OMITTED parameter;;
+79;extensions.at:24;COMP-5;;
+80;extensions.at:69;Hexadecimal numeric literal;;
+81;extensions.at:95;Semi-parenthesized condition;;
+82;extensions.at:115;ADDRESS OF;;
+83;extensions.at:170;LENGTH OF;;
+84;extensions.at:201;WHEN-COMPILED;;
+85;extensions.at:223;Complex OCCURS DEPENDING ON;;
+86;extensions.at:250;MOVE NON-INTEGER TO ALPHA-NUMERIC;;
+87;extensions.at:333;CALL USING file-name;;
+88;extensions.at:374;CALL unusual program-id.;;
+89;extensions.at:428;ASSIGN MF;;
+90;extensions.at:458;ASSIGN IBM;;
+91;extensions.at:488;ASSIGN mapping;;
+92;extensions.at:524;ASSIGN expansion;;
+93;extensions.at:554;ASSIGN with COB_FILE_PATH;;
+94;extensions.at:587;NUMBER-OF-CALL-PARAMETERS;;
+95;extensions.at:637;PROCEDURE DIVISION USING BY ...;;
+96;extensions.at:682;PROCEDURE DIVISION CHAINING ...;;
+97;extensions.at:708;STOP RUN RETURNING;;
+98;extensions.at:725;ENTRY;;
+99;extensions.at:768;LINE SEQUENTIAL write;;
+100;extensions.at:804;LINE SEQUENTIAL read;;
+101;extensions.at:852;ASSIGN to KEYBOARD/DISPLAY;;
+102;extensions.at:907;Environment/Argument variable;;
+103;return-code.at:23;RETURN-CODE moving;;
+104;return-code.at:46;RETURN-CODE passing;;
+105;functions.at:22;FUNCTION ABS;;
+106;functions.at:42;FUNCTION ACOS;;
+107;functions.at:69;FUNCTION ANNUITY;;
+108;functions.at:97;FUNCTION ASIN;;
+109;functions.at:124;FUNCTION ATAN;;
+110;functions.at:151;FUNCTION CHAR;;
+111;functions.at:171;FUNCTION COS;;
+112;functions.at:198;FUNCTION DATE-OF-INTEGER;;
+113;functions.at:217;FUNCTION DATE-TO-YYYYMMDD;;
+114;functions.at:236;FUNCTION DAY-OF-INTEGER;;
+115;functions.at:255;FUNCTION DAY-TO-YYYYDDD;;
+116;functions.at:274;FUNCTION EXCEPTION-FILE;;
+117;functions.at:303;FUNCTION EXCEPTION-LOCATION;;
+118;functions.at:336;FUNCTION EXCEPTION-STATEMENT;;
+119;functions.at:365;FUNCTION EXCEPTION-STATUS;;
+120;functions.at:394;FUNCTION EXP;;
+121;functions.at:420;FUNCTION FACTORIAL;;
+122;functions.at:439;FUNCTION FRACTION-PART;;
+123;functions.at:460;FUNCTION INTEGER;;
+124;functions.at:480;FUNCTION INTEGER-OF-DATE;;
+125;functions.at:499;FUNCTION INTEGER-OF-DAY;;
+126;functions.at:518;FUNCTION INTEGER-PART;;
+127;functions.at:538;FUNCTION LENGTH;;
+128;functions.at:558;FUNCTION LOCALE-DATE;;
+129;functions.at:581;FUNCTION LOCALE-TIME;;
+130;functions.at:604;FUNCTION LOG;;
+131;functions.at:631;FUNCTION LOG10;;
+132;functions.at:658;FUNCTION LOWER-CASE;;
+133;functions.at:678;FUNCTION MAX;;
+134;functions.at:697;FUNCTION MEAN;;
+135;functions.at:716;FUNCTION MEDIAN;;
+136;functions.at:735;FUNCTION MIDRANGE;;
+137;functions.at:754;FUNCTION MIN;;
+138;functions.at:773;FUNCTION MOD;;
+139;functions.at:792;FUNCTION NUMVAL;;
+140;functions.at:812;FUNCTION NUMVAL-C;;
+141;functions.at:832;FUNCTION ORD;;
+142;functions.at:851;FUNCTION ORD-MAX;;
+143;functions.at:870;FUNCTION ORD-MIN;;
+144;functions.at:889;FUNCTION PRESENT-VALUE;;
+145;functions.at:908;FUNCTION RANGE;;
+146;functions.at:927;FUNCTION REM;;
+147;functions.at:946;FUNCTION REVERSE;;
+148;functions.at:966;FUNCTION SECONDS-FROM-FORMATTED-TIME;;
+149;functions.at:993;FUNCTION SECONDS-PAST-MIDNIGHT;;
+150;functions.at:1018;FUNCTION SIGN;;
+151;functions.at:1043;FUNCTION SIN;;
+152;functions.at:1070;FUNCTION SQRT;;
+153;functions.at:1097;FUNCTION STANDARD-DEVIATION;;
+154;functions.at:1123;FUNCTION STORED-CHAR-LENGTH;;
+155;functions.at:1144;FUNCTION TAN;;
+156;functions.at:1171;FUNCTION TRIM;;
+157;functions.at:1193;FUNCTION UPPER-CASE;;
+158;functions.at:1213;FUNCTION VARIANCE;;
 '
 
 at_keywords=
@@ -5316,10 +5317,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  50 ) # 50. misc.at:563: INSPECT: no repeat conversion check
+  50 ) # 50. misc.at:563: INSPECT: No repeat conversion check
     at_setup_line='misc.at:563'
-    at_desc='INSPECT: no repeat conversion check'
-    $at_quiet $ECHO_N " 50: INSPECT: no repeat conversion check          $ECHO_C"
+    at_desc='INSPECT: No repeat conversion check'
+    $at_quiet $ECHO_N " 50: INSPECT: No repeat conversion check          $ECHO_C"
     at_xfail=no
     (
       echo "50. misc.at:563: testing ..."
@@ -5397,10 +5398,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  51 ) # 51. misc.at:583: INSPECT: TALLYING BEFORE
+  51 ) # 51. misc.at:583: INSPECT: REPLACING figurative constant
     at_setup_line='misc.at:583'
-    at_desc='INSPECT: TALLYING BEFORE'
-    $at_quiet $ECHO_N " 51: INSPECT: TALLYING BEFORE                     $ECHO_C"
+    at_desc='INSPECT: REPLACING figurative constant'
+    $at_quiet $ECHO_N " 51: INSPECT: REPLACING figurative constant       $ECHO_C"
     at_xfail=no
     (
       echo "51. misc.at:583: testing ..."
@@ -5413,25 +5414,17 @@ cat >prog.cob <<'_ATEOF'
        PROGRAM-ID.      prog.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
-       01 X             PIC X(4) VALUE "ABC ".
-       01 TAL           PIC 999 VALUE 0.
+       01 X             PIC X(3) VALUE "BCA".
        PROCEDURE        DIVISION.
-           MOVE 0 TO TAL.
-           INSPECT X TALLYING TAL FOR CHARACTERS
-                     BEFORE INITIAL " ".
-           DISPLAY TAL NO ADVANCING.
-           MOVE 0 TO TAL.
-           MOVE " ABC" TO X.
-           INSPECT X TALLYING TAL FOR CHARACTERS
-                     BEFORE INITIAL " ".
-           DISPLAY TAL NO ADVANCING.
+           INSPECT X REPLACING ALL "BC" BY SPACE.
+           DISPLAY X NO ADVANCING.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "misc.at:605: \${COMPILE} prog.cob"
-echo misc.at:605 >$at_check_line_file
+echo "misc.at:597: \${COMPILE} prog.cob"
+echo misc.at:597 >$at_check_line_file
 ( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5443,7 +5436,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:605: exit code was $at_status, expected 0"
+   *) echo "misc.at:597: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5455,20 +5448,20 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:606: ./prog"
-echo misc.at:606 >$at_check_line_file
+echo "misc.at:598: ./prog"
+echo misc.at:598 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
 $at_diff $at_devnull $at_stderr || at_failed=:
-echo >>$at_stdout; echo "003000" | $at_diff - $at_stdout || at_failed=:
+echo >>$at_stdout; echo "  A" | $at_diff - $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:606: exit code was $at_status, expected 0"
+   *) echo "misc.at:598: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5486,13 +5479,102 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  52 ) # 52. misc.at:611: INSPECT: TALLYING AFTER
-    at_setup_line='misc.at:611'
-    at_desc='INSPECT: TALLYING AFTER'
-    $at_quiet $ECHO_N " 52: INSPECT: TALLYING AFTER                      $ECHO_C"
+  52 ) # 52. misc.at:603: INSPECT: TALLYING BEFORE
+    at_setup_line='misc.at:603'
+    at_desc='INSPECT: TALLYING BEFORE'
+    $at_quiet $ECHO_N " 52: INSPECT: TALLYING BEFORE                     $ECHO_C"
     at_xfail=no
     (
-      echo "52. misc.at:611: testing ..."
+      echo "52. misc.at:603: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X(4) VALUE "ABC ".
+       01 TAL           PIC 999 VALUE 0.
+       PROCEDURE        DIVISION.
+           MOVE 0 TO TAL.
+           INSPECT X TALLYING TAL FOR CHARACTERS
+                     BEFORE INITIAL " ".
+           DISPLAY TAL NO ADVANCING.
+           MOVE 0 TO TAL.
+           MOVE " ABC" TO X.
+           INSPECT X TALLYING TAL FOR CHARACTERS
+                     BEFORE INITIAL " ".
+           DISPLAY TAL NO ADVANCING.
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "misc.at:625: \${COMPILE} prog.cob"
+echo misc.at:625 >$at_check_line_file
+( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "misc.at:625: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "misc.at:626: ./prog"
+echo misc.at:626 >$at_check_line_file
+( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+echo >>$at_stdout; echo "003000" | $at_diff - $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "misc.at:626: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  53 ) # 53. misc.at:631: INSPECT: TALLYING AFTER
+    at_setup_line='misc.at:631'
+    at_desc='INSPECT: TALLYING AFTER'
+    $at_quiet $ECHO_N " 53: INSPECT: TALLYING AFTER                      $ECHO_C"
+    at_xfail=no
+    (
+      echo "53. misc.at:631: testing ..."
       $at_traceon
 
 
@@ -5519,8 +5601,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:633: \${COMPILE} prog.cob"
-echo misc.at:633 >$at_check_line_file
+echo "misc.at:653: \${COMPILE} prog.cob"
+echo misc.at:653 >$at_check_line_file
 ( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5532,7 +5614,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:633: exit code was $at_status, expected 0"
+   *) echo "misc.at:653: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5544,8 +5626,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:634: ./prog"
-echo misc.at:634 >$at_check_line_file
+echo "misc.at:654: ./prog"
+echo misc.at:654 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5557,7 +5639,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:634: exit code was $at_status, expected 0"
+   *) echo "misc.at:654: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5575,13 +5657,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  53 ) # 53. misc.at:638: INSPECT REPLACING TRAILING ZEROS BY SPACES
-    at_setup_line='misc.at:638'
+  54 ) # 54. misc.at:658: INSPECT REPLACING TRAILING ZEROS BY SPACES
+    at_setup_line='misc.at:658'
     at_desc='INSPECT REPLACING TRAILING ZEROS BY SPACES'
-    $at_quiet $ECHO_N " 53: INSPECT REPLACING TRAILING ZEROS BY SPACES   $ECHO_C"
+    $at_quiet $ECHO_N " 54: INSPECT REPLACING TRAILING ZEROS BY SPACES   $ECHO_C"
     at_xfail=no
     (
-      echo "53. misc.at:638: testing ..."
+      echo "54. misc.at:658: testing ..."
       $at_traceon
 
 
@@ -5600,8 +5682,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:652: \${COMPILE} prog.cob"
-echo misc.at:652 >$at_check_line_file
+echo "misc.at:672: \${COMPILE} prog.cob"
+echo misc.at:672 >$at_check_line_file
 ( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5613,7 +5695,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:652: exit code was $at_status, expected 0"
+   *) echo "misc.at:672: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5625,8 +5707,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:653: ./prog"
-echo misc.at:653 >$at_check_line_file
+echo "misc.at:673: ./prog"
+echo misc.at:673 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5638,7 +5720,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:653: exit code was $at_status, expected 0"
+   *) echo "misc.at:673: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5656,13 +5738,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  54 ) # 54. misc.at:657: INSPECT REPLACING complex
-    at_setup_line='misc.at:657'
+  55 ) # 55. misc.at:677: INSPECT REPLACING complex
+    at_setup_line='misc.at:677'
     at_desc='INSPECT REPLACING complex'
-    $at_quiet $ECHO_N " 54: INSPECT REPLACING complex                    $ECHO_C"
+    $at_quiet $ECHO_N " 55: INSPECT REPLACING complex                    $ECHO_C"
     at_xfail=no
     (
-      echo "54. misc.at:657: testing ..."
+      echo "55. misc.at:677: testing ..."
       $at_traceon
 
 
@@ -5684,8 +5766,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:674: \${COMPILE} prog.cob"
-echo misc.at:674 >$at_check_line_file
+echo "misc.at:694: \${COMPILE} prog.cob"
+echo misc.at:694 >$at_check_line_file
 ( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5697,7 +5779,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:674: exit code was $at_status, expected 0"
+   *) echo "misc.at:694: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5709,8 +5791,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:675: ./prog"
-echo misc.at:675 >$at_check_line_file
+echo "misc.at:695: ./prog"
+echo misc.at:695 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5722,7 +5804,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:675: exit code was $at_status, expected 0"
+   *) echo "misc.at:695: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5739,13 +5821,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  55 ) # 55. misc.at:678: SWITCHES
-    at_setup_line='misc.at:678'
+  56 ) # 56. misc.at:698: SWITCHES
+    at_setup_line='misc.at:698'
     at_desc='SWITCHES'
-    $at_quiet $ECHO_N " 55: SWITCHES                                     $ECHO_C"
+    $at_quiet $ECHO_N " 56: SWITCHES                                     $ECHO_C"
     at_xfail=no
     (
-      echo "55. misc.at:678: testing ..."
+      echo "56. misc.at:698: testing ..."
       $at_traceon
 
 
@@ -5792,8 +5874,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:720: \${COMPILE} prog.cob"
-echo misc.at:720 >$at_check_line_file
+echo "misc.at:740: \${COMPILE} prog.cob"
+echo misc.at:740 >$at_check_line_file
 ( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5805,7 +5887,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:720: exit code was $at_status, expected 0"
+   *) echo "misc.at:740: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5817,8 +5899,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:721: COB_SWITCH_1=ON COB_SWITCH_2=OFF ./prog"
-echo misc.at:721 >$at_check_line_file
+echo "misc.at:741: COB_SWITCH_1=ON COB_SWITCH_2=OFF ./prog"
+echo misc.at:741 >$at_check_line_file
 ( $at_traceon; COB_SWITCH_1=ON COB_SWITCH_2=OFF ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5830,7 +5912,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:721: exit code was $at_status, expected 0"
+   *) echo "misc.at:741: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5848,13 +5930,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  56 ) # 56. misc.at:728: Nested PERFORM
-    at_setup_line='misc.at:728'
+  57 ) # 57. misc.at:748: Nested PERFORM
+    at_setup_line='misc.at:748'
     at_desc='Nested PERFORM'
-    $at_quiet $ECHO_N " 56: Nested PERFORM                               $ECHO_C"
+    $at_quiet $ECHO_N " 57: Nested PERFORM                               $ECHO_C"
     at_xfail=no
     (
-      echo "56. misc.at:728: testing ..."
+      echo "57. misc.at:748: testing ..."
       $at_traceon
 
 
@@ -5874,8 +5956,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:743: \${COMPILE} -o prog prog.cob"
-echo misc.at:743 >$at_check_line_file
+echo "misc.at:763: \${COMPILE} -o prog prog.cob"
+echo misc.at:763 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5887,7 +5969,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:743: exit code was $at_status, expected 0"
+   *) echo "misc.at:763: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5899,8 +5981,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:744: ./prog"
-echo misc.at:744 >$at_check_line_file
+echo "misc.at:764: ./prog"
+echo misc.at:764 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5912,7 +5994,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:744: exit code was $at_status, expected 0"
+   *) echo "misc.at:764: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5930,13 +6012,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  57 ) # 57. misc.at:752: EXIT PERFORM
-    at_setup_line='misc.at:752'
+  58 ) # 58. misc.at:772: EXIT PERFORM
+    at_setup_line='misc.at:772'
     at_desc='EXIT PERFORM'
-    $at_quiet $ECHO_N " 57: EXIT PERFORM                                 $ECHO_C"
+    $at_quiet $ECHO_N " 58: EXIT PERFORM                                 $ECHO_C"
     at_xfail=no
     (
-      echo "57. misc.at:752: testing ..."
+      echo "58. misc.at:772: testing ..."
       $at_traceon
 
 
@@ -5955,8 +6037,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:766: \${COMPILE} -o prog prog.cob"
-echo misc.at:766 >$at_check_line_file
+echo "misc.at:786: \${COMPILE} -o prog prog.cob"
+echo misc.at:786 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5968,7 +6050,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:766: exit code was $at_status, expected 0"
+   *) echo "misc.at:786: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5980,8 +6062,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:767: ./prog"
-echo misc.at:767 >$at_check_line_file
+echo "misc.at:787: ./prog"
+echo misc.at:787 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -5993,7 +6075,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:767: exit code was $at_status, expected 0"
+   *) echo "misc.at:787: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6011,13 +6093,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  58 ) # 58. misc.at:774: EXIT PERFORM CYCLE
-    at_setup_line='misc.at:774'
+  59 ) # 59. misc.at:794: EXIT PERFORM CYCLE
+    at_setup_line='misc.at:794'
     at_desc='EXIT PERFORM CYCLE'
-    $at_quiet $ECHO_N " 58: EXIT PERFORM CYCLE                           $ECHO_C"
+    $at_quiet $ECHO_N " 59: EXIT PERFORM CYCLE                           $ECHO_C"
     at_xfail=no
     (
-      echo "58. misc.at:774: testing ..."
+      echo "59. misc.at:794: testing ..."
       $at_traceon
 
 
@@ -6036,8 +6118,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:788: \${COMPILE} -o prog prog.cob"
-echo misc.at:788 >$at_check_line_file
+echo "misc.at:808: \${COMPILE} -o prog prog.cob"
+echo misc.at:808 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6049,7 +6131,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:788: exit code was $at_status, expected 0"
+   *) echo "misc.at:808: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6061,8 +6143,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:789: ./prog"
-echo misc.at:789 >$at_check_line_file
+echo "misc.at:809: ./prog"
+echo misc.at:809 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6074,7 +6156,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:789: exit code was $at_status, expected 0"
+   *) echo "misc.at:809: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6092,13 +6174,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  59 ) # 59. misc.at:794: 88 with FILLER
-    at_setup_line='misc.at:794'
+  60 ) # 60. misc.at:814: 88 with FILLER
+    at_setup_line='misc.at:814'
     at_desc='88 with FILLER'
-    $at_quiet $ECHO_N " 59: 88 with FILLER                               $ECHO_C"
+    $at_quiet $ECHO_N " 60: 88 with FILLER                               $ECHO_C"
     at_xfail=no
     (
-      echo "59. misc.at:794: testing ..."
+      echo "60. misc.at:814: testing ..."
       $at_traceon
 
 
@@ -6123,8 +6205,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:814: \${COMPILE} -o prog prog.cob"
-echo misc.at:814 >$at_check_line_file
+echo "misc.at:834: \${COMPILE} -o prog prog.cob"
+echo misc.at:834 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6136,7 +6218,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:814: exit code was $at_status, expected 0"
+   *) echo "misc.at:834: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6148,8 +6230,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:815: ./prog"
-echo misc.at:815 >$at_check_line_file
+echo "misc.at:835: ./prog"
+echo misc.at:835 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6161,7 +6243,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:815: exit code was $at_status, expected 0"
+   *) echo "misc.at:835: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6179,13 +6261,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  60 ) # 60. misc.at:819: Non-overflow after overflow
-    at_setup_line='misc.at:819'
+  61 ) # 61. misc.at:839: Non-overflow after overflow
+    at_setup_line='misc.at:839'
     at_desc='Non-overflow after overflow'
-    $at_quiet $ECHO_N " 60: Non-overflow after overflow                  $ECHO_C"
+    $at_quiet $ECHO_N " 61: Non-overflow after overflow                  $ECHO_C"
     at_xfail=no
     (
-      echo "60. misc.at:819: testing ..."
+      echo "61. misc.at:839: testing ..."
       $at_traceon
 
 
@@ -6206,8 +6288,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:835: \${COMPILE} -o prog prog.cob"
-echo misc.at:835 >$at_check_line_file
+echo "misc.at:855: \${COMPILE} -o prog prog.cob"
+echo misc.at:855 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6219,7 +6301,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:835: exit code was $at_status, expected 0"
+   *) echo "misc.at:855: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6231,8 +6313,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:836: ./prog"
-echo misc.at:836 >$at_check_line_file
+echo "misc.at:856: ./prog"
+echo misc.at:856 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6244,7 +6326,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:836: exit code was $at_status, expected 0"
+   *) echo "misc.at:856: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6262,13 +6344,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  61 ) # 61. misc.at:843: PERFORM ... CONTINUE
-    at_setup_line='misc.at:843'
+  62 ) # 62. misc.at:863: PERFORM ... CONTINUE
+    at_setup_line='misc.at:863'
     at_desc='PERFORM ... CONTINUE'
-    $at_quiet $ECHO_N " 61: PERFORM ... CONTINUE                         $ECHO_C"
+    $at_quiet $ECHO_N " 62: PERFORM ... CONTINUE                         $ECHO_C"
     at_xfail=no
     (
-      echo "61. misc.at:843: testing ..."
+      echo "62. misc.at:863: testing ..."
       $at_traceon
 
 
@@ -6284,66 +6366,9 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:854: \${COMPILE_ONLY} prog.cob"
-echo misc.at:854 >$at_check_line_file
-( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
-at_status=$?
-grep '^ *+' $at_stder1 >&2
-grep -v '^ *+' $at_stder1 >$at_stderr
-at_failed=false
-$at_diff $at_devnull $at_stderr || at_failed=:
-$at_diff $at_devnull $at_stdout || at_failed=:
-case $at_status in
-   77) echo 77 > $at_status_file
-            exit 77;;
-   0) ;;
-   *) echo "misc.at:854: exit code was $at_status, expected 0"
-      at_failed=:;;
-esac
-if $at_failed; then
-
-  echo 1 > $at_status_file
-  exit 1
-fi
-
-$at_traceon
-
-
-      $at_traceoff
-      $at_times_p && times >$at_times_file
-    ) 5>&1 2>&1 | eval $at_tee_pipe
-    at_status=`cat $at_status_file`
-    ;;
-
-  62 ) # 62. misc.at:859: STRING with subscript reference
-    at_setup_line='misc.at:859'
-    at_desc='STRING with subscript reference'
-    $at_quiet $ECHO_N " 62: STRING with subscript reference              $ECHO_C"
-    at_xfail=no
-    (
-      echo "62. misc.at:859: testing ..."
-      $at_traceon
-
-
-cat >prog.cob <<'_ATEOF'
-
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 G.
-         02 X           PIC X(3) OCCURS 3.
-       PROCEDURE        DIVISION.
-           STRING "abc" INTO X(1).
-           DISPLAY X(1) NO ADVANCING.
-           STOP RUN.
-_ATEOF
-
-
-$at_traceoff
-echo "misc.at:874: \${COMPILE} -o prog prog.cob"
+echo "misc.at:874: \${COMPILE_ONLY} prog.cob"
 echo misc.at:874 >$at_check_line_file
-( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
@@ -6365,9 +6390,66 @@ fi
 
 $at_traceon
 
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  63 ) # 63. misc.at:879: STRING with subscript reference
+    at_setup_line='misc.at:879'
+    at_desc='STRING with subscript reference'
+    $at_quiet $ECHO_N " 63: STRING with subscript reference              $ECHO_C"
+    at_xfail=no
+    (
+      echo "63. misc.at:879: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 G.
+         02 X           PIC X(3) OCCURS 3.
+       PROCEDURE        DIVISION.
+           STRING "abc" INTO X(1).
+           DISPLAY X(1) NO ADVANCING.
+           STOP RUN.
+_ATEOF
+
+
 $at_traceoff
-echo "misc.at:875: ./prog"
-echo misc.at:875 >$at_check_line_file
+echo "misc.at:894: \${COMPILE} -o prog prog.cob"
+echo misc.at:894 >$at_check_line_file
+( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+$at_diff $at_devnull $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "misc.at:894: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+$at_traceoff
+echo "misc.at:895: ./prog"
+echo misc.at:895 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6379,7 +6461,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:875: exit code was $at_status, expected 0"
+   *) echo "misc.at:895: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6397,13 +6479,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  63 ) # 63. misc.at:880: UNSTRING DELIMITED ALL LOW-VALUE
-    at_setup_line='misc.at:880'
+  64 ) # 64. misc.at:900: UNSTRING DELIMITED ALL LOW-VALUE
+    at_setup_line='misc.at:900'
     at_desc='UNSTRING DELIMITED ALL LOW-VALUE'
-    $at_quiet $ECHO_N " 63: UNSTRING DELIMITED ALL LOW-VALUE             $ECHO_C"
+    $at_quiet $ECHO_N " 64: UNSTRING DELIMITED ALL LOW-VALUE             $ECHO_C"
     at_xfail=no
     (
-      echo "63. misc.at:880: testing ..."
+      echo "64. misc.at:900: testing ..."
       $at_traceon
 
 
@@ -6429,8 +6511,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:901: \${COMPILE} -o prog prog.cob"
-echo misc.at:901 >$at_check_line_file
+echo "misc.at:921: \${COMPILE} -o prog prog.cob"
+echo misc.at:921 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6442,7 +6524,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:901: exit code was $at_status, expected 0"
+   *) echo "misc.at:921: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6454,8 +6536,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:905: ./prog"
-echo misc.at:905 >$at_check_line_file
+echo "misc.at:925: ./prog"
+echo misc.at:925 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6469,7 +6551,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:905: exit code was $at_status, expected 0"
+   *) echo "misc.at:925: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6487,13 +6569,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  64 ) # 64. misc.at:910: READ INTO AT-END sequence
-    at_setup_line='misc.at:910'
+  65 ) # 65. misc.at:930: READ INTO AT-END sequence
+    at_setup_line='misc.at:930'
     at_desc='READ INTO AT-END sequence'
-    $at_quiet $ECHO_N " 64: READ INTO AT-END sequence                    $ECHO_C"
+    $at_quiet $ECHO_N " 65: READ INTO AT-END sequence                    $ECHO_C"
     at_xfail=no
     (
-      echo "64. misc.at:910: testing ..."
+      echo "65. misc.at:930: testing ..."
       $at_traceon
 
 
@@ -6525,8 +6607,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:937: \${COMPILE} -o prog prog.cob"
-echo misc.at:937 >$at_check_line_file
+echo "misc.at:957: \${COMPILE} -o prog prog.cob"
+echo misc.at:957 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6538,7 +6620,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:937: exit code was $at_status, expected 0"
+   *) echo "misc.at:957: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6550,8 +6632,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:938: ./prog"
-echo misc.at:938 >$at_check_line_file
+echo "misc.at:958: ./prog"
+echo misc.at:958 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6563,7 +6645,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:938: exit code was $at_status, expected 0"
+   *) echo "misc.at:958: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6581,13 +6663,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  65 ) # 65. misc.at:943: First READ on empty SEQUENTIAL INDEXED file
-    at_setup_line='misc.at:943'
+  66 ) # 66. misc.at:963: First READ on empty SEQUENTIAL INDEXED file
+    at_setup_line='misc.at:963'
     at_desc='First READ on empty SEQUENTIAL INDEXED file'
-    $at_quiet $ECHO_N " 65: First READ on empty SEQUENTIAL INDEXED file  $ECHO_C"
+    $at_quiet $ECHO_N " 66: First READ on empty SEQUENTIAL INDEXED file  $ECHO_C"
     at_xfail=no
     (
-      echo "65. misc.at:943: testing ..."
+      echo "66. misc.at:963: testing ..."
       $at_traceon
 
 
@@ -6620,8 +6702,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:971: \${COMPILE} -o prog prog.cob"
-echo misc.at:971 >$at_check_line_file
+echo "misc.at:991: \${COMPILE} -o prog prog.cob"
+echo misc.at:991 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6633,7 +6715,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:971: exit code was $at_status, expected 0"
+   *) echo "misc.at:991: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6645,8 +6727,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:972: ./prog"
-echo misc.at:972 >$at_check_line_file
+echo "misc.at:992: ./prog"
+echo misc.at:992 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6658,7 +6740,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:972: exit code was $at_status, expected 0"
+   *) echo "misc.at:992: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6676,13 +6758,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  66 ) # 66. misc.at:977: REWRITE a RELATIVE file with RANDOM access
-    at_setup_line='misc.at:977'
+  67 ) # 67. misc.at:997: REWRITE a RELATIVE file with RANDOM access
+    at_setup_line='misc.at:997'
     at_desc='REWRITE a RELATIVE file with RANDOM access'
-    $at_quiet $ECHO_N " 66: REWRITE a RELATIVE file with RANDOM access   $ECHO_C"
+    $at_quiet $ECHO_N " 67: REWRITE a RELATIVE file with RANDOM access   $ECHO_C"
     at_xfail=no
     (
-      echo "66. misc.at:977: testing ..."
+      echo "67. misc.at:997: testing ..."
       $at_traceon
 
 
@@ -6724,8 +6806,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:1014: \${COMPILE} -o prog prog.cob"
-echo misc.at:1014 >$at_check_line_file
+echo "misc.at:1034: \${COMPILE} -o prog prog.cob"
+echo misc.at:1034 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6737,7 +6819,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1014: exit code was $at_status, expected 0"
+   *) echo "misc.at:1034: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6749,8 +6831,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1018: ./prog"
-echo misc.at:1018 >$at_check_line_file
+echo "misc.at:1038: ./prog"
+echo misc.at:1038 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6764,7 +6846,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1018: exit code was $at_status, expected 0"
+   *) echo "misc.at:1038: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6782,13 +6864,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  67 ) # 67. misc.at:1023: SORT: table sort
-    at_setup_line='misc.at:1023'
+  68 ) # 68. misc.at:1043: SORT: table sort
+    at_setup_line='misc.at:1043'
     at_desc='SORT: table sort'
-    $at_quiet $ECHO_N " 67: SORT: table sort                             $ECHO_C"
+    $at_quiet $ECHO_N " 68: SORT: table sort                             $ECHO_C"
     at_xfail=no
     (
-      echo "67. misc.at:1023: testing ..."
+      echo "68. misc.at:1043: testing ..."
       $at_traceon
 
 
@@ -6816,8 +6898,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:1046: \${COMPILE} -o prog prog.cob"
-echo misc.at:1046 >$at_check_line_file
+echo "misc.at:1066: \${COMPILE} -o prog prog.cob"
+echo misc.at:1066 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6829,7 +6911,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1046: exit code was $at_status, expected 0"
+   *) echo "misc.at:1066: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6841,8 +6923,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1052: ./prog"
-echo misc.at:1052 >$at_check_line_file
+echo "misc.at:1072: ./prog"
+echo misc.at:1072 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6858,7 +6940,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1052: exit code was $at_status, expected 0"
+   *) echo "misc.at:1072: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6876,13 +6958,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  68 ) # 68. misc.at:1056: SORT: EBCDIC table sort
-    at_setup_line='misc.at:1056'
+  69 ) # 69. misc.at:1076: SORT: EBCDIC table sort
+    at_setup_line='misc.at:1076'
     at_desc='SORT: EBCDIC table sort'
-    $at_quiet $ECHO_N " 68: SORT: EBCDIC table sort                      $ECHO_C"
+    $at_quiet $ECHO_N " 69: SORT: EBCDIC table sort                      $ECHO_C"
     at_xfail=no
     (
-      echo "68. misc.at:1056: testing ..."
+      echo "69. misc.at:1076: testing ..."
       $at_traceon
 
 
@@ -6917,8 +6999,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:1086: \${COMPILE} -o prog prog.cob"
-echo misc.at:1086 >$at_check_line_file
+echo "misc.at:1106: \${COMPILE} -o prog prog.cob"
+echo misc.at:1106 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6930,7 +7012,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1086: exit code was $at_status, expected 0"
+   *) echo "misc.at:1106: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6942,8 +7024,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1092: ./prog"
-echo misc.at:1092 >$at_check_line_file
+echo "misc.at:1112: ./prog"
+echo misc.at:1112 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -6959,7 +7041,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1092: exit code was $at_status, expected 0"
+   *) echo "misc.at:1112: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -6977,13 +7059,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  69 ) # 69. misc.at:1096: SORT nonexistent file
-    at_setup_line='misc.at:1096'
+  70 ) # 70. misc.at:1116: SORT nonexistent file
+    at_setup_line='misc.at:1116'
     at_desc='SORT nonexistent file'
-    $at_quiet $ECHO_N " 69: SORT nonexistent file                        $ECHO_C"
+    $at_quiet $ECHO_N " 70: SORT nonexistent file                        $ECHO_C"
     at_xfail=no
     (
-      echo "69. misc.at:1096: testing ..."
+      echo "70. misc.at:1116: testing ..."
       $at_traceon
 
 
@@ -7015,8 +7097,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:1123: \${COMPILE} -o prog prog.cob"
-echo misc.at:1123 >$at_check_line_file
+echo "misc.at:1143: \${COMPILE} -o prog prog.cob"
+echo misc.at:1143 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7028,7 +7110,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1123: exit code was $at_status, expected 0"
+   *) echo "misc.at:1143: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7040,8 +7122,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1124: ./prog"
-echo misc.at:1124 >$at_check_line_file
+echo "misc.at:1144: ./prog"
+echo misc.at:1144 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7053,7 +7135,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1124: exit code was $at_status, expected 0"
+   *) echo "misc.at:1144: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7065,8 +7147,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1125: cat SORT-OUT"
-echo misc.at:1125 >$at_check_line_file
+echo "misc.at:1145: cat SORT-OUT"
+echo misc.at:1145 >$at_check_line_file
 ( $at_traceon; cat SORT-OUT ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7078,7 +7160,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1125: exit code was $at_status, expected 0"
+   *) echo "misc.at:1145: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7096,13 +7178,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  70 ) # 70. misc.at:1130: PIC ZZZ-, ZZZ+
-    at_setup_line='misc.at:1130'
+  71 ) # 71. misc.at:1150: PIC ZZZ-, ZZZ+
+    at_setup_line='misc.at:1150'
     at_desc='PIC ZZZ-, ZZZ+'
-    $at_quiet $ECHO_N " 70: PIC ZZZ-, ZZZ+                               $ECHO_C"
+    $at_quiet $ECHO_N " 71: PIC ZZZ-, ZZZ+                               $ECHO_C"
     at_xfail=no
     (
-      echo "70. misc.at:1130: testing ..."
+      echo "71. misc.at:1150: testing ..."
       $at_traceon
 
 
@@ -7126,8 +7208,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:1149: \${COMPILE} -o prog prog.cob"
-echo misc.at:1149 >$at_check_line_file
+echo "misc.at:1169: \${COMPILE} -o prog prog.cob"
+echo misc.at:1169 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7139,7 +7221,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1149: exit code was $at_status, expected 0"
+   *) echo "misc.at:1169: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7151,8 +7233,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1157: ./prog"
-echo misc.at:1157 >$at_check_line_file
+echo "misc.at:1177: ./prog"
+echo misc.at:1177 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7170,7 +7252,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1157: exit code was $at_status, expected 0"
+   *) echo "misc.at:1177: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7188,13 +7270,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  71 ) # 71. misc.at:1162: Larger REDEFINES lengths
-    at_setup_line='misc.at:1162'
+  72 ) # 72. misc.at:1182: Larger REDEFINES lengths
+    at_setup_line='misc.at:1182'
     at_desc='Larger REDEFINES lengths'
-    $at_quiet $ECHO_N " 71: Larger REDEFINES lengths                     $ECHO_C"
+    $at_quiet $ECHO_N " 72: Larger REDEFINES lengths                     $ECHO_C"
     at_xfail=no
     (
-      echo "71. misc.at:1162: testing ..."
+      echo "72. misc.at:1182: testing ..."
       $at_traceon
 
 
@@ -7221,8 +7303,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:1186: \${COMPILE} -std=mf -o prog prog.cob"
-echo misc.at:1186 >$at_check_line_file
+echo "misc.at:1206: \${COMPILE} -std=mf -o prog prog.cob"
+echo misc.at:1206 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -std=mf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7235,7 +7317,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1186: exit code was $at_status, expected 0"
+   *) echo "misc.at:1206: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7247,8 +7329,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1193: ./prog"
-echo misc.at:1193 >$at_check_line_file
+echo "misc.at:1213: ./prog"
+echo misc.at:1213 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7265,7 +7347,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1193: exit code was $at_status, expected 0"
+   *) echo "misc.at:1213: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7283,13 +7365,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  72 ) # 72. misc.at:1197: PERFORM type OSVS
-    at_setup_line='misc.at:1197'
+  73 ) # 73. misc.at:1217: PERFORM type OSVS
+    at_setup_line='misc.at:1217'
     at_desc='PERFORM type OSVS'
-    $at_quiet $ECHO_N " 72: PERFORM type OSVS                            $ECHO_C"
+    $at_quiet $ECHO_N " 73: PERFORM type OSVS                            $ECHO_C"
     at_xfail=no
     (
-      echo "72. misc.at:1197: testing ..."
+      echo "73. misc.at:1217: testing ..."
       $at_traceon
 
 
@@ -7328,8 +7410,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:1229: \${COMPILE} -conf=test.conf -o prog prog.cob"
-echo misc.at:1229 >$at_check_line_file
+echo "misc.at:1249: \${COMPILE} -conf=test.conf -o prog prog.cob"
+echo misc.at:1249 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7341,7 +7423,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1229: exit code was $at_status, expected 0"
+   *) echo "misc.at:1249: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7353,8 +7435,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1232: ./prog"
-echo misc.at:1232 >$at_check_line_file
+echo "misc.at:1252: ./prog"
+echo misc.at:1252 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7367,7 +7449,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1232: exit code was $at_status, expected 0"
+   *) echo "misc.at:1252: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7385,13 +7467,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  73 ) # 73. misc.at:1237: Sticky LINKAGE
-    at_setup_line='misc.at:1237'
+  74 ) # 74. misc.at:1257: Sticky LINKAGE
+    at_setup_line='misc.at:1257'
     at_desc='Sticky LINKAGE'
-    $at_quiet $ECHO_N " 73: Sticky LINKAGE                               $ECHO_C"
+    $at_quiet $ECHO_N " 74: Sticky LINKAGE                               $ECHO_C"
     at_xfail=no
     (
-      echo "73. misc.at:1237: testing ..."
+      echo "74. misc.at:1257: testing ..."
       $at_traceon
 
 
@@ -7439,8 +7521,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:1276: \${COMPILE_MODULE} -conf=test.conf callee.cob"
-echo misc.at:1276 >$at_check_line_file
+echo "misc.at:1296: \${COMPILE_MODULE} -conf=test.conf callee.cob"
+echo misc.at:1296 >$at_check_line_file
 ( $at_traceon; ${COMPILE_MODULE} -conf=test.conf callee.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7452,7 +7534,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1276: exit code was $at_status, expected 0"
+   *) echo "misc.at:1296: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7464,8 +7546,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1277: \${COMPILE} -conf=test.conf -o caller caller.cob"
-echo misc.at:1277 >$at_check_line_file
+echo "misc.at:1297: \${COMPILE} -conf=test.conf -o caller caller.cob"
+echo misc.at:1297 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -conf=test.conf -o caller caller.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7477,7 +7559,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1277: exit code was $at_status, expected 0"
+   *) echo "misc.at:1297: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7489,8 +7571,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1280: ./caller"
-echo misc.at:1280 >$at_check_line_file
+echo "misc.at:1300: ./caller"
+echo misc.at:1300 >$at_check_line_file
 ( $at_traceon; ./caller ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7503,7 +7585,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1280: exit code was $at_status, expected 0"
+   *) echo "misc.at:1300: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7521,13 +7603,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  74 ) # 74. misc.at:1284: COB_PRE_LOAD test
-    at_setup_line='misc.at:1284'
+  75 ) # 75. misc.at:1304: COB_PRE_LOAD test
+    at_setup_line='misc.at:1304'
     at_desc='COB_PRE_LOAD test'
-    $at_quiet $ECHO_N " 74: COB_PRE_LOAD test                            $ECHO_C"
+    $at_quiet $ECHO_N " 75: COB_PRE_LOAD test                            $ECHO_C"
     at_xfail=no
     (
-      echo "74. misc.at:1284: testing ..."
+      echo "75. misc.at:1304: testing ..."
       $at_traceon
 
 
@@ -7550,8 +7632,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:1300: \${COMPILE_MODULE} callee.cob"
-echo misc.at:1300 >$at_check_line_file
+echo "misc.at:1320: \${COMPILE_MODULE} callee.cob"
+echo misc.at:1320 >$at_check_line_file
 ( $at_traceon; ${COMPILE_MODULE} callee.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7563,7 +7645,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1300: exit code was $at_status, expected 0"
+   *) echo "misc.at:1320: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7575,8 +7657,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1301: \${COMPILE} caller.cob"
-echo misc.at:1301 >$at_check_line_file
+echo "misc.at:1321: \${COMPILE} caller.cob"
+echo misc.at:1321 >$at_check_line_file
 ( $at_traceon; ${COMPILE} caller.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7588,7 +7670,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1301: exit code was $at_status, expected 0"
+   *) echo "misc.at:1321: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7600,8 +7682,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1302: export COB_PRE_LOAD=callee; ./caller"
-echo misc.at:1302 >$at_check_line_file
+echo "misc.at:1322: export COB_PRE_LOAD=callee; ./caller"
+echo misc.at:1322 >$at_check_line_file
 ( $at_traceon; export COB_PRE_LOAD=callee; ./caller ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7613,7 +7695,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1302: exit code was $at_status, expected 0"
+   *) echo "misc.at:1322: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7631,13 +7713,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  75 ) # 75. misc.at:1306: 88 level with FALSE IS clause
-    at_setup_line='misc.at:1306'
+  76 ) # 76. misc.at:1326: 88 level with FALSE IS clause
+    at_setup_line='misc.at:1326'
     at_desc='88 level with FALSE IS clause'
-    $at_quiet $ECHO_N " 75: 88 level with FALSE IS clause                $ECHO_C"
+    $at_quiet $ECHO_N " 76: 88 level with FALSE IS clause                $ECHO_C"
     at_xfail=no
     (
-      echo "75. misc.at:1306: testing ..."
+      echo "76. misc.at:1326: testing ..."
       $at_traceon
 
 
@@ -7659,8 +7741,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:1323: \${COMPILE} prog.cob"
-echo misc.at:1323 >$at_check_line_file
+echo "misc.at:1343: \${COMPILE} prog.cob"
+echo misc.at:1343 >$at_check_line_file
 ( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7672,7 +7754,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1323: exit code was $at_status, expected 0"
+   *) echo "misc.at:1343: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7684,8 +7766,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1326: ./prog"
-echo misc.at:1326 >$at_check_line_file
+echo "misc.at:1346: ./prog"
+echo misc.at:1346 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7698,7 +7780,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1326: exit code was $at_status, expected 0"
+   *) echo "misc.at:1346: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7716,13 +7798,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  76 ) # 76. misc.at:1330: ALLOCATE/FREE with BASED item
-    at_setup_line='misc.at:1330'
+  77 ) # 77. misc.at:1350: ALLOCATE/FREE with BASED item
+    at_setup_line='misc.at:1350'
     at_desc='ALLOCATE/FREE with BASED item'
-    $at_quiet $ECHO_N " 76: ALLOCATE/FREE with BASED item                $ECHO_C"
+    $at_quiet $ECHO_N " 77: ALLOCATE/FREE with BASED item                $ECHO_C"
     at_xfail=no
     (
-      echo "76. misc.at:1330: testing ..."
+      echo "77. misc.at:1350: testing ..."
       $at_traceon
 
 
@@ -7743,8 +7825,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:1346: \${COMPILE} prog.cob"
-echo misc.at:1346 >$at_check_line_file
+echo "misc.at:1366: \${COMPILE} prog.cob"
+echo misc.at:1366 >$at_check_line_file
 ( $at_traceon; ${COMPILE} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7756,7 +7838,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1346: exit code was $at_status, expected 0"
+   *) echo "misc.at:1366: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7768,8 +7850,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1349: ./prog"
-echo misc.at:1349 >$at_check_line_file
+echo "misc.at:1369: ./prog"
+echo misc.at:1369 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7782,7 +7864,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1349: exit code was $at_status, expected 0"
+   *) echo "misc.at:1369: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7800,13 +7882,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  77 ) # 77. misc.at:1353: CALL with OMITTED parameter
-    at_setup_line='misc.at:1353'
+  78 ) # 78. misc.at:1373: CALL with OMITTED parameter
+    at_setup_line='misc.at:1373'
     at_desc='CALL with OMITTED parameter'
-    $at_quiet $ECHO_N " 77: CALL with OMITTED parameter                  $ECHO_C"
+    $at_quiet $ECHO_N " 78: CALL with OMITTED parameter                  $ECHO_C"
     at_xfail=no
     (
-      echo "77. misc.at:1353: testing ..."
+      echo "78. misc.at:1373: testing ..."
       $at_traceon
 
 
@@ -7841,8 +7923,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "misc.at:1381: \${COMPILE_MODULE} callee.cob"
-echo misc.at:1381 >$at_check_line_file
+echo "misc.at:1401: \${COMPILE_MODULE} callee.cob"
+echo misc.at:1401 >$at_check_line_file
 ( $at_traceon; ${COMPILE_MODULE} callee.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7854,7 +7936,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1381: exit code was $at_status, expected 0"
+   *) echo "misc.at:1401: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7866,8 +7948,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1382: \${COMPILE} -o caller caller.cob"
-echo misc.at:1382 >$at_check_line_file
+echo "misc.at:1402: \${COMPILE} -o caller caller.cob"
+echo misc.at:1402 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o caller caller.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7879,7 +7961,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1382: exit code was $at_status, expected 0"
+   *) echo "misc.at:1402: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7891,8 +7973,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "misc.at:1385: ./caller"
-echo misc.at:1385 >$at_check_line_file
+echo "misc.at:1405: ./caller"
+echo misc.at:1405 >$at_check_line_file
 ( $at_traceon; ./caller ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -7905,7 +7987,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "misc.at:1385: exit code was $at_status, expected 0"
+   *) echo "misc.at:1405: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -7923,13 +8005,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  78 ) # 78. extensions.at:24: COMP-5
+  79 ) # 79. extensions.at:24: COMP-5
     at_setup_line='extensions.at:24'
     at_desc='COMP-5'
-    $at_quiet $ECHO_N " 78: COMP-5                                       $ECHO_C"
+    $at_quiet $ECHO_N " 79: COMP-5                                       $ECHO_C"
     at_xfail=no
     (
-      echo "78. extensions.at:24: testing ..."
+      echo "79. extensions.at:24: testing ..."
       $at_traceon
 
 
@@ -8052,13 +8134,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  79 ) # 79. extensions.at:69: Hexadecimal numeric literal
+  80 ) # 80. extensions.at:69: Hexadecimal numeric literal
     at_setup_line='extensions.at:69'
     at_desc='Hexadecimal numeric literal'
-    $at_quiet $ECHO_N " 79: Hexadecimal numeric literal                  $ECHO_C"
+    $at_quiet $ECHO_N " 80: Hexadecimal numeric literal                  $ECHO_C"
     at_xfail=no
     (
-      echo "79. extensions.at:69: testing ..."
+      echo "80. extensions.at:69: testing ..."
       $at_traceon
 
 
@@ -8136,13 +8218,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  80 ) # 80. extensions.at:95: Semi-parenthesized condition
+  81 ) # 81. extensions.at:95: Semi-parenthesized condition
     at_setup_line='extensions.at:95'
     at_desc='Semi-parenthesized condition'
-    $at_quiet $ECHO_N " 80: Semi-parenthesized condition                 $ECHO_C"
+    $at_quiet $ECHO_N " 81: Semi-parenthesized condition                 $ECHO_C"
     at_xfail=no
     (
-      echo "80. extensions.at:95: testing ..."
+      echo "81. extensions.at:95: testing ..."
       $at_traceon
 
 
@@ -8215,13 +8297,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  81 ) # 81. extensions.at:115: ADDRESS OF
+  82 ) # 82. extensions.at:115: ADDRESS OF
     at_setup_line='extensions.at:115'
     at_desc='ADDRESS OF'
-    $at_quiet $ECHO_N " 81: ADDRESS OF                                   $ECHO_C"
+    $at_quiet $ECHO_N " 82: ADDRESS OF                                   $ECHO_C"
     at_xfail=no
     (
-      echo "81. extensions.at:115: testing ..."
+      echo "82. extensions.at:115: testing ..."
       $at_traceon
 
 
@@ -8327,13 +8409,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  82 ) # 82. extensions.at:170: LENGTH OF
+  83 ) # 83. extensions.at:170: LENGTH OF
     at_setup_line='extensions.at:170'
     at_desc='LENGTH OF'
-    $at_quiet $ECHO_N " 82: LENGTH OF                                    $ECHO_C"
+    $at_quiet $ECHO_N " 83: LENGTH OF                                    $ECHO_C"
     at_xfail=no
     (
-      echo "82. extensions.at:170: testing ..."
+      echo "83. extensions.at:170: testing ..."
       $at_traceon
 
 
@@ -8416,13 +8498,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  83 ) # 83. extensions.at:201: WHEN-COMPILED
+  84 ) # 84. extensions.at:201: WHEN-COMPILED
     at_setup_line='extensions.at:201'
     at_desc='WHEN-COMPILED'
-    $at_quiet $ECHO_N " 83: WHEN-COMPILED                                $ECHO_C"
+    $at_quiet $ECHO_N " 84: WHEN-COMPILED                                $ECHO_C"
     at_xfail=no
     (
-      echo "83. extensions.at:201: testing ..."
+      echo "84. extensions.at:201: testing ..."
       $at_traceon
 
 
@@ -8497,13 +8579,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  84 ) # 84. extensions.at:223: Complex OCCURS DEPENDING ON
+  85 ) # 85. extensions.at:223: Complex OCCURS DEPENDING ON
     at_setup_line='extensions.at:223'
     at_desc='Complex OCCURS DEPENDING ON'
-    $at_quiet $ECHO_N " 84: Complex OCCURS DEPENDING ON                  $ECHO_C"
+    $at_quiet $ECHO_N " 85: Complex OCCURS DEPENDING ON                  $ECHO_C"
     at_xfail=no
     (
-      echo "84. extensions.at:223: testing ..."
+      echo "85. extensions.at:223: testing ..."
       $at_traceon
 
 
@@ -8585,13 +8667,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  85 ) # 85. extensions.at:250: MOVE NON-INTEGER TO ALPHA-NUMERIC
+  86 ) # 86. extensions.at:250: MOVE NON-INTEGER TO ALPHA-NUMERIC
     at_setup_line='extensions.at:250'
     at_desc='MOVE NON-INTEGER TO ALPHA-NUMERIC'
-    $at_quiet $ECHO_N " 85: MOVE NON-INTEGER TO ALPHA-NUMERIC            $ECHO_C"
+    $at_quiet $ECHO_N " 86: MOVE NON-INTEGER TO ALPHA-NUMERIC            $ECHO_C"
     at_xfail=no
     (
-      echo "85. extensions.at:250: testing ..."
+      echo "86. extensions.at:250: testing ..."
       $at_traceon
 
 #  see MF - COBOL  Error Messages  1029-E ...
@@ -8726,13 +8808,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  86 ) # 86. extensions.at:333: CALL USING file-name
+  87 ) # 87. extensions.at:333: CALL USING file-name
     at_setup_line='extensions.at:333'
     at_desc='CALL USING file-name'
-    $at_quiet $ECHO_N " 86: CALL USING file-name                         $ECHO_C"
+    $at_quiet $ECHO_N " 87: CALL USING file-name                         $ECHO_C"
     at_xfail=no
     (
-      echo "86. extensions.at:333: testing ..."
+      echo "87. extensions.at:333: testing ..."
       $at_traceon
 
 
@@ -8879,13 +8961,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  87 ) # 87. extensions.at:374: CALL unusual program-id.
+  88 ) # 88. extensions.at:374: CALL unusual program-id.
     at_setup_line='extensions.at:374'
     at_desc='CALL unusual program-id.'
-    $at_quiet $ECHO_N " 87: CALL unusual program-id.                     $ECHO_C"
+    $at_quiet $ECHO_N " 88: CALL unusual program-id.                     $ECHO_C"
     at_xfail=no
     (
-      echo "87. extensions.at:374: testing ..."
+      echo "88. extensions.at:374: testing ..."
       $at_traceon
 
 
@@ -9096,13 +9178,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  88 ) # 88. extensions.at:428: ASSIGN MF
+  89 ) # 89. extensions.at:428: ASSIGN MF
     at_setup_line='extensions.at:428'
     at_desc='ASSIGN MF'
-    $at_quiet $ECHO_N " 88: ASSIGN MF                                    $ECHO_C"
+    $at_quiet $ECHO_N " 89: ASSIGN MF                                    $ECHO_C"
     at_xfail=no
     (
-      echo "88. extensions.at:428: testing ..."
+      echo "89. extensions.at:428: testing ..."
       $at_traceon
 
 
@@ -9190,13 +9272,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  89 ) # 89. extensions.at:458: ASSIGN IBM
+  90 ) # 90. extensions.at:458: ASSIGN IBM
     at_setup_line='extensions.at:458'
     at_desc='ASSIGN IBM'
-    $at_quiet $ECHO_N " 89: ASSIGN IBM                                   $ECHO_C"
+    $at_quiet $ECHO_N " 90: ASSIGN IBM                                   $ECHO_C"
     at_xfail=no
     (
-      echo "89. extensions.at:458: testing ..."
+      echo "90. extensions.at:458: testing ..."
       $at_traceon
 
 
@@ -9308,13 +9390,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  90 ) # 90. extensions.at:488: ASSIGN mapping
+  91 ) # 91. extensions.at:488: ASSIGN mapping
     at_setup_line='extensions.at:488'
     at_desc='ASSIGN mapping'
-    $at_quiet $ECHO_N " 90: ASSIGN mapping                               $ECHO_C"
+    $at_quiet $ECHO_N " 91: ASSIGN mapping                               $ECHO_C"
     at_xfail=no
     (
-      echo "90. extensions.at:488: testing ..."
+      echo "91. extensions.at:488: testing ..."
       $at_traceon
 
 
@@ -9576,13 +9658,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  91 ) # 91. extensions.at:524: ASSIGN expansion
+  92 ) # 92. extensions.at:524: ASSIGN expansion
     at_setup_line='extensions.at:524'
     at_desc='ASSIGN expansion'
-    $at_quiet $ECHO_N " 91: ASSIGN expansion                             $ECHO_C"
+    $at_quiet $ECHO_N " 92: ASSIGN expansion                             $ECHO_C"
     at_xfail=no
     (
-      echo "91. extensions.at:524: testing ..."
+      echo "92. extensions.at:524: testing ..."
       $at_traceon
 
 
@@ -9694,13 +9776,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  92 ) # 92. extensions.at:554: ASSIGN with COB_FILE_PATH
+  93 ) # 93. extensions.at:554: ASSIGN with COB_FILE_PATH
     at_setup_line='extensions.at:554'
     at_desc='ASSIGN with COB_FILE_PATH'
-    $at_quiet $ECHO_N " 92: ASSIGN with COB_FILE_PATH                    $ECHO_C"
+    $at_quiet $ECHO_N " 93: ASSIGN with COB_FILE_PATH                    $ECHO_C"
     at_xfail=no
     (
-      echo "92. extensions.at:554: testing ..."
+      echo "93. extensions.at:554: testing ..."
       $at_traceon
 
 
@@ -9812,13 +9894,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  93 ) # 93. extensions.at:587: NUMBER-OF-CALL-PARAMETERS
+  94 ) # 94. extensions.at:587: NUMBER-OF-CALL-PARAMETERS
     at_setup_line='extensions.at:587'
     at_desc='NUMBER-OF-CALL-PARAMETERS'
-    $at_quiet $ECHO_N " 93: NUMBER-OF-CALL-PARAMETERS                    $ECHO_C"
+    $at_quiet $ECHO_N " 94: NUMBER-OF-CALL-PARAMETERS                    $ECHO_C"
     at_xfail=no
     (
-      echo "93. extensions.at:587: testing ..."
+      echo "94. extensions.at:587: testing ..."
       $at_traceon
 
 
@@ -9946,13 +10028,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  94 ) # 94. extensions.at:637: PROCEDURE DIVISION USING BY ...
+  95 ) # 95. extensions.at:637: PROCEDURE DIVISION USING BY ...
     at_setup_line='extensions.at:637'
     at_desc='PROCEDURE DIVISION USING BY ...'
-    $at_quiet $ECHO_N " 94: PROCEDURE DIVISION USING BY ...              $ECHO_C"
+    $at_quiet $ECHO_N " 95: PROCEDURE DIVISION USING BY ...              $ECHO_C"
     at_xfail=no
     (
-      echo "94. extensions.at:637: testing ..."
+      echo "95. extensions.at:637: testing ..."
       $at_traceon
 
 
@@ -10078,13 +10160,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  95 ) # 95. extensions.at:682: PROCEDURE DIVISION CHAINING ...
+  96 ) # 96. extensions.at:682: PROCEDURE DIVISION CHAINING ...
     at_setup_line='extensions.at:682'
     at_desc='PROCEDURE DIVISION CHAINING ...'
-    $at_quiet $ECHO_N " 95: PROCEDURE DIVISION CHAINING ...              $ECHO_C"
+    $at_quiet $ECHO_N " 96: PROCEDURE DIVISION CHAINING ...              $ECHO_C"
     at_xfail=no
     (
-      echo "95. extensions.at:682: testing ..."
+      echo "96. extensions.at:682: testing ..."
       $at_traceon
 
 
@@ -10164,13 +10246,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  96 ) # 96. extensions.at:708: STOP RUN RETURNING
+  97 ) # 97. extensions.at:708: STOP RUN RETURNING
     at_setup_line='extensions.at:708'
     at_desc='STOP RUN RETURNING'
-    $at_quiet $ECHO_N " 96: STOP RUN RETURNING                           $ECHO_C"
+    $at_quiet $ECHO_N " 97: STOP RUN RETURNING                           $ECHO_C"
     at_xfail=no
     (
-      echo "96. extensions.at:708: testing ..."
+      echo "97. extensions.at:708: testing ..."
       $at_traceon
 
 
@@ -10240,13 +10322,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  97 ) # 97. extensions.at:725: ENTRY
+  98 ) # 98. extensions.at:725: ENTRY
     at_setup_line='extensions.at:725'
     at_desc='ENTRY'
-    $at_quiet $ECHO_N " 97: ENTRY                                        $ECHO_C"
+    $at_quiet $ECHO_N " 98: ENTRY                                        $ECHO_C"
     at_xfail=no
     (
-      echo "97. extensions.at:725: testing ..."
+      echo "98. extensions.at:725: testing ..."
       $at_traceon
 
 
@@ -10391,13 +10473,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  98 ) # 98. extensions.at:768: LINE SEQUENTIAL write
+  99 ) # 99. extensions.at:768: LINE SEQUENTIAL write
     at_setup_line='extensions.at:768'
     at_desc='LINE SEQUENTIAL write'
-    $at_quiet $ECHO_N " 98: LINE SEQUENTIAL write                        $ECHO_C"
+    $at_quiet $ECHO_N " 99: LINE SEQUENTIAL write                        $ECHO_C"
     at_xfail=no
     (
-      echo "98. extensions.at:768: testing ..."
+      echo "99. extensions.at:768: testing ..."
       $at_traceon
 
 
@@ -10512,13 +10594,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  99 ) # 99. extensions.at:804: LINE SEQUENTIAL read
+  100 ) # 100. extensions.at:804: LINE SEQUENTIAL read
     at_setup_line='extensions.at:804'
     at_desc='LINE SEQUENTIAL read'
-    $at_quiet $ECHO_N " 99: LINE SEQUENTIAL read                         $ECHO_C"
+    $at_quiet $ECHO_N "100: LINE SEQUENTIAL read                         $ECHO_C"
     at_xfail=no
     (
-      echo "99. extensions.at:804: testing ..."
+      echo "100. extensions.at:804: testing ..."
       $at_traceon
 
 
@@ -10621,13 +10703,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  100 ) # 100. extensions.at:852: ASSIGN to KEYBOARD/DISPLAY
+  101 ) # 101. extensions.at:852: ASSIGN to KEYBOARD/DISPLAY
     at_setup_line='extensions.at:852'
     at_desc='ASSIGN to KEYBOARD/DISPLAY'
-    $at_quiet $ECHO_N "100: ASSIGN to KEYBOARD/DISPLAY                   $ECHO_C"
+    $at_quiet $ECHO_N "101: ASSIGN to KEYBOARD/DISPLAY                   $ECHO_C"
     at_xfail=no
     (
-      echo "100. extensions.at:852: testing ..."
+      echo "101. extensions.at:852: testing ..."
       $at_traceon
 
 
@@ -10738,13 +10820,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  101 ) # 101. extensions.at:907: Environment/Argument variable
+  102 ) # 102. extensions.at:907: Environment/Argument variable
     at_setup_line='extensions.at:907'
     at_desc='Environment/Argument variable'
-    $at_quiet $ECHO_N "101: Environment/Argument variable                $ECHO_C"
+    $at_quiet $ECHO_N "102: Environment/Argument variable                $ECHO_C"
     at_xfail=no
     (
-      echo "101. extensions.at:907: testing ..."
+      echo "102. extensions.at:907: testing ..."
       $at_traceon
 
 
@@ -10834,13 +10916,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  102 ) # 102. return-code.at:23: RETURN-CODE moving
+  103 ) # 103. return-code.at:23: RETURN-CODE moving
     at_setup_line='return-code.at:23'
     at_desc='RETURN-CODE moving'
-    $at_quiet $ECHO_N "102: RETURN-CODE moving                           $ECHO_C"
+    $at_quiet $ECHO_N "103: RETURN-CODE moving                           $ECHO_C"
     at_xfail=no
     (
-      echo "102. return-code.at:23: testing ..."
+      echo "103. return-code.at:23: testing ..."
       $at_traceon
 
 
@@ -10918,13 +11000,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  103 ) # 103. return-code.at:46: RETURN-CODE passing
+  104 ) # 104. return-code.at:46: RETURN-CODE passing
     at_setup_line='return-code.at:46'
     at_desc='RETURN-CODE passing'
-    $at_quiet $ECHO_N "103: RETURN-CODE passing                          $ECHO_C"
+    $at_quiet $ECHO_N "104: RETURN-CODE passing                          $ECHO_C"
     at_xfail=no
     (
-      echo "103. return-code.at:46: testing ..."
+      echo "104. return-code.at:46: testing ..."
       $at_traceon
 
 
@@ -11069,13 +11151,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  104 ) # 104. functions.at:22: FUNCTION ABS
+  105 ) # 105. functions.at:22: FUNCTION ABS
     at_setup_line='functions.at:22'
     at_desc='FUNCTION ABS'
-    $at_quiet $ECHO_N "104: FUNCTION ABS                                 $ECHO_C"
+    $at_quiet $ECHO_N "105: FUNCTION ABS                                 $ECHO_C"
     at_xfail=no
     (
-      echo "104. functions.at:22: testing ..."
+      echo "105. functions.at:22: testing ..."
       $at_traceon
 
 
@@ -11150,13 +11232,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  105 ) # 105. functions.at:42: FUNCTION ACOS
+  106 ) # 106. functions.at:42: FUNCTION ACOS
     at_setup_line='functions.at:42'
     at_desc='FUNCTION ACOS'
-    $at_quiet $ECHO_N "105: FUNCTION ACOS                                $ECHO_C"
+    $at_quiet $ECHO_N "106: FUNCTION ACOS                                $ECHO_C"
     at_xfail=no
     (
-      echo "105. functions.at:42: testing ..."
+      echo "106. functions.at:42: testing ..."
       $at_traceon
 
 
@@ -11238,13 +11320,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  106 ) # 106. functions.at:69: FUNCTION ANNUITY
+  107 ) # 107. functions.at:69: FUNCTION ANNUITY
     at_setup_line='functions.at:69'
     at_desc='FUNCTION ANNUITY'
-    $at_quiet $ECHO_N "106: FUNCTION ANNUITY                             $ECHO_C"
+    $at_quiet $ECHO_N "107: FUNCTION ANNUITY                             $ECHO_C"
     at_xfail=no
     (
-      echo "106. functions.at:69: testing ..."
+      echo "107. functions.at:69: testing ..."
       $at_traceon
 
 
@@ -11327,13 +11409,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  107 ) # 107. functions.at:97: FUNCTION ASIN
+  108 ) # 108. functions.at:97: FUNCTION ASIN
     at_setup_line='functions.at:97'
     at_desc='FUNCTION ASIN'
-    $at_quiet $ECHO_N "107: FUNCTION ASIN                                $ECHO_C"
+    $at_quiet $ECHO_N "108: FUNCTION ASIN                                $ECHO_C"
     at_xfail=no
     (
-      echo "107. functions.at:97: testing ..."
+      echo "108. functions.at:97: testing ..."
       $at_traceon
 
 
@@ -11415,13 +11497,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  108 ) # 108. functions.at:124: FUNCTION ATAN
+  109 ) # 109. functions.at:124: FUNCTION ATAN
     at_setup_line='functions.at:124'
     at_desc='FUNCTION ATAN'
-    $at_quiet $ECHO_N "108: FUNCTION ATAN                                $ECHO_C"
+    $at_quiet $ECHO_N "109: FUNCTION ATAN                                $ECHO_C"
     at_xfail=no
     (
-      echo "108. functions.at:124: testing ..."
+      echo "109. functions.at:124: testing ..."
       $at_traceon
 
 
@@ -11503,13 +11585,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  109 ) # 109. functions.at:151: FUNCTION CHAR
+  110 ) # 110. functions.at:151: FUNCTION CHAR
     at_setup_line='functions.at:151'
     at_desc='FUNCTION CHAR'
-    $at_quiet $ECHO_N "109: FUNCTION CHAR                                $ECHO_C"
+    $at_quiet $ECHO_N "110: FUNCTION CHAR                                $ECHO_C"
     at_xfail=no
     (
-      echo "109. functions.at:151: testing ..."
+      echo "110. functions.at:151: testing ..."
       $at_traceon
 
 
@@ -11584,13 +11666,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  110 ) # 110. functions.at:171: FUNCTION COS
+  111 ) # 111. functions.at:171: FUNCTION COS
     at_setup_line='functions.at:171'
     at_desc='FUNCTION COS'
-    $at_quiet $ECHO_N "110: FUNCTION COS                                 $ECHO_C"
+    $at_quiet $ECHO_N "111: FUNCTION COS                                 $ECHO_C"
     at_xfail=no
     (
-      echo "110. functions.at:171: testing ..."
+      echo "111. functions.at:171: testing ..."
       $at_traceon
 
 
@@ -11672,13 +11754,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  111 ) # 111. functions.at:198: FUNCTION DATE-OF-INTEGER
+  112 ) # 112. functions.at:198: FUNCTION DATE-OF-INTEGER
     at_setup_line='functions.at:198'
     at_desc='FUNCTION DATE-OF-INTEGER'
-    $at_quiet $ECHO_N "111: FUNCTION DATE-OF-INTEGER                     $ECHO_C"
+    $at_quiet $ECHO_N "112: FUNCTION DATE-OF-INTEGER                     $ECHO_C"
     at_xfail=no
     (
-      echo "111. functions.at:198: testing ..."
+      echo "112. functions.at:198: testing ..."
       $at_traceon
 
 
@@ -11752,13 +11834,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  112 ) # 112. functions.at:217: FUNCTION DATE-TO-YYYYMMDD
+  113 ) # 113. functions.at:217: FUNCTION DATE-TO-YYYYMMDD
     at_setup_line='functions.at:217'
     at_desc='FUNCTION DATE-TO-YYYYMMDD'
-    $at_quiet $ECHO_N "112: FUNCTION DATE-TO-YYYYMMDD                    $ECHO_C"
+    $at_quiet $ECHO_N "113: FUNCTION DATE-TO-YYYYMMDD                    $ECHO_C"
     at_xfail=no
     (
-      echo "112. functions.at:217: testing ..."
+      echo "113. functions.at:217: testing ..."
       $at_traceon
 
 
@@ -11832,13 +11914,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  113 ) # 113. functions.at:236: FUNCTION DAY-OF-INTEGER
+  114 ) # 114. functions.at:236: FUNCTION DAY-OF-INTEGER
     at_setup_line='functions.at:236'
     at_desc='FUNCTION DAY-OF-INTEGER'
-    $at_quiet $ECHO_N "113: FUNCTION DAY-OF-INTEGER                      $ECHO_C"
+    $at_quiet $ECHO_N "114: FUNCTION DAY-OF-INTEGER                      $ECHO_C"
     at_xfail=no
     (
-      echo "113. functions.at:236: testing ..."
+      echo "114. functions.at:236: testing ..."
       $at_traceon
 
 
@@ -11912,13 +11994,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  114 ) # 114. functions.at:255: FUNCTION DAY-TO-YYYYDDD
+  115 ) # 115. functions.at:255: FUNCTION DAY-TO-YYYYDDD
     at_setup_line='functions.at:255'
     at_desc='FUNCTION DAY-TO-YYYYDDD'
-    $at_quiet $ECHO_N "114: FUNCTION DAY-TO-YYYYDDD                      $ECHO_C"
+    $at_quiet $ECHO_N "115: FUNCTION DAY-TO-YYYYDDD                      $ECHO_C"
     at_xfail=no
     (
-      echo "114. functions.at:255: testing ..."
+      echo "115. functions.at:255: testing ..."
       $at_traceon
 
 
@@ -11992,13 +12074,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  115 ) # 115. functions.at:274: FUNCTION EXCEPTION-FILE
+  116 ) # 116. functions.at:274: FUNCTION EXCEPTION-FILE
     at_setup_line='functions.at:274'
     at_desc='FUNCTION EXCEPTION-FILE'
-    $at_quiet $ECHO_N "115: FUNCTION EXCEPTION-FILE                      $ECHO_C"
+    $at_quiet $ECHO_N "116: FUNCTION EXCEPTION-FILE                      $ECHO_C"
     at_xfail=no
     (
-      echo "115. functions.at:274: testing ..."
+      echo "116. functions.at:274: testing ..."
       $at_traceon
 
 
@@ -12082,13 +12164,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  116 ) # 116. functions.at:303: FUNCTION EXCEPTION-LOCATION
+  117 ) # 117. functions.at:303: FUNCTION EXCEPTION-LOCATION
     at_setup_line='functions.at:303'
     at_desc='FUNCTION EXCEPTION-LOCATION'
-    $at_quiet $ECHO_N "116: FUNCTION EXCEPTION-LOCATION                  $ECHO_C"
+    $at_quiet $ECHO_N "117: FUNCTION EXCEPTION-LOCATION                  $ECHO_C"
     at_xfail=no
     (
-      echo "116. functions.at:303: testing ..."
+      echo "117. functions.at:303: testing ..."
       $at_traceon
 
 
@@ -12176,13 +12258,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  117 ) # 117. functions.at:336: FUNCTION EXCEPTION-STATEMENT
+  118 ) # 118. functions.at:336: FUNCTION EXCEPTION-STATEMENT
     at_setup_line='functions.at:336'
     at_desc='FUNCTION EXCEPTION-STATEMENT'
-    $at_quiet $ECHO_N "117: FUNCTION EXCEPTION-STATEMENT                 $ECHO_C"
+    $at_quiet $ECHO_N "118: FUNCTION EXCEPTION-STATEMENT                 $ECHO_C"
     at_xfail=no
     (
-      echo "117. functions.at:336: testing ..."
+      echo "118. functions.at:336: testing ..."
       $at_traceon
 
 
@@ -12266,13 +12348,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  118 ) # 118. functions.at:365: FUNCTION EXCEPTION-STATUS
+  119 ) # 119. functions.at:365: FUNCTION EXCEPTION-STATUS
     at_setup_line='functions.at:365'
     at_desc='FUNCTION EXCEPTION-STATUS'
-    $at_quiet $ECHO_N "118: FUNCTION EXCEPTION-STATUS                    $ECHO_C"
+    $at_quiet $ECHO_N "119: FUNCTION EXCEPTION-STATUS                    $ECHO_C"
     at_xfail=no
     (
-      echo "118. functions.at:365: testing ..."
+      echo "119. functions.at:365: testing ..."
       $at_traceon
 
 
@@ -12356,13 +12438,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  119 ) # 119. functions.at:394: FUNCTION EXP
+  120 ) # 120. functions.at:394: FUNCTION EXP
     at_setup_line='functions.at:394'
     at_desc='FUNCTION EXP'
-    $at_quiet $ECHO_N "119: FUNCTION EXP                                 $ECHO_C"
+    $at_quiet $ECHO_N "120: FUNCTION EXP                                 $ECHO_C"
     at_xfail=no
     (
-      echo "119. functions.at:394: testing ..."
+      echo "120. functions.at:394: testing ..."
       $at_traceon
 
 
@@ -12443,13 +12525,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  120 ) # 120. functions.at:420: FUNCTION FACTORIAL
+  121 ) # 121. functions.at:420: FUNCTION FACTORIAL
     at_setup_line='functions.at:420'
     at_desc='FUNCTION FACTORIAL'
-    $at_quiet $ECHO_N "120: FUNCTION FACTORIAL                           $ECHO_C"
+    $at_quiet $ECHO_N "121: FUNCTION FACTORIAL                           $ECHO_C"
     at_xfail=no
     (
-      echo "120. functions.at:420: testing ..."
+      echo "121. functions.at:420: testing ..."
       $at_traceon
 
 
@@ -12523,13 +12605,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  121 ) # 121. functions.at:439: FUNCTION FRACTION-PART
+  122 ) # 122. functions.at:439: FUNCTION FRACTION-PART
     at_setup_line='functions.at:439'
     at_desc='FUNCTION FRACTION-PART'
-    $at_quiet $ECHO_N "121: FUNCTION FRACTION-PART                       $ECHO_C"
+    $at_quiet $ECHO_N "122: FUNCTION FRACTION-PART                       $ECHO_C"
     at_xfail=no
     (
-      echo "121. functions.at:439: testing ..."
+      echo "122. functions.at:439: testing ..."
       $at_traceon
 
 
@@ -12605,13 +12687,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  122 ) # 122. functions.at:460: FUNCTION INTEGER
+  123 ) # 123. functions.at:460: FUNCTION INTEGER
     at_setup_line='functions.at:460'
     at_desc='FUNCTION INTEGER'
-    $at_quiet $ECHO_N "122: FUNCTION INTEGER                             $ECHO_C"
+    $at_quiet $ECHO_N "123: FUNCTION INTEGER                             $ECHO_C"
     at_xfail=no
     (
-      echo "122. functions.at:460: testing ..."
+      echo "123. functions.at:460: testing ..."
       $at_traceon
 
 
@@ -12686,13 +12768,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  123 ) # 123. functions.at:480: FUNCTION INTEGER-OF-DATE
+  124 ) # 124. functions.at:480: FUNCTION INTEGER-OF-DATE
     at_setup_line='functions.at:480'
     at_desc='FUNCTION INTEGER-OF-DATE'
-    $at_quiet $ECHO_N "123: FUNCTION INTEGER-OF-DATE                     $ECHO_C"
+    $at_quiet $ECHO_N "124: FUNCTION INTEGER-OF-DATE                     $ECHO_C"
     at_xfail=no
     (
-      echo "123. functions.at:480: testing ..."
+      echo "124. functions.at:480: testing ..."
       $at_traceon
 
 
@@ -12766,13 +12848,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  124 ) # 124. functions.at:499: FUNCTION INTEGER-OF-DAY
+  125 ) # 125. functions.at:499: FUNCTION INTEGER-OF-DAY
     at_setup_line='functions.at:499'
     at_desc='FUNCTION INTEGER-OF-DAY'
-    $at_quiet $ECHO_N "124: FUNCTION INTEGER-OF-DAY                      $ECHO_C"
+    $at_quiet $ECHO_N "125: FUNCTION INTEGER-OF-DAY                      $ECHO_C"
     at_xfail=no
     (
-      echo "124. functions.at:499: testing ..."
+      echo "125. functions.at:499: testing ..."
       $at_traceon
 
 
@@ -12846,13 +12928,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  125 ) # 125. functions.at:518: FUNCTION INTEGER-PART
+  126 ) # 126. functions.at:518: FUNCTION INTEGER-PART
     at_setup_line='functions.at:518'
     at_desc='FUNCTION INTEGER-PART'
-    $at_quiet $ECHO_N "125: FUNCTION INTEGER-PART                        $ECHO_C"
+    $at_quiet $ECHO_N "126: FUNCTION INTEGER-PART                        $ECHO_C"
     at_xfail=no
     (
-      echo "125. functions.at:518: testing ..."
+      echo "126. functions.at:518: testing ..."
       $at_traceon
 
 
@@ -12927,13 +13009,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  126 ) # 126. functions.at:538: FUNCTION LENGTH
+  127 ) # 127. functions.at:538: FUNCTION LENGTH
     at_setup_line='functions.at:538'
     at_desc='FUNCTION LENGTH'
-    $at_quiet $ECHO_N "126: FUNCTION LENGTH                              $ECHO_C"
+    $at_quiet $ECHO_N "127: FUNCTION LENGTH                              $ECHO_C"
     at_xfail=no
     (
-      echo "126. functions.at:538: testing ..."
+      echo "127. functions.at:538: testing ..."
       $at_traceon
 
 
@@ -13008,13 +13090,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  127 ) # 127. functions.at:558: FUNCTION LOCALE-DATE
+  128 ) # 128. functions.at:558: FUNCTION LOCALE-DATE
     at_setup_line='functions.at:558'
     at_desc='FUNCTION LOCALE-DATE'
-    $at_quiet $ECHO_N "127: FUNCTION LOCALE-DATE                         $ECHO_C"
+    $at_quiet $ECHO_N "128: FUNCTION LOCALE-DATE                         $ECHO_C"
     at_xfail=no
     (
-      echo "127. functions.at:558: testing ..."
+      echo "128. functions.at:558: testing ..."
       $at_traceon
 
 
@@ -13092,13 +13174,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  128 ) # 128. functions.at:581: FUNCTION LOCALE-TIME
+  129 ) # 129. functions.at:581: FUNCTION LOCALE-TIME
     at_setup_line='functions.at:581'
     at_desc='FUNCTION LOCALE-TIME'
-    $at_quiet $ECHO_N "128: FUNCTION LOCALE-TIME                         $ECHO_C"
+    $at_quiet $ECHO_N "129: FUNCTION LOCALE-TIME                         $ECHO_C"
     at_xfail=no
     (
-      echo "128. functions.at:581: testing ..."
+      echo "129. functions.at:581: testing ..."
       $at_traceon
 
 
@@ -13176,13 +13258,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  129 ) # 129. functions.at:604: FUNCTION LOG
+  130 ) # 130. functions.at:604: FUNCTION LOG
     at_setup_line='functions.at:604'
     at_desc='FUNCTION LOG'
-    $at_quiet $ECHO_N "129: FUNCTION LOG                                 $ECHO_C"
+    $at_quiet $ECHO_N "130: FUNCTION LOG                                 $ECHO_C"
     at_xfail=no
     (
-      echo "129. functions.at:604: testing ..."
+      echo "130. functions.at:604: testing ..."
       $at_traceon
 
 
@@ -13264,13 +13346,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  130 ) # 130. functions.at:631: FUNCTION LOG10
+  131 ) # 131. functions.at:631: FUNCTION LOG10
     at_setup_line='functions.at:631'
     at_desc='FUNCTION LOG10'
-    $at_quiet $ECHO_N "130: FUNCTION LOG10                               $ECHO_C"
+    $at_quiet $ECHO_N "131: FUNCTION LOG10                               $ECHO_C"
     at_xfail=no
     (
-      echo "130. functions.at:631: testing ..."
+      echo "131. functions.at:631: testing ..."
       $at_traceon
 
 
@@ -13352,13 +13434,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  131 ) # 131. functions.at:658: FUNCTION LOWER-CASE
+  132 ) # 132. functions.at:658: FUNCTION LOWER-CASE
     at_setup_line='functions.at:658'
     at_desc='FUNCTION LOWER-CASE'
-    $at_quiet $ECHO_N "131: FUNCTION LOWER-CASE                          $ECHO_C"
+    $at_quiet $ECHO_N "132: FUNCTION LOWER-CASE                          $ECHO_C"
     at_xfail=no
     (
-      echo "131. functions.at:658: testing ..."
+      echo "132. functions.at:658: testing ..."
       $at_traceon
 
 
@@ -13433,13 +13515,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  132 ) # 132. functions.at:678: FUNCTION MAX
+  133 ) # 133. functions.at:678: FUNCTION MAX
     at_setup_line='functions.at:678'
     at_desc='FUNCTION MAX'
-    $at_quiet $ECHO_N "132: FUNCTION MAX                                 $ECHO_C"
+    $at_quiet $ECHO_N "133: FUNCTION MAX                                 $ECHO_C"
     at_xfail=no
     (
-      echo "132. functions.at:678: testing ..."
+      echo "133. functions.at:678: testing ..."
       $at_traceon
 
 
@@ -13513,13 +13595,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  133 ) # 133. functions.at:697: FUNCTION MEAN
+  134 ) # 134. functions.at:697: FUNCTION MEAN
     at_setup_line='functions.at:697'
     at_desc='FUNCTION MEAN'
-    $at_quiet $ECHO_N "133: FUNCTION MEAN                                $ECHO_C"
+    $at_quiet $ECHO_N "134: FUNCTION MEAN                                $ECHO_C"
     at_xfail=no
     (
-      echo "133. functions.at:697: testing ..."
+      echo "134. functions.at:697: testing ..."
       $at_traceon
 
 
@@ -13593,13 +13675,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  134 ) # 134. functions.at:716: FUNCTION MEDIAN
+  135 ) # 135. functions.at:716: FUNCTION MEDIAN
     at_setup_line='functions.at:716'
     at_desc='FUNCTION MEDIAN'
-    $at_quiet $ECHO_N "134: FUNCTION MEDIAN                              $ECHO_C"
+    $at_quiet $ECHO_N "135: FUNCTION MEDIAN                              $ECHO_C"
     at_xfail=no
     (
-      echo "134. functions.at:716: testing ..."
+      echo "135. functions.at:716: testing ..."
       $at_traceon
 
 
@@ -13673,13 +13755,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  135 ) # 135. functions.at:735: FUNCTION MIDRANGE
+  136 ) # 136. functions.at:735: FUNCTION MIDRANGE
     at_setup_line='functions.at:735'
     at_desc='FUNCTION MIDRANGE'
-    $at_quiet $ECHO_N "135: FUNCTION MIDRANGE                            $ECHO_C"
+    $at_quiet $ECHO_N "136: FUNCTION MIDRANGE                            $ECHO_C"
     at_xfail=no
     (
-      echo "135. functions.at:735: testing ..."
+      echo "136. functions.at:735: testing ..."
       $at_traceon
 
 
@@ -13753,13 +13835,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  136 ) # 136. functions.at:754: FUNCTION MIN
+  137 ) # 137. functions.at:754: FUNCTION MIN
     at_setup_line='functions.at:754'
     at_desc='FUNCTION MIN'
-    $at_quiet $ECHO_N "136: FUNCTION MIN                                 $ECHO_C"
+    $at_quiet $ECHO_N "137: FUNCTION MIN                                 $ECHO_C"
     at_xfail=no
     (
-      echo "136. functions.at:754: testing ..."
+      echo "137. functions.at:754: testing ..."
       $at_traceon
 
 
@@ -13833,13 +13915,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  137 ) # 137. functions.at:773: FUNCTION MOD
+  138 ) # 138. functions.at:773: FUNCTION MOD
     at_setup_line='functions.at:773'
     at_desc='FUNCTION MOD'
-    $at_quiet $ECHO_N "137: FUNCTION MOD                                 $ECHO_C"
+    $at_quiet $ECHO_N "138: FUNCTION MOD                                 $ECHO_C"
     at_xfail=no
     (
-      echo "137. functions.at:773: testing ..."
+      echo "138. functions.at:773: testing ..."
       $at_traceon
 
 
@@ -13913,13 +13995,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  138 ) # 138. functions.at:792: FUNCTION NUMVAL
+  139 ) # 139. functions.at:792: FUNCTION NUMVAL
     at_setup_line='functions.at:792'
     at_desc='FUNCTION NUMVAL'
-    $at_quiet $ECHO_N "138: FUNCTION NUMVAL                              $ECHO_C"
+    $at_quiet $ECHO_N "139: FUNCTION NUMVAL                              $ECHO_C"
     at_xfail=no
     (
-      echo "138. functions.at:792: testing ..."
+      echo "139. functions.at:792: testing ..."
       $at_traceon
 
 
@@ -13994,13 +14076,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  139 ) # 139. functions.at:812: FUNCTION NUMVAL-C
+  140 ) # 140. functions.at:812: FUNCTION NUMVAL-C
     at_setup_line='functions.at:812'
     at_desc='FUNCTION NUMVAL-C'
-    $at_quiet $ECHO_N "139: FUNCTION NUMVAL-C                            $ECHO_C"
+    $at_quiet $ECHO_N "140: FUNCTION NUMVAL-C                            $ECHO_C"
     at_xfail=no
     (
-      echo "139. functions.at:812: testing ..."
+      echo "140. functions.at:812: testing ..."
       $at_traceon
 
 
@@ -14075,13 +14157,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  140 ) # 140. functions.at:832: FUNCTION ORD
+  141 ) # 141. functions.at:832: FUNCTION ORD
     at_setup_line='functions.at:832'
     at_desc='FUNCTION ORD'
-    $at_quiet $ECHO_N "140: FUNCTION ORD                                 $ECHO_C"
+    $at_quiet $ECHO_N "141: FUNCTION ORD                                 $ECHO_C"
     at_xfail=no
     (
-      echo "140. functions.at:832: testing ..."
+      echo "141. functions.at:832: testing ..."
       $at_traceon
 
 
@@ -14155,13 +14237,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  141 ) # 141. functions.at:851: FUNCTION ORD-MAX
+  142 ) # 142. functions.at:851: FUNCTION ORD-MAX
     at_setup_line='functions.at:851'
     at_desc='FUNCTION ORD-MAX'
-    $at_quiet $ECHO_N "141: FUNCTION ORD-MAX                             $ECHO_C"
+    $at_quiet $ECHO_N "142: FUNCTION ORD-MAX                             $ECHO_C"
     at_xfail=no
     (
-      echo "141. functions.at:851: testing ..."
+      echo "142. functions.at:851: testing ..."
       $at_traceon
 
 
@@ -14235,13 +14317,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  142 ) # 142. functions.at:870: FUNCTION ORD-MIN
+  143 ) # 143. functions.at:870: FUNCTION ORD-MIN
     at_setup_line='functions.at:870'
     at_desc='FUNCTION ORD-MIN'
-    $at_quiet $ECHO_N "142: FUNCTION ORD-MIN                             $ECHO_C"
+    $at_quiet $ECHO_N "143: FUNCTION ORD-MIN                             $ECHO_C"
     at_xfail=no
     (
-      echo "142. functions.at:870: testing ..."
+      echo "143. functions.at:870: testing ..."
       $at_traceon
 
 
@@ -14315,13 +14397,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  143 ) # 143. functions.at:889: FUNCTION PRESENT-VALUE
+  144 ) # 144. functions.at:889: FUNCTION PRESENT-VALUE
     at_setup_line='functions.at:889'
     at_desc='FUNCTION PRESENT-VALUE'
-    $at_quiet $ECHO_N "143: FUNCTION PRESENT-VALUE                       $ECHO_C"
+    $at_quiet $ECHO_N "144: FUNCTION PRESENT-VALUE                       $ECHO_C"
     at_xfail=no
     (
-      echo "143. functions.at:889: testing ..."
+      echo "144. functions.at:889: testing ..."
       $at_traceon
 
 
@@ -14395,13 +14477,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  144 ) # 144. functions.at:908: FUNCTION RANGE
+  145 ) # 145. functions.at:908: FUNCTION RANGE
     at_setup_line='functions.at:908'
     at_desc='FUNCTION RANGE'
-    $at_quiet $ECHO_N "144: FUNCTION RANGE                               $ECHO_C"
+    $at_quiet $ECHO_N "145: FUNCTION RANGE                               $ECHO_C"
     at_xfail=no
     (
-      echo "144. functions.at:908: testing ..."
+      echo "145. functions.at:908: testing ..."
       $at_traceon
 
 
@@ -14475,13 +14557,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  145 ) # 145. functions.at:927: FUNCTION REM
+  146 ) # 146. functions.at:927: FUNCTION REM
     at_setup_line='functions.at:927'
     at_desc='FUNCTION REM'
-    $at_quiet $ECHO_N "145: FUNCTION REM                                 $ECHO_C"
+    $at_quiet $ECHO_N "146: FUNCTION REM                                 $ECHO_C"
     at_xfail=no
     (
-      echo "145. functions.at:927: testing ..."
+      echo "146. functions.at:927: testing ..."
       $at_traceon
 
 
@@ -14555,13 +14637,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  146 ) # 146. functions.at:946: FUNCTION REVERSE
+  147 ) # 147. functions.at:946: FUNCTION REVERSE
     at_setup_line='functions.at:946'
     at_desc='FUNCTION REVERSE'
-    $at_quiet $ECHO_N "146: FUNCTION REVERSE                             $ECHO_C"
+    $at_quiet $ECHO_N "147: FUNCTION REVERSE                             $ECHO_C"
     at_xfail=no
     (
-      echo "146. functions.at:946: testing ..."
+      echo "147. functions.at:946: testing ..."
       $at_traceon
 
 
@@ -14636,13 +14718,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  147 ) # 147. functions.at:966: FUNCTION SECONDS-FROM-FORMATTED-TIME
+  148 ) # 148. functions.at:966: FUNCTION SECONDS-FROM-FORMATTED-TIME
     at_setup_line='functions.at:966'
     at_desc='FUNCTION SECONDS-FROM-FORMATTED-TIME'
-    $at_quiet $ECHO_N "147: FUNCTION SECONDS-FROM-FORMATTED-TIME         $ECHO_C"
+    $at_quiet $ECHO_N "148: FUNCTION SECONDS-FROM-FORMATTED-TIME         $ECHO_C"
     at_xfail=no
     (
-      echo "147. functions.at:966: testing ..."
+      echo "148. functions.at:966: testing ..."
       $at_traceon
 
 
@@ -14724,13 +14806,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  148 ) # 148. functions.at:993: FUNCTION SECONDS-PAST-MIDNIGHT
+  149 ) # 149. functions.at:993: FUNCTION SECONDS-PAST-MIDNIGHT
     at_setup_line='functions.at:993'
     at_desc='FUNCTION SECONDS-PAST-MIDNIGHT'
-    $at_quiet $ECHO_N "148: FUNCTION SECONDS-PAST-MIDNIGHT               $ECHO_C"
+    $at_quiet $ECHO_N "149: FUNCTION SECONDS-PAST-MIDNIGHT               $ECHO_C"
     at_xfail=no
     (
-      echo "148. functions.at:993: testing ..."
+      echo "149. functions.at:993: testing ..."
       $at_traceon
 
 
@@ -14810,13 +14892,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  149 ) # 149. functions.at:1018: FUNCTION SIGN
+  150 ) # 150. functions.at:1018: FUNCTION SIGN
     at_setup_line='functions.at:1018'
     at_desc='FUNCTION SIGN'
-    $at_quiet $ECHO_N "149: FUNCTION SIGN                                $ECHO_C"
+    $at_quiet $ECHO_N "150: FUNCTION SIGN                                $ECHO_C"
     at_xfail=no
     (
-      echo "149. functions.at:1018: testing ..."
+      echo "150. functions.at:1018: testing ..."
       $at_traceon
 
 
@@ -14896,13 +14978,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  150 ) # 150. functions.at:1043: FUNCTION SIN
+  151 ) # 151. functions.at:1043: FUNCTION SIN
     at_setup_line='functions.at:1043'
     at_desc='FUNCTION SIN'
-    $at_quiet $ECHO_N "150: FUNCTION SIN                                 $ECHO_C"
+    $at_quiet $ECHO_N "151: FUNCTION SIN                                 $ECHO_C"
     at_xfail=no
     (
-      echo "150. functions.at:1043: testing ..."
+      echo "151. functions.at:1043: testing ..."
       $at_traceon
 
 
@@ -14984,13 +15066,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  151 ) # 151. functions.at:1070: FUNCTION SQRT
+  152 ) # 152. functions.at:1070: FUNCTION SQRT
     at_setup_line='functions.at:1070'
     at_desc='FUNCTION SQRT'
-    $at_quiet $ECHO_N "151: FUNCTION SQRT                                $ECHO_C"
+    $at_quiet $ECHO_N "152: FUNCTION SQRT                                $ECHO_C"
     at_xfail=no
     (
-      echo "151. functions.at:1070: testing ..."
+      echo "152. functions.at:1070: testing ..."
       $at_traceon
 
 
@@ -15072,13 +15154,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  152 ) # 152. functions.at:1097: FUNCTION STANDARD-DEVIATION
+  153 ) # 153. functions.at:1097: FUNCTION STANDARD-DEVIATION
     at_setup_line='functions.at:1097'
     at_desc='FUNCTION STANDARD-DEVIATION'
-    $at_quiet $ECHO_N "152: FUNCTION STANDARD-DEVIATION                  $ECHO_C"
+    $at_quiet $ECHO_N "153: FUNCTION STANDARD-DEVIATION                  $ECHO_C"
     at_xfail=no
     (
-      echo "152. functions.at:1097: testing ..."
+      echo "153. functions.at:1097: testing ..."
       $at_traceon
 
 
@@ -15159,13 +15241,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  153 ) # 153. functions.at:1123: FUNCTION STORED-CHAR-LENGTH
+  154 ) # 154. functions.at:1123: FUNCTION STORED-CHAR-LENGTH
     at_setup_line='functions.at:1123'
     at_desc='FUNCTION STORED-CHAR-LENGTH'
-    $at_quiet $ECHO_N "153: FUNCTION STORED-CHAR-LENGTH                  $ECHO_C"
+    $at_quiet $ECHO_N "154: FUNCTION STORED-CHAR-LENGTH                  $ECHO_C"
     at_xfail=no
     (
-      echo "153. functions.at:1123: testing ..."
+      echo "154. functions.at:1123: testing ..."
       $at_traceon
 
 
@@ -15241,13 +15323,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  154 ) # 154. functions.at:1144: FUNCTION TAN
+  155 ) # 155. functions.at:1144: FUNCTION TAN
     at_setup_line='functions.at:1144'
     at_desc='FUNCTION TAN'
-    $at_quiet $ECHO_N "154: FUNCTION TAN                                 $ECHO_C"
+    $at_quiet $ECHO_N "155: FUNCTION TAN                                 $ECHO_C"
     at_xfail=no
     (
-      echo "154. functions.at:1144: testing ..."
+      echo "155. functions.at:1144: testing ..."
       $at_traceon
 
 
@@ -15329,13 +15411,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  155 ) # 155. functions.at:1171: FUNCTION TRIM
+  156 ) # 156. functions.at:1171: FUNCTION TRIM
     at_setup_line='functions.at:1171'
     at_desc='FUNCTION TRIM'
-    $at_quiet $ECHO_N "155: FUNCTION TRIM                                $ECHO_C"
+    $at_quiet $ECHO_N "156: FUNCTION TRIM                                $ECHO_C"
     at_xfail=no
     (
-      echo "155. functions.at:1171: testing ..."
+      echo "156. functions.at:1171: testing ..."
       $at_traceon
 
 
@@ -15412,13 +15494,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  156 ) # 156. functions.at:1193: FUNCTION UPPER-CASE
+  157 ) # 157. functions.at:1193: FUNCTION UPPER-CASE
     at_setup_line='functions.at:1193'
     at_desc='FUNCTION UPPER-CASE'
-    $at_quiet $ECHO_N "156: FUNCTION UPPER-CASE                          $ECHO_C"
+    $at_quiet $ECHO_N "157: FUNCTION UPPER-CASE                          $ECHO_C"
     at_xfail=no
     (
-      echo "156. functions.at:1193: testing ..."
+      echo "157. functions.at:1193: testing ..."
       $at_traceon
 
 
@@ -15493,13 +15575,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  157 ) # 157. functions.at:1213: FUNCTION VARIANCE
+  158 ) # 158. functions.at:1213: FUNCTION VARIANCE
     at_setup_line='functions.at:1213'
     at_desc='FUNCTION VARIANCE'
-    $at_quiet $ECHO_N "157: FUNCTION VARIANCE                            $ECHO_C"
+    $at_quiet $ECHO_N "158: FUNCTION VARIANCE                            $ECHO_C"
     at_xfail=no
     (
-      echo "157. functions.at:1213: testing ..."
+      echo "158. functions.at:1213: testing ..."
       $at_traceon
 
 

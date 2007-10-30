@@ -337,7 +337,7 @@ output_base (struct cb_field *f)
 			if (!f01->flag_local) {
 				output_storage ("static ");
 			}
-#ifdef __GNUC__
+#ifdef HAVE_ATTRIBUTE_ALIGNED
 			output_storage ("unsigned char %s%s[%d] __attribute__((aligned));",
 #else
 			output_storage ("unsigned char %s%s[%d];",
@@ -385,7 +385,7 @@ output_data (cb_tree x)
 				(l->sign < 0) ? "-" : (l->sign > 0) ? "+" : "");
 		} else {
 			output ("(unsigned char *)");
-			output_string (l->data, l->size);
+			output_string (l->data, (int) l->size);
 		}
 		break;
 	case CB_TAG_REFERENCE:
@@ -545,7 +545,7 @@ output_attr (cb_tree x)
 				flags = COB_FLAG_HAVE_SIGN | COB_FLAG_SIGN_SEPARATE;
 			}
 			id = lookup_attr (COB_TYPE_NUMERIC_DISPLAY,
-					  l->size, l->scale, flags, NULL, 0);
+					  (int) l->size, l->scale, flags, NULL, 0);
 		} else {
 			if (l->all) {
 				id = lookup_attr (COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL, 0);
@@ -798,7 +798,7 @@ output_integer (cb_tree x)
 				return;
 			}
 #ifdef	COB_NON_ALIGNED
-			if (f->indexes == 0 && (
+			if (f->storage != CB_STORAGE_LINKAGE && f->indexes == 0 && (
 #ifdef	COB_SHORT_BORK
 				(f->size == 2 && (f->offset % 4 == 0)) ||
 #else
@@ -860,6 +860,9 @@ output_integer (cb_tree x)
 					output ("))");
 					return;
 				}
+			}
+			if (f->pic->have_sign == 0) {
+				output ("(unsigned int)");
 			}
 			break;
 
@@ -936,7 +939,7 @@ output_param (cb_tree x, int id)
 		output_integer (x);
 		break;
 	case CB_TAG_STRING:
-		output_string (CB_STRING (x)->data, CB_STRING (x)->size);
+		output_string (CB_STRING (x)->data, (int) CB_STRING (x)->size);
 		break;
 	case CB_TAG_LOCALE_NAME:
 		output_param (CB_LOCALE_NAME(x)->list, id);
@@ -1774,7 +1777,7 @@ output_initialize_compound (struct cb_initialize *p, cb_tree x)
 					size = ff->offset + ff->size - last_field->offset;
 				}
 
-				output_initialize_uniform (c, last_char, size);
+				output_initialize_uniform (c, last_char, (int) size);
 				break;
 			}
 			/* fall through */
@@ -2080,7 +2083,7 @@ output_call (struct cb_call *p)
 	n = 0;
 	for (l = p->args; l; l = CB_CHAIN (l), n++) {
 		x = CB_VALUE (l);
-		field_iteration = n;
+		field_iteration = (int) n;
 		output_prefix ();
 		output ("module.cob_procedure_parameters[%d] = ", (int)n);
 		switch (CB_TREE_TAG (x)) {
@@ -3057,23 +3060,23 @@ output_alphabet_name_definition (struct cb_alphabet_name *p)
 			lower = literal_value (CB_PAIR_X (x));
 			upper = literal_value (CB_PAIR_Y (x));
 			for (i = lower; i <= upper; i++) {
-				table[i] = n++;
+				table[i] = (int) n++;
 			}
 		} else if (CB_LIST_P (x)) {
 			/* X ALSO Y ... */
 			for (ls = x; ls; ls = CB_CHAIN (ls)) {
-				table[literal_value (CB_VALUE (ls))] = n;
+				table[literal_value (CB_VALUE (ls))] = (int) n;
 			}
 			n++;
 		} else {
 			/* literal */
 			if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
-				table[literal_value (x)] = n++;
+				table[literal_value (x)] = (int) n++;
 			} else {
 				size = CB_LITERAL (x)->size;
 				data = CB_LITERAL (x)->data;
 				for (i = 0; i < size; i++) {
-					table[data[i]] = n++;
+					table[data[i]] = (int) n++;
 				}
 			}
 		}
@@ -3082,7 +3085,7 @@ output_alphabet_name_definition (struct cb_alphabet_name *p)
 	/* fill the rest of characters */
 	for (i = 0; i < 256; i++) {
 		if (table[i] == -1) {
-			table[i] = n++;
+			table[i] = (int) n++;
 		}
 	}
 

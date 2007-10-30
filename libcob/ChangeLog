@@ -1,3 +1,11 @@
+2007-10-27  Roger While <simrw@sim-basis.de>
+
+	* strings.c : Fix figurative constant handling in INSPECT
+
+2007-10-24  Roger While <simrw@sim-basis.de>
+
+	* numeric.[ch] : New routine cob_cmp_uint
+
 2007-10-22  Roger While <simrw@sim-basis.de>
 
 	* numeric.c : Fix 36 digit numerics

@@ -56,6 +56,7 @@ extern int cob_div_quotient (cob_field *dividend, cob_field *divisor, cob_field 
 extern int cob_div_remainder (cob_field *fld_remainder, const int opt);
 
 extern int cob_cmp_int (cob_field *f1, const int n);
+extern int cob_cmp_uint (cob_field *f1, const unsigned int n);
 extern int cob_cmp_packed (cob_field *f, int n);
 extern int cob_cmp_numdisp (const unsigned char *data, const size_t size, const int n);
 extern int cob_cmp_sign_numdisp (const unsigned char *data, const size_t size, const int n);

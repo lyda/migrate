@@ -69,6 +69,7 @@ AH_TEMPLATE([PATCH_LEVEL], [Define a patch level])
 AH_TEMPLATE([WITH_VARSEQ], [Define variable sequential file format])
 # AH_TEMPLATE([DLLHIDDEN], [Has visibility attribute])
 AH_TEMPLATE([HAVE_PSIGN_OPT], [Has -Wno-pointer-sign])
+AH_TEMPLATE([HAVE_ATTRIBUTE_ALIGNED], [Has __attribute__((aligned))])
 AH_TEMPLATE([HAVE_TIMEZONE], [Has timezone variable])
 AH_TEMPLATE([HAVE_MVGETNSTR], [Has mvgetnstr in curses library])
 AH_TEMPLATE([COB_EXEEXT], [Executable extension])
@@ -563,6 +564,11 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int testint;]])],
 	[AC_DEFINE(HAVE_PSIGN_OPT, 1)],
 	[])
 CFLAGS="$MYOLDCFLAGS"
+
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]],
+	[[char testchar[4] __attribute__((aligned));]])],
+	[AC_DEFINE(HAVE_ATTRIBUTE_ALIGNED, 1)],
+	[])
 
 # Special stuff
 
