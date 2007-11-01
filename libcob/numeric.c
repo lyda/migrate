@@ -345,7 +345,7 @@ cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 		if (COB_FIELD_HAVE_SIGN (f)) {
 			mpz_set_si (d->value, cob_binary_get_int (f));
 		} else {
-			mpz_set_ui (d->value, cob_binary_get_int (f));
+			mpz_set_ui (d->value, (unsigned int) cob_binary_get_int (f));
 		}
 	} else {
 		if (COB_FIELD_HAVE_SIGN (f)) {
