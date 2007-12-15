@@ -56,6 +56,9 @@ AH_TEMPLATE([WITH_DB], [Compile with the Berkeley DB library])
 AH_TEMPLATE([USE_DB41], [Use Berkeley DB library new features])
 AH_TEMPLATE([WITH_INDEX_EXTFH], [Compile with an external ISAM handler])
 AH_TEMPLATE([WITH_SEQRA_EXTFH], [Compile with an external SEQ/RAN handler])
+AH_TEMPLATE([WITH_CISAM], [Use CISAM as ISAM handler])
+AH_TEMPLATE([WITH_DISAM], [Use DISAM as ISAM handler])
+AH_TEMPLATE([WITH_VBISAM], [Use VBISAM as ISAM handler])
 AH_TEMPLATE([WITH_LFS64], [Compile with large file system 64])
 AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
 AH_TEMPLATE([COB_EXPERIMENTAL], [Enable experimemental code (Developers only!)])
@@ -78,6 +81,7 @@ AH_TEMPLATE([__USE_STRING_INLINES], [Compiler optimization])
 AH_TEMPLATE([COB_HAS_INLINE], [Can use inline keyword])
 AH_TEMPLATE([COB_NO_SELFOPEN], [Can not dlopen self])
 AH_TEMPLATE([COB_STRFTIME], [Can use strftime for timezone])
+AH_TEMPLATE([COB_LI_IS_LL], [long int is long long])
 
 # enable debug mode by default for now
 AC_DEFINE(COB_DEBUG)
@@ -110,8 +114,46 @@ AC_ARG_WITH(seqra-extfh,
 	AC_DEFINE(WITH_SEQRA_EXTFH)
     fi ], [])
 
+AC_ARG_WITH(cisam,
+  [  --with-cisam            (OpenCOBOL) Use CISAM for ISAM I/O],
+  [ if test "$with_cisam" = "yes"
+    then
+	AC_CHECK_HEADERS([isam.h], , AC_MSG_ERROR(isam.h is required for CISAM))
+	AC_DEFINE(WITH_CISAM)
+	LIBCOB_LIBS="$LIBCOB_LIBS -lifisam -lifisamx"
+    fi ], [])
+
+if test "$with_cisam" != "yes"
+then
+ AC_ARG_WITH(disam,
+  [  --with-disam            (OpenCOBOL) Use DISAM for ISAM I/O],
+  [ if test "$with_disam" = "yes"
+    then
+	AC_CHECK_HEADERS([disam.h], , AC_MSG_ERROR(disam.h is required for DISAM))
+	AC_CHECK_LIB([disam], [isopen], , AC_MSG_ERROR(libdisam is required for DISAM))
+	AC_DEFINE(WITH_DISAM)
+	LIBCOB_LIBS="$LIBCOB_LIBS -ldisam"
+    fi ], [])
+fi
+
+if test "$with_cisam" != "yes" -a "$with_disam" != "yes"
+then
+AC_ARG_WITH(vbisam,
+  [  --with-vbisam           (OpenCOBOL) Use VBISAM for ISAM I/O],
+  [ if test "$with_vbisam" = "yes"
+    then
+	AC_CHECK_HEADERS([vbisam.h], , AC_MSG_ERROR(vbisam.h is required for VBISAM))
+	AC_CHECK_LIB([vbisam], [isopen], , AC_MSG_ERROR(libvbisam is required for VBISAM))
+	AC_DEFINE(WITH_VBISAM)
+	LIBCOB_LIBS="$LIBCOB_LIBS -lvbisam"
+    fi ], [])
+fi
+
 LIBDB=""
-AC_ARG_WITH(index-extfh,
+
+if test "$with_cisam" != "yes" -a "$with_disam" != "yes" -a "$with_vbisam" != "yes"
+then
+ AC_ARG_WITH(index-extfh,
   [  --with-index-extfh      (OpenCOBOL) Use external ISAM file handler],
   [ if test "$with_index_extfh" = "yes"
     then
@@ -130,6 +172,7 @@ AC_ARG_WITH(index-extfh,
 		  fi ],
 		[ LIBDB="3"
 		  AC_DEFINE(WITH_DB, 3) ]) ]) ])
+fi
 
 #AC_ARG_WITH(db,
 #  [  --with-db               (OpenCOBOL) use Berkeley DB 3.0 or later (libdb)],
@@ -486,6 +529,15 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
 	[],
 	[])
 
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[]], [[
+	if (sizeof(long int) == sizeof(long long))
+		return 0;
+	return 1;
+	]])],
+	[AC_DEFINE(COB_LI_IS_LL)],
+	[],
+	[])
+
 # OpenCOBOL Configuration
 
 if test "x$prefix" = "xNONE"
@@ -704,14 +756,23 @@ echo ""
 echo "  Use gettext for international messages:      ${USE_NLS}"
 if test "$with_seqra_extfh" = "yes"
 then
-echo "  Use external SEQ/RAN file handler            yes"
+  echo "  Use external SEQ/RAN file handler            yes"
 fi
 if test "$with_index_extfh" = "yes"
 then
-echo "  Use external ISAM file handler               yes"
+  echo "  Use external ISAM file handler               yes"
+elif test "$with_cisam" = "yes"
+then
+  echo "  Use CISAM for file I/O                       yes"
+elif test "$with_disam" = "yes"
+then
+  echo "  Use DISAM for file I/O                       yes"
+elif test "$with_vbisam" = "yes"
+then
+  echo "  Use VBISAM for file I/O                      yes"
 else
-echo "  Use Berkeley DB for file I/O:                ${USE_DB}"
-echo "  Use enhanced Berkeley DB (>= 4.1)            ${HAS_DB41}"
+  echo "  Use Berkeley DB for file I/O:                ${USE_DB}"
+  echo "  Use enhanced Berkeley DB (>= 4.1)            ${HAS_DB41}"
 fi
 echo "  Use fcntl for file locking:                  ${ac_cv_func_fcntl}"
 echo "  Use ncurses/pdcurses/curses for screen I/O:  ${USE_NCURSES}"

@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301 USA
  */
 
-%expect 121
+%expect 123
 
 %defines
 %verbose
@@ -107,7 +107,7 @@ static int literal_value (cb_tree x);
 %token AND ANY ARE AREA ARGUMENT_NUMBER ARGUMENT_VALUE ASCENDING ASSIGN
 %token AT AUTO BACKGROUND_COLOR BEFORE BELL
 %token BINARY BLANK BLINK BLOCK BY CHARACTER CHARACTERS CLASS CODE_SET CYCLE
-%token COLLATING COLUMN COMMA COMMAND_LINE COMMON CONFIGURATION CONTAINS
+%token COLLATING COLUMN COMMA COMMAND_LINE COMMIT COMMON CONFIGURATION CONTAINS
 %token CONTENT CONTINUE CONVERTING CORRESPONDING COUNT CRT CURRENCY CURSOR
 %token DATA DATE DAY DAY_OF_WEEK DEBUGGING DECIMAL_POINT DECLARATIVES DEFAULT
 %token DELIMITED DELIMITER DEPENDING DESCENDING DIVISION DOWN DUPLICATES
@@ -861,7 +861,7 @@ lock_mode:
 
 lock_with:
 | WITH LOCK ON records
-| WITH LOCK ON MULTIPLE records	{ PENDING ("WITH LOCK ON MULTIPLE RECORDS"); }
+| WITH LOCK ON MULTIPLE records	{ current_file->lock_mode |= COB_LOCK_MULTIPLE; }
 | WITH ROLLBACK			{ PENDING ("WITH ROLLBACK"); }
 ;
 
@@ -2215,6 +2215,7 @@ statement:
 | call_statement
 | cancel_statement
 | close_statement
+| commit_statement
 | compute_statement
 | continue_statement
 | delete_statement
@@ -2238,6 +2239,7 @@ statement:
 | release_statement
 | return_statement
 | rewrite_statement
+| rollback_statement
 | search_statement
 | set_statement
 | sort_statement
@@ -2420,7 +2422,7 @@ allocate_returning:
 alter_statement:
   ALTER alter_options
   {
-	cb_verify (cb_alter_statement, "ALTER");
+	cb_error (_("ALTER statement is obsolete and unsupported"));
   }
 ;
 
@@ -2605,6 +2607,19 @@ end_compute:
 ;
 
 comp_equal: '=' | EQUAL;
+
+/*
+ * COMMIT statement
+ */
+
+commit_statement:
+  COMMIT
+  {
+	BEGIN_STATEMENT ("COMMIT");
+	cb_emit_commit ();
+  }
+;
+
 
 /*
  * CONTINUE statement
@@ -3460,7 +3475,7 @@ read_statement:
   end_read
   {
 	if ($3 != cb_error_node) {
-		if ($7 && CB_FILE(cb_ref($3))->lock_mode == COB_LOCK_AUTOMATIC) {
+		if ($7 && (CB_FILE(cb_ref($3))->lock_mode & COB_LOCK_AUTOMATIC)) {
 			cb_error (_("LOCK clause invalid with file LOCK AUTOMATIC"));
 		} else if ($8 &&
 		      (CB_FILE(cb_ref($3))->organization != COB_ORG_RELATIVE &&
@@ -3576,6 +3591,19 @@ write_lock:
 end_rewrite:
   /* empty */			{ terminator_warning (); }
 | END_REWRITE
+;
+
+
+/*
+ * ROLLBACK statement
+ */
+
+rollback_statement:
+  ROLLBACK
+  {
+	BEGIN_STATEMENT ("ROLLBACK");
+	cb_emit_rollback ();
+  }
 ;
 
 

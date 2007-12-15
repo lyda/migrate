@@ -31,3 +31,5 @@ Frank Swarbrick - Work on compiler syntax
 Warren Gay - For testing systems that we did
 	known that we even support!
 	(eg. Old DEC Alpha sytems)
+Ron Norman - Work on C/D/VB-ISAM handler
+Fabrizio Calabretta - Work on the EXTFH interface

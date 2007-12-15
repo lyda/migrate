@@ -1,6 +1,19 @@
+2007-11-21  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Add C/D/VB-ISAM code
+
+2007-11-20  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Cater for 02 return status
+		Put in hooks for C/D/VB-ISAM
+
+2007-11-09  Roger While <simrw@sim-basis.de>
+
+	* numeric.c : Use 64-bit when available
+
 2007-11-01  Roger While <simrw@sim-basis.de>
 
-	* numeric : Fix 64-bit unsigned problem
+	* numeric.c : Fix 64-bit unsigned problem
 
 2007-10-27  Roger While <simrw@sim-basis.de>
 

@@ -1,3 +1,16 @@
+2007-12-03  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Add checks for headers/libraries when using
+			 CISAM/DISAM/VBISAM
+
+2007-11-21  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Add --with-cisam, --with-disam, --with-vbisam
+
+2007-11-09  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Check for sizeof long int == long long
+
 2007-10-23  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : Check for __attribute__((aligned))

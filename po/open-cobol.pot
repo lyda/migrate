@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2007-10-30 14:06+0100\n"
+"POT-Creation-Date: 2007-12-13 16:14+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -442,8 +442,8 @@ msgstr ""
 msgid "Invalid input stream '%s'"
 msgstr ""
 
-#: cobc/typeck.c:2555 cobc/typeck.c:2564 cobc/typeck.c:2893 cobc/typeck.c:2896
-#: cobc/typeck.c:2904
+#: cobc/typeck.c:2555 cobc/typeck.c:2564 cobc/typeck.c:2903 cobc/typeck.c:2906
+#: cobc/typeck.c:2914
 #, c-format
 msgid "'%s' undefined in SPECIAL-NAMES"
 msgstr ""
@@ -475,209 +475,209 @@ msgstr ""
 msgid "Wrong number of CALL parameters for '%s'"
 msgstr ""
 
-#: cobc/typeck.c:2690 cobc/typeck.c:2718 cobc/typeck.c:4276 cobc/typeck.c:4368
-#: cobc/typeck.c:4416 cobc/typeck.c:4962
+#: cobc/typeck.c:2690 cobc/typeck.c:2728 cobc/typeck.c:4289 cobc/typeck.c:4381
+#: cobc/typeck.c:4429 cobc/typeck.c:4985
 msgid "Operation not allowed on SORT files"
 msgstr ""
 
-#: cobc/typeck.c:2754
+#: cobc/typeck.c:2764
 #, c-format
 msgid "'%s' is an invalid type for DISPLAY operand"
 msgstr ""
 
-#: cobc/typeck.c:2758
+#: cobc/typeck.c:2768
 msgid "Invalid type for DISPLAY operand"
 msgstr ""
 
-#: cobc/typeck.c:2765 cobc/typeck.c:2772 cobc/typeck.c:2779
+#: cobc/typeck.c:2775 cobc/typeck.c:2782 cobc/typeck.c:2789
 msgid "Wrong number of data items"
 msgstr ""
 
-#: cobc/typeck.c:2876
+#: cobc/typeck.c:2886
 msgid "Invalid output stream"
 msgstr ""
 
-#: cobc/typeck.c:2976
+#: cobc/typeck.c:2986
 msgid "Invalid use of 88 level in WHEN expression"
 msgstr ""
 
-#: cobc/typeck.c:3023
+#: cobc/typeck.c:3033
 msgid "Wrong number of WHEN parameters"
 msgstr ""
 
-#: cobc/typeck.c:3067
+#: cobc/typeck.c:3077
 #, c-format
 msgid ""
 "Target %d of FREE, a data address identifier, must address a BASED data item"
 msgstr ""
 
-#: cobc/typeck.c:3077
+#: cobc/typeck.c:3087
 #, c-format
 msgid "Target %d of FREE must be a data pointer"
 msgstr ""
 
-#: cobc/typeck.c:3100
+#: cobc/typeck.c:3110
 msgid "GO TO with multiple procedure-names"
 msgstr ""
 
-#: cobc/typeck.c:3168
+#: cobc/typeck.c:3178
 msgid "Invalid target for INSPECT"
 msgstr ""
 
-#: cobc/typeck.c:3175 cobc/typeck.c:3179
+#: cobc/typeck.c:3185 cobc/typeck.c:3189
 msgid "Invalid target for REPLACING/CONVERTING"
 msgstr ""
 
-#: cobc/typeck.c:3204
+#: cobc/typeck.c:3214
 msgid "Data name expected before CHARACTERS"
 msgstr ""
 
-#: cobc/typeck.c:3214
+#: cobc/typeck.c:3224
 msgid "Data name expected before ALL"
 msgstr ""
 
-#: cobc/typeck.c:3224
+#: cobc/typeck.c:3234
 msgid "Data name expected before LEADING"
 msgstr ""
 
-#: cobc/typeck.c:3234
+#: cobc/typeck.c:3244
 msgid "Data name expected before TRAILING"
 msgstr ""
 
-#: cobc/typeck.c:3244
+#: cobc/typeck.c:3254
 #, c-format
 msgid "ALL, LEADING or TRAILING expected before '%s'"
 msgstr ""
 
-#: cobc/typeck.c:3317
+#: cobc/typeck.c:3327
 #, c-format
 msgid "'%s' defined here as PIC %s"
 msgstr ""
 
-#: cobc/typeck.c:3319
+#: cobc/typeck.c:3329
 #, c-format
 msgid "'%s' defined here as a group of length %d"
 msgstr ""
 
-#: cobc/typeck.c:3378
+#: cobc/typeck.c:3388
 msgid "Invalid destination for MOVE"
 msgstr ""
 
-#: cobc/typeck.c:3479
+#: cobc/typeck.c:3492
 msgid "Data item not signed"
 msgstr ""
 
-#: cobc/typeck.c:3483
+#: cobc/typeck.c:3496
 msgid "Ignoring negative sign"
 msgstr ""
 
-#: cobc/typeck.c:3610
+#: cobc/typeck.c:3623
 msgid "Move non-integer to alphanumeric"
 msgstr ""
 
-#: cobc/typeck.c:3636
+#: cobc/typeck.c:3649
 msgid "Invalid source for MOVE"
 msgstr ""
 
-#: cobc/typeck.c:3653
+#: cobc/typeck.c:3666
 msgid "Invalid VALUE clause"
 msgstr ""
 
-#: cobc/typeck.c:3655
+#: cobc/typeck.c:3668
 msgid "Invalid MOVE statement"
 msgstr ""
 
-#: cobc/typeck.c:3661
+#: cobc/typeck.c:3674
 msgid "Numeric value is expected"
 msgstr ""
 
-#: cobc/typeck.c:3665
+#: cobc/typeck.c:3678
 msgid "Alphanumeric value is expected"
 msgstr ""
 
-#: cobc/typeck.c:3669
+#: cobc/typeck.c:3682
 msgid "Value does not fit the picture string"
 msgstr ""
 
-#: cobc/typeck.c:3673
+#: cobc/typeck.c:3686
 msgid "Value size exceeds data size"
 msgstr ""
 
-#: cobc/typeck.c:3677
+#: cobc/typeck.c:3690
 msgid "Sending field larger than receiving field"
 msgstr ""
 
-#: cobc/typeck.c:3681
+#: cobc/typeck.c:3694
 msgid "Some digits may be truncated"
 msgstr ""
 
-#: cobc/typeck.c:4376
+#: cobc/typeck.c:4389
 msgid "READ PREVIOUS only allowed for INDEXED SEQUENTIAL files"
 msgstr ""
 
-#: cobc/typeck.c:4383
+#: cobc/typeck.c:4396
 msgid "KEY ignored with sequential READ"
 msgstr ""
 
-#: cobc/typeck.c:4421 cobc/typeck.c:4967 cobc/parser.y:3472
+#: cobc/typeck.c:4434 cobc/typeck.c:4990 cobc/parser.y:3487
 msgid "INVALID KEY clause invalid with this file type"
 msgstr ""
 
-#: cobc/typeck.c:4424 cobc/typeck.c:4971 cobc/parser.y:3464
+#: cobc/typeck.c:4437 cobc/typeck.c:4994 cobc/parser.y:3479
 msgid "LOCK clause invalid with file LOCK AUTOMATIC"
 msgstr ""
 
-#: cobc/typeck.c:4501
+#: cobc/typeck.c:4524
 #, c-format
 msgid "Undeclared key '%s'"
 msgstr ""
 
-#: cobc/typeck.c:4505
+#: cobc/typeck.c:4528
 msgid "Invalid SEARCH ALL condition"
 msgstr ""
 
-#: cobc/typeck.c:4600
+#: cobc/typeck.c:4623
 msgid "The targets of SET must be either indexes or pointers"
 msgstr ""
 
-#: cobc/typeck.c:4612 cobc/typeck.c:4616
+#: cobc/typeck.c:4635 cobc/typeck.c:4639
 msgid "SET targets must be PROGRAM-POINTER"
 msgstr ""
 
-#: cobc/typeck.c:4630
+#: cobc/typeck.c:4653
 #, c-format
 msgid "The address of '%s' cannot be changed"
 msgstr ""
 
-#: cobc/typeck.c:4690 cobc/typeck.c:4695 cobc/typeck.c:4722 cobc/typeck.c:4727
+#: cobc/typeck.c:4713 cobc/typeck.c:4718 cobc/typeck.c:4745 cobc/typeck.c:4750
 msgid "Invalid SET statement"
 msgstr ""
 
-#: cobc/typeck.c:4731
+#: cobc/typeck.c:4754
 msgid "Field does not have FALSE clause"
 msgstr ""
 
-#: cobc/typeck.c:4765
+#: cobc/typeck.c:4788
 msgid "Invalid SORT filename"
 msgstr ""
 
-#: cobc/typeck.c:4779
+#: cobc/typeck.c:4802
 msgid "Table sort without keys not implemented yet"
 msgstr ""
 
-#: cobc/typeck.c:4803
+#: cobc/typeck.c:4826
 msgid "Invalid SORT USING parameter"
 msgstr ""
 
-#: cobc/typeck.c:4827
+#: cobc/typeck.c:4850
 msgid "Invalid SORT GIVING parameter"
 msgstr ""
 
-#: cobc/typeck.c:4974
+#: cobc/typeck.c:4997
 msgid "LOCK clause invalid here"
 msgstr ""
 
-#: cobc/typeck.c:5022
+#: cobc/typeck.c:5045
 msgid "Invalid mnemonic name"
 msgstr ""
 
@@ -781,7 +781,7 @@ msgstr ""
 msgid "RENAMES may not reference a level 01 or > 50"
 msgstr ""
 
-#: cobc/parser.y:1889 cobc/parser.y:1921 cobc/parser.y:2715 cobc/parser.y:2747
+#: cobc/parser.y:1889 cobc/parser.y:1921 cobc/parser.y:2730 cobc/parser.y:2762
 #, c-format
 msgid "Invalid color '%d'"
 msgstr ""
@@ -795,132 +795,136 @@ msgstr ""
 msgid "Unknown statement '%s'"
 msgstr ""
 
-#: cobc/parser.y:2477 cobc/parser.y:2484
+#: cobc/parser.y:2425
+msgid "ALTER statement is obsolete and unsupported"
+msgstr ""
+
+#: cobc/parser.y:2479 cobc/parser.y:2486
 msgid "OMITTED only allowed with BY REFERENCE"
 msgstr ""
 
-#: cobc/parser.y:2500
+#: cobc/parser.y:2502
 msgid "BY CONTENT not allowed in CHAINED program"
 msgstr ""
 
-#: cobc/parser.y:2508
+#: cobc/parser.y:2510
 msgid "BY VALUE not allowed in CHAINED program"
 msgstr ""
 
-#: cobc/parser.y:2957 cobc/parser.y:2974
+#: cobc/parser.y:2972 cobc/parser.y:2989
 msgid "EXIT PERFORM is only valid with inline PERFORM"
 msgstr ""
 
-#: cobc/parser.y:2991
+#: cobc/parser.y:3006
 msgid "EXIT SECTION is only valid with an active SECTION"
 msgstr ""
 
-#: cobc/parser.y:3009
+#: cobc/parser.y:3024
 msgid "EXIT PARAGRAPH is only valid with an active PARAGRAPH"
 msgstr ""
 
-#: cobc/parser.y:3243
+#: cobc/parser.y:3258
 msgid "INSPECT missing a keyword"
 msgstr ""
 
-#: cobc/parser.y:3468
+#: cobc/parser.y:3483
 msgid "KEY clause invalid with this file type"
 msgstr ""
 
-#: cobc/parser.y:3724
+#: cobc/parser.y:3752
 msgid "File sort requires KEY phrase"
 msgstr ""
 
-#: cobc/parser.y:3772
+#: cobc/parser.y:3800
 msgid "File sort requires USING or INPUT PROCEDURE"
 msgstr ""
 
-#: cobc/parser.y:3778
+#: cobc/parser.y:3806
 msgid "USING invalid with table SORT"
 msgstr ""
 
-#: cobc/parser.y:3786
+#: cobc/parser.y:3814
 msgid "INPUT PROCEDURE invalid with table SORT"
 msgstr ""
 
-#: cobc/parser.y:3797
+#: cobc/parser.y:3825
 msgid "File sort requires GIVING or OUTPUT PROCEDURE"
 msgstr ""
 
-#: cobc/parser.y:3803
+#: cobc/parser.y:3831
 msgid "GIVING invalid with table SORT"
 msgstr ""
 
-#: cobc/parser.y:3811
+#: cobc/parser.y:3839
 msgid "OUTPUT PROCEDURE invalid with table SORT"
 msgstr ""
 
-#: cobc/parser.y:3832
+#: cobc/parser.y:3860
 msgid "START not allowed on SEQUENTIAL files"
 msgstr ""
 
-#: cobc/parser.y:3838 cobc/parser.y:4451 cobc/parser.y:4508
+#: cobc/parser.y:3866 cobc/parser.y:4479 cobc/parser.y:4536
 #, c-format
 msgid "'%s' not file name"
 msgstr ""
 
-#: cobc/parser.y:4049
+#: cobc/parser.y:4077
 msgid "USE statement must be within DECLARATIVES"
 msgstr ""
 
-#: cobc/parser.y:4051
+#: cobc/parser.y:4079
 msgid "SECTION header missing before USE statement"
 msgstr ""
 
-#: cobc/parser.y:4437
+#: cobc/parser.y:4465
 msgid "LINAGE-COUNTER must be qualified here"
 msgstr ""
 
-#: cobc/parser.y:4440
+#: cobc/parser.y:4468
 msgid "Invalid LINAGE-COUNTER usage"
 msgstr ""
 
-#: cobc/parser.y:4486
+#: cobc/parser.y:4514
 #, c-format
 msgid "'%s' not indexed"
 msgstr ""
 
-#: cobc/parser.y:4487
+#: cobc/parser.y:4515
 #, c-format
 msgid "'%s' defined here"
 msgstr ""
 
-#: cobc/parser.y:4961
+#: cobc/parser.y:4989
 #, c-format
 msgid "'%s' not level 01 or 77"
 msgstr ""
 
-#: cobc/parser.y:4965
+#: cobc/parser.y:4993
 #, c-format
 msgid "'%s' is not in LINKAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:4968
+#: cobc/parser.y:4996
 #, c-format
 msgid "'%s' can not be BASED/EXTERNAL"
 msgstr ""
 
-#: cobc/parser.y:4972
+#: cobc/parser.y:5000
 #, c-format
 msgid "'%s' is not in WORKING-STORAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:4979
+#: cobc/parser.y:5007
 #, c-format
 msgid "'%s' REDEFINES field not allowed here"
 msgstr ""
 
-#: cobc/parser.y:4985
+#: cobc/parser.y:5013
 #, c-format
 msgid "ENTRY '%s' duplicated"
 msgstr ""
 
-#: cobc/parser.y:5000 cobc/parser.y:5009
+#: cobc/parser.y:5028 cobc/parser.y:5037
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr ""

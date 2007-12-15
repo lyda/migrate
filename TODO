@@ -16,16 +16,12 @@ OpenCOBOL TODO						-*- outline -*-
 
 2 Other features to be implemented
 
-2.2 Nested subprograms
-
-On the way.
-
-2.3 SCREEN SECTION
+2.2 SCREEN SECTION
 
 COBOL 2002 has defined extended ACCEPT/DISPLAY.
 We can do this eventually.
 
-2.4 Embedded SQL
+2.3 Embedded SQL
 
 Frank Polscheit posted his implementation of SQL preprocessor.
 (2004-02-17: SQL pre-processor for OPEN-COBOL)
@@ -33,7 +29,7 @@ Frank Polscheit posted his implementation of SQL preprocessor.
 Firebird (firebird.sourceforge.net) has a SQL preprocessor
 for their database.
 
-2.5 New backends for INDEXED files
+2.4 New backends for INDEXED files
 
  - Look at C-ISAM replacements
 
@@ -41,145 +37,32 @@ for their database.
 
 3.1 Error checking
 
-3.1.1 If the VALUE clause does not match to the picture,
-maybe we should print warnings.
-
-3.1.2 Type checking with each statement
+3.1.1 Type checking with each statement
 
 Most statements do not check the type of thier parameters.
 We should do it at the beginning of each cb_emit_* functions.
 
-3.1.3 Strict error checking depending on the standard
+3.1.2 Strict error checking depending on the standard
+Partially implemented
 
 3.1.4 Use `error' token in the parser for better error recovery
-
-3.2 Intermediate data storage
-
-Currently, the following statement
-
-  MOVE A(B) TO B, C(B).
-
-is converted into
-
-  MOVE A(B) TO B.
-  MOVE A(B) TO C(B).
-
-which does not work correctly.  We should instead convert it into
-
-  MOVE A(B) TO T.
-  MOVE T TO B.
-  MOVE T TO C(B).
-
-where `T' is an intermediate data item allocated by the compiler.
-
-More generally, all identifiers must be identified where described
-in the standard.  Thus, the above statement should be converted
-into the following internal code:
-
-  t1 := A(B)
-  t2 := B
-  t3 := C(B)
-  cob_move (t1, t2)
-  cob_move (t1, t3)
 
 4 Optimization
 
 4.1 More inlining of run-time functions
-See own_memcpy, own_memcmp
-Needs more investigation
 
-4.2
-
-Currently, cobc translates a COBOL program into a single huge
-C function.  There are two problems with doing this:
-
- - The speed of C compilation is very slow, especially when
-   optimization is enabled.  It seems compiling a single huge
-   C function is slower than compiling divided functions of it.
-
- - Debugging the generated COBOL program with gdb is hard
-   because you cannot skip PERFORM statement by the 'next'
-   command.  Currently PERFORM is implemented by C's goto
-   statement, so you have to go there.
-
-To solve these problems, we could separate COBOL sections into
-multiple C functions, and use C function calls to execute each
-section.  However, this does not work for all cases.  Consider
-the following example:
-
-  SAMPLE-1 SECTION.
-    PERFORM SAMPLE-2.
-    PERFORM SAMPLE-3.
-  SAMPLE-2 SECTION.
-    GO TO SAMPLE-3.
-  SAMPLE-3 SECTION.
-    EXIT.
-
-You might want to generate three functions SAMPLE_1, SAMPLE_2,
-and SAMPLE_3.  SAMPLE_1 might be defined as follows:
-
-  void SAMPLE_1 ()
-  {
-    SAMPLE_2 ();
-    SAMPLE_3 ();
-  }
-
-But you cannot define SAMPLE_2 because you cannot jump from
-one function to another function.  SAMPLE_1 and SAMPLE_2 must
-be defined within the same function, and thus you cannot call
-them separately.
-
-Maybe this is not a good example, but it illustrates a problem
-that can happen.  To detect and avoid this kind of problems,
-we will need control flow analysis of COBOL programs.
-
-If a portion of program is used only through a PERFORM
-statement, and if there is no GO TO statement that jumps
-to outside of the portion, then we can safely separate the
-portion as a C function.
+Done with various binary operands
 
 5 Debugging support
 
-5.1 Better line directive
-
-When line directive is enabled, the following COBOL code
-
-  DISPLAY "Hello" "world".
-
-produces something like this:
-
-  #line 1 "source.cob"
-    cob_display ("Hello");
-    cob_display ("world");
-    cob_newline ();
-
-Suppose you are debugging the COBOL program using gdb.
-You set a break point at the beginning of DISPLAY.
-You typed 'next' command.  Then, you'd see nothing.
-
-This is because the first `cob_display' in the C code was
-executed.  We could instead produce the following code:
-
-  #line 1 "source.cob"
-    cob_display ("Hello"); cob_display ("world"); cob_newline ();
-
-In this case, you'll get all three function calls executed at once.
-
-NOTE - (Roger While) - We now use an alternate call.
-NOTE - See typeck.c/termio.c (cob_new_display) - This uses
-       varargs to pass a variable number of parameters.
-NOTE - However, there are other (non-DISPLAY) constructs that
-       produce multiple statements.
-
-
-5.2 Data access method
+5.1 Data access method
 
 We should generate all data hierarchy defined in a COBOL program
 with all relevant information, including data names, picture clauses,
 and source locations.  We should also define a debugging function
-that receive a data name and displays its value, using the generated
+that receives a data name and displays its value using the generated
 data hierarchy.  By calling the function from gdb, we can easily
-access to the COBOL data at debugging time.
+access the COBOL data at debugging time.
 
 6 Better user manual
 

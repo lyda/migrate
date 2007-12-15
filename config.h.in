@@ -18,6 +18,9 @@
 /* Can use inline keyword */
 #undef COB_HAS_INLINE
 
+/* long int is long long */
+#undef COB_LI_IS_LL
+
 /* Can not dlopen self */
 #undef COB_NO_SELFOPEN
 
@@ -95,6 +98,9 @@
    */
 #undef HAVE_DCGETTEXT
 
+/* Define to 1 if you have the <disam.h> header file. */
+#undef HAVE_DISAM_H
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -125,6 +131,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the <isam.h> header file. */
+#undef HAVE_ISAM_H
+
 /* Define to 1 if you have the <kpathsea/getopt.h> header file. */
 #undef HAVE_KPATHSEA_GETOPT_H
 
@@ -133,6 +142,9 @@
 
 /* Define to 1 if you have the `curses' library (-lcurses). */
 #undef HAVE_LIBCURSES
+
+/* Define to 1 if you have the `disam' library (-ldisam). */
+#undef HAVE_LIBDISAM
 
 /* Define to 1 if you have the `gmp' library (-lgmp). */
 #undef HAVE_LIBGMP
@@ -145,6 +157,9 @@
 
 /* Define to 1 if you have the `pdcurses' library (-lpdcurses). */
 #undef HAVE_LIBPDCURSES
+
+/* Define to 1 if you have the `vbisam' library (-lvbisam). */
+#undef HAVE_LIBVBISAM
 
 /* Define to 1 if you have the <locale.h> header file. */
 #undef HAVE_LOCALE_H
@@ -239,6 +254,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Define to 1 if you have the <vbisam.h> header file. */
+#undef HAVE_VBISAM_H
+
 /* Define to 1 if you have the `vprintf' function. */
 #undef HAVE_VPRINTF
 
@@ -292,8 +310,14 @@
 /* Version number of package */
 #undef VERSION
 
+/* Use CISAM as ISAM handler */
+#undef WITH_CISAM
+
 /* Compile with the Berkeley DB library */
 #undef WITH_DB
+
+/* Use DISAM as ISAM handler */
+#undef WITH_DISAM
 
 /* Compile with an external ISAM handler */
 #undef WITH_INDEX_EXTFH
@@ -306,6 +330,9 @@
 
 /* Define variable sequential file format */
 #undef WITH_VARSEQ
+
+/* Use VBISAM as ISAM handler */
+#undef WITH_VBISAM
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

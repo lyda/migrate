@@ -530,6 +530,13 @@ extern int cb_field_subordinate (struct cb_field *p, struct cb_field *f);
  * File
  */
 
+struct cb_alt_key {
+	struct cb_alt_key	*next;
+	cb_tree			key;
+	int			duplicates;
+	int			offset;
+};
+
 struct cb_file {
 	struct cb_tree_common	common;
 	const char		*name;			/* the original name */
@@ -539,19 +546,14 @@ struct cb_file {
 	int			optional;		/* OPTIONAL */
 	int			organization;		/* ORGANIZATION */
 	int			access_mode;		/* ACCESS MODE */
-	int			lock_mode;			/* LOCK MODE */
+	int			lock_mode;		/* LOCK MODE */
 	int			same_clause;		/* SAME clause */
 	int			finalized;		/* is finalized */
 	int			external;		/* is EXTERNAL */
 	cb_tree			file_status;		/* FILE STATUS */
 	cb_tree			sharing;		/* SHARING */
 	cb_tree			key;			/* RELATIVE/RECORD KEY */
-	struct cb_alt_key {
-		struct cb_alt_key	*next;
-		cb_tree			key;
-		int			duplicates;
-		int			offset;
-	}			*alt_key_list;		/* ALTERNATE RECORD KEY */
+	struct cb_alt_key	*alt_key_list;		/* ALTERNATE RECORD KEY */
 	/* FD/SD */
 	struct cb_field		*record;		/* record descriptor */
 	int			record_min;		/* RECORD CONTAINS */
@@ -996,10 +998,10 @@ struct cb_statement {
 	const char		*name;
 	cb_tree			body;
 	cb_tree			file;
-	int			handler_id;
 	cb_tree			handler1;
 	cb_tree			handler2;
 	cb_tree			handler3;
+	int			handler_id;
 	int			need_terminator;
 };
 
@@ -1068,11 +1070,11 @@ extern int cb_list_length (cb_tree l);
 #define CB_WORD_HASH_SIZE	133
 
 struct cb_word {
+	struct cb_word	*next;		/* next word with the same hash value */
 	const char	*name;		/* word name */
+	cb_tree		items;		/* objects associated with this word */
 	int		count;		/* number of words with the same name */
 	int		error;		/* set to 1 if error displayed */
-	cb_tree		items;		/* objects associated with this word */
-	struct cb_word	*next;		/* next word with the same hash value */
 };
 
 struct cb_program {
@@ -1218,6 +1220,8 @@ extern void cb_emit_cancel (cb_tree prog);
 
 extern void cb_emit_close (cb_tree file, cb_tree opt);
 
+extern void cb_emit_commit (void);
+
 extern void cb_emit_continue (void);
 
 extern void cb_emit_delete (cb_tree file);
@@ -1272,6 +1276,8 @@ extern void cb_emit_rewrite (cb_tree record, cb_tree from, cb_tree lockopt);
 
 extern void cb_emit_release (cb_tree ref, cb_tree from);
 extern void cb_emit_return (cb_tree ref, cb_tree into);
+
+extern void cb_emit_rollback (void);
 
 extern void cb_emit_search (cb_tree table, cb_tree varying, cb_tree at_end, cb_tree whens);
 extern void cb_emit_search_all (cb_tree table, cb_tree at_end, cb_tree when, cb_tree stmts);

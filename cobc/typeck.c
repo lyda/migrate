@@ -510,12 +510,12 @@ cb_build_registers (void)
 	/* FUNCTION PI */
 	memset (buff, 0, sizeof (buff));
 	strcpy (buff, "31415926535897932384626433832795029");
-	cb_intr_pi = cb_build_numeric_literal (0, (ucharptr)buff, 35);
+	cb_intr_pi = cb_build_numeric_literal (0, (ucharptr)buff, 34);
 
 	/* FUNCTION E */
 	memset (buff, 0, sizeof (buff));
-	strcpy (buff, "27182818284590452360287471352662497");
-	cb_intr_e = cb_build_numeric_literal (0, (ucharptr)buff, 35);
+	strcpy (buff, "27182818284590452353602874713526625");
+	cb_intr_e = cb_build_numeric_literal (0, (ucharptr)buff, 34);
 }
 
 char *
@@ -2694,6 +2694,16 @@ cb_emit_close (cb_tree file, cb_tree opt)
 }
 
 /*
+ * COMMIT statement
+ */
+
+void
+cb_emit_commit ()
+{
+	cb_emit (cb_build_funcall_0 ("cob_commit"));
+}
+
+/*
  * CONTINUE statement
  */
 
@@ -3410,6 +3420,9 @@ validate_move (cb_tree src, cb_tree dst, int is_value)
 		l = CB_LITERAL (src);
 		if (CB_TREE_CLASS (src) == CB_CLASS_NUMERIC) {
 			/* Numeric literal */
+			if (l->all) {
+				goto invalid;
+			}
 			most_significant = -999;
 			least_significant = 999;
 
@@ -4419,7 +4432,7 @@ cb_emit_rewrite (cb_tree record, cb_tree from, cb_tree lockopt)
 			   CB_FILE(file)->organization != COB_ORG_INDEXED)) {
 				cb_error_x (CB_TREE(current_statement),
 				_("INVALID KEY clause invalid with this file type"));
-		} else if (CB_FILE (file)->lock_mode == COB_LOCK_AUTOMATIC && lockopt) {
+		} else if ((CB_FILE (file)->lock_mode & COB_LOCK_AUTOMATIC) && lockopt) {
 			cb_error_x (CB_TREE (current_statement),
 			_("LOCK clause invalid with file LOCK AUTOMATIC"));
 		} else if (lockopt == cb_int1) {
@@ -4467,6 +4480,16 @@ cb_emit_return (cb_tree ref, cb_tree into)
 		current_statement->handler3 = cb_build_move (rec, into);
 	}
 	current_statement->file = file;
+}
+
+/*
+ * ROLLBACK statement
+ */
+
+void
+cb_emit_rollback ()
+{
+	cb_emit (cb_build_funcall_0 ("cob_rollback"));
 }
 
 /*
@@ -4966,7 +4989,7 @@ cb_emit_write (cb_tree record, cb_tree from, cb_tree opt, cb_tree lockopt)
 				cb_error_x (CB_TREE(current_statement),
 				_("INVALID KEY clause invalid with this file type"));
 		} else if (lockopt) {
-			if (CB_FILE (file)->lock_mode == COB_LOCK_AUTOMATIC) {
+			if ((CB_FILE (file)->lock_mode & COB_LOCK_AUTOMATIC)) {
 				cb_error_x (CB_TREE (current_statement),
 				_("LOCK clause invalid with file LOCK AUTOMATIC"));
 			} else if (opt != cb_int0) {

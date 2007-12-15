@@ -1,3 +1,11 @@
+2007-12-12  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : numeric literal is not allowed with ALL
+
+2007-12-03  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Fix values of PI and E
+
 2007-10-30  Roger While <simrw@sim-basis.de>
 
 	* cobc.c, codegen.c : Fix size_t <-> int casts

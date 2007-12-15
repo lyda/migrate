@@ -151,6 +151,7 @@ static const struct reserved reserved_words[] = {
   {"COLUMNS",		COLUMN},		/* 2002 */
   {"COMMA",		COMMA},			/* 2002 */
   {"COMMAND-LINE",	COMMAND_LINE},		/* extension */
+  {"COMMIT",		COMMIT},		/* extension */
   {"COMMON",		COMMON},		/* 2002 */
   {"COMMUNICATION",	-1},			/* 2002 */
   {"COMP",		COMP},			/* 2002 */

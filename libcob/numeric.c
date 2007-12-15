@@ -330,7 +330,13 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f, const int opt)
 static void
 cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 {
-#ifdef	COB_EXPERIMENTAL
+#ifdef	COB_LI_IS_LL
+	if (COB_FIELD_HAVE_SIGN (f)) {
+		mpz_set_si (d->value, cob_binary_get_int64 (f));
+	} else {
+		mpz_set_ui (d->value, cob_binary_get_uint64 (f));
+	}
+#elif	COB_EXPERIMENTAL
 	if (COB_FIELD_HAVE_SIGN (f)) {
 		mpz_set_sll (d->value, cob_binary_get_int64 (f));
 	} else {
@@ -378,7 +384,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, const int opt)
 	size_t			digits;
 	size_t			sign;
 	size_t			bitnum;
-#ifndef	COB_EXPERIMENTAL
+#if	!defined(COB_EXPERIMENTAL) && !defined(COB_LI_IS_LL)
 	long long		llval;
 	unsigned long long	ullval;
 	unsigned int		lo;
@@ -421,7 +427,13 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, const int opt)
 			}
 		}
 	}
-#ifdef	COB_EXPERIMENTAL
+#ifdef	COB_LI_IS_LL
+	if (!sign || overflow) {
+		cob_binary_set_uint64 (f, mpz_get_ui (d->value));
+	} else {
+		cob_binary_set_int64 (f, mpz_get_si (d->value));
+	}
+#elif	COB_EXPERIMENTAL
 	if (!sign || overflow) {
 		cob_binary_set_uint64 (f, mpz_get_ull (d->value));
 	} else {

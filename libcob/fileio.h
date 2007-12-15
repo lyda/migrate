@@ -62,7 +62,9 @@
 
 #define COB_LOCK_EXCLUSIVE	1
 #define COB_LOCK_MANUAL		2
-#define COB_LOCK_AUTOMATIC	3
+#define COB_LOCK_AUTOMATIC	4
+#define COB_LOCK_MULTIPLE	8
+#define COB_LOCK_MASK		0x7
 
 /* Open mode */
 
@@ -222,6 +224,9 @@ extern void cob_write (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus
 extern void cob_rewrite (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus);
 extern void cob_delete (cob_file *f, cob_field *fnstatus);
 extern void cob_start (cob_file *f, int cond, cob_field *key, cob_field *fnstatus);
+
+extern void cob_commit (void);
+extern void cob_rollback (void);
 
 /* System routines */
 extern int CBL_OPEN_FILE (char *file_name, char *file_access, char *file_lock,
