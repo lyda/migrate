@@ -243,75 +243,14 @@ AC_ARG_WITH(varseq, [  --with-varseq           (OpenCOBOL) define variable seque
 		;;
     no)		AC_MSG_ERROR(["--without-varseq not supported."])
 		;;
-    [[0-2]])	WITH_VARSEQ=$with_varseq
+    [[0-3]])	WITH_VARSEQ=$with_varseq
 		;;
     *)		AC_MSG_ERROR(["Invalid --with-varseq argument"])
 		;;
 esac])
-AC_DEFINE(WITH_VARSEQ)
+AC_DEFINE_UNQUOTED(WITH_VARSEQ, $WITH_VARSEQ)
 
 save_libs="$LIBS"
-
-# Checks for getopt_long.
-# Cygwin has getopt_long_only prototype in kpathsea/getopt.h
-# FreeBSD has gnugetopt library - needs checking
-
-AC_CHECK_FUNC([getopt_long_only],
-  [AC_CHECK_HEADERS([kpathsea/getopt.h getopt.h], [], [])],
-  [AC_LIBOBJ(getopt)
-   AC_LIBOBJ(getopt1)
-   AC_LIBSOURCE(getopt.h)])
-
-# Checks for regex. (Not used anymore)
-# AC_CHECK_LIB([regex], [regcomp], [LIBCOB_LIBS="$LIBCOB_LIBS -lregex"])
-
-# Checks for gmp.
-AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
-# MYOLDLIBS="$LIBS"
-# LIBS="$LIBS -lgmp"
-# AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <gmp.h>]], [[
-#     mpz_t  myvar;
-#     mpz_init (myvar);
-#   ]])],
-#   [],
-#   [AC_MSG_ERROR(GMP 3 or later is required)],
-#   [])
-# LIBS="$MYOLDLIBS"
-AC_CHECK_LIB([gmp], [__gmp_randinit], , AC_MSG_ERROR(GMP 3 or later is required))
-LIBCOB_LIBS="$LIBCOB_LIBS -lgmp"
-
-# Checks for gettext.
-AM_GNU_GETTEXT([external])
-AM_GNU_GETTEXT_VERSION(0.13)
-if test "x$LTLIBINTL" != "x"; then
-  COBC_LIBS="$COBC_LIBS $LTLIBINTL"
-  LIBCOB_LIBS="$LIBCOB_LIBS $LTLIBINTL"
-fi
-
-# Checks for ncurses/pdcurses/curses.
-USE_NCURSES="no"
-AC_CHECK_HEADERS([ncurses.h pdcurses.h ncurses/ncurses.h curses.h])
-AC_CHECK_LIB([ncurses], [initscr])
-if test "x$ac_cv_lib_ncurses_initscr" = "xyes"; then
-  USE_NCURSES="yes"
-  LIBCOB_LIBS="$LIBCOB_LIBS -lncurses"
-else
-  AC_CHECK_LIB([pdcurses], [initscr])
-  if test "x$ac_cv_lib_pdcurses_initscr" = "xyes"; then
-    USE_NCURSES="yes"
-    LIBCOB_LIBS="$LIBCOB_LIBS -lpdcurses"
-  else
-    AC_CHECK_LIB([curses], [initscr])
-    if test "x$ac_cv_lib_curses_initscr" = "xyes"; then
-      USE_NCURSES="yes"
-      LIBCOB_LIBS="$LIBCOB_LIBS -lcurses"
-      AC_CHECK_LIB([curses], [mvgetnstr])
-      if test "x$ac_cv_lib_curses_mvgetnstr" = "xyes"; then
-	 AC_DEFINE(HAVE_MVGETNSTR,1)
-      fi
-    fi
-  fi
-fi
 
 # Checks for programs.
 # Stop the stupid tests for C++ and Fortran
@@ -356,6 +295,54 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[timezone = 3600;]])]
 # Checks for internationalization stuff
 AM_ICONV
 AM_LANGINFO_CODESET
+
+# Checks for getopt_long.
+# Cygwin has getopt_long_only prototype in kpathsea/getopt.h
+# FreeBSD has gnugetopt library - needs checking
+
+AC_CHECK_FUNC([getopt_long_only],
+  [AC_CHECK_HEADERS([kpathsea/getopt.h getopt.h], [], [])],
+  [AC_LIBOBJ(getopt)
+   AC_LIBOBJ(getopt1)
+   AC_LIBSOURCE(getopt.h)])
+
+# Checks for gmp.
+AC_CHECK_HEADERS([gmp.h], , AC_MSG_ERROR(gmp.h is required))
+AC_CHECK_LIB([gmp], [__gmp_randinit], , AC_MSG_ERROR(GMP 3 or later is required))
+LIBCOB_LIBS="$LIBCOB_LIBS -lgmp"
+
+# Checks for gettext.
+AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION(0.13)
+if test "x$LTLIBINTL" != "x"; then
+  COBC_LIBS="$COBC_LIBS $LTLIBINTL"
+  LIBCOB_LIBS="$LIBCOB_LIBS $LTLIBINTL"
+fi
+
+# Checks for ncurses/pdcurses/curses.
+USE_NCURSES="no"
+AC_CHECK_HEADERS([ncurses.h pdcurses.h ncurses/ncurses.h curses.h])
+AC_CHECK_LIB([ncurses], [initscr])
+if test "x$ac_cv_lib_ncurses_initscr" = "xyes"; then
+  USE_NCURSES="yes"
+  LIBCOB_LIBS="$LIBCOB_LIBS -lncurses"
+else
+  AC_CHECK_LIB([pdcurses], [initscr])
+  if test "x$ac_cv_lib_pdcurses_initscr" = "xyes"; then
+    USE_NCURSES="yes"
+    LIBCOB_LIBS="$LIBCOB_LIBS -lpdcurses"
+  else
+    AC_CHECK_LIB([curses], [initscr])
+    if test "x$ac_cv_lib_curses_initscr" = "xyes"; then
+      USE_NCURSES="yes"
+      LIBCOB_LIBS="$LIBCOB_LIBS -lcurses"
+      AC_CHECK_LIB([curses], [mvgetnstr])
+      if test "x$ac_cv_lib_curses_mvgetnstr" = "xyes"; then
+	 AC_DEFINE(HAVE_MVGETNSTR,1)
+      fi
+    fi
+  fi
+fi
 
 # Checks for db.
 USE_DB="no"

@@ -1,3 +1,11 @@
+2007-12-27  Roger While <simrw@sim-basis.de>
+
+	* Add OC test for WHEN-COMPILED
+
+2007-12-21  Roger While <simrw@sim-basis.de>
+
+	*  Cobol85 tests changed to cater for unsupported ALTER
+
 2007-10-27  Roger While <simrw@sim-basis.de>
 
 	* OC test for INSPECT with figurative constant

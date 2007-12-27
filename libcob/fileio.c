@@ -496,7 +496,7 @@ typedef struct {
 	int		keyhasdups;	/* 'curkey' has dups */
 	int		wrkhasrec;	/* 'recwrk' buffer holds the next|prev record */
 	struct keydesc	key[1];		/* Table of key information */
-					/* keydesc is defined is (d|c|vb)isam.h */
+					/* keydesc is defined in (d|c|vb)isam.h */
 } indexfile;
 
 /* Translate ISAM status to COBOL status and return */
@@ -980,7 +980,7 @@ cob_file_write_opt (cob_file *f, const int opt)
 static int
 sequential_read (cob_file *f, int read_opts)
 {
-#if	WITH_VARSEQ == 0 || WITH_VARSEQ == 1
+#if	WITH_VARSEQ == 0 || WITH_VARSEQ == 1 || WITH_VARSEQ == 3
 	union {
 		unsigned char	sbuff[4];
 		unsigned short	sshort[2];
@@ -1002,6 +1002,8 @@ sequential_read (cob_file *f, int read_opts)
 	if (f->record_min != f->record_max) {
 #if	WITH_VARSEQ == 2
 		if (unlikely(fread (&f->record->size, sizeof (f->record->size), 1, (FILE *)f->file) != 1)) {
+#elif	WITH_VARSEQ == 3
+		if (unlikely(fread (recsize.sbuff, 2, 1, (FILE *)f->file) != 1)) {
 #else
 		if (unlikely(fread (recsize.sbuff, 4, 1, (FILE *)f->file) != 1)) {
 #endif
@@ -1011,19 +1013,17 @@ sequential_read (cob_file *f, int read_opts)
 				return COB_STATUS_10_END_OF_FILE;
 			}
 		}
-#if	WITH_VARSEQ == 0
+#if	WITH_VARSEQ == 0 || WITH_VARSEQ == 3
 #ifdef WORDS_BIGENDIAN
 		f->record->size = recsize.sshort[0];
 #else
 		f->record->size = COB_BSWAP_16 (recsize.sshort[0]);
 #endif
-#else
-#if	WITH_VARSEQ == 1
+#elif	WITH_VARSEQ == 1
 #ifdef WORDS_BIGENDIAN
 		f->record->size = recsize.sint;
 #else
 		f->record->size = COB_BSWAP_32 (recsize.sint);
-#endif
 #endif
 #endif
 	}
@@ -1043,7 +1043,7 @@ sequential_read (cob_file *f, int read_opts)
 static int
 sequential_write (cob_file *f, int opt)
 {
-#if	WITH_VARSEQ == 0 || WITH_VARSEQ == 1
+#if	WITH_VARSEQ == 0 || WITH_VARSEQ == 1 || WITH_VARSEQ == 3
 	union {
 		unsigned char	sbuff[4];
 		unsigned short	sshort[2];
@@ -1067,8 +1067,7 @@ sequential_write (cob_file *f, int opt)
 	if (f->record_min != f->record_max) {
 #if	WITH_VARSEQ == 2
 		if (unlikely(fwrite (&f->record->size, sizeof (f->record->size), 1, (FILE *)f->file) != 1)) {
-#else
-#if	WITH_VARSEQ == 1
+#elif	WITH_VARSEQ == 1
 #ifdef WORDS_BIGENDIAN
 		recsize.sint = f->record->size;
 #else
@@ -1081,8 +1080,11 @@ sequential_write (cob_file *f, int opt)
 #else
 		recsize.sshort[0] = COB_BSWAP_16 ((unsigned short)f->record->size);
 #endif
-#endif
+#if	WITH_VARSEQ == 3
+		if (unlikely(fwrite (recsize.sbuff, 2, 1, (FILE *)f->file) != 1)) {
+#else
 		if (unlikely(fwrite (recsize.sbuff, 4, 1, (FILE *)f->file) != 1)) {
+#endif
 #endif
 			return COB_STATUS_30_PERMANENT_ERROR;
 		}
@@ -1624,12 +1626,18 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 	int		ret = COB_STATUS_00_SUCCESS;
 	int		omode = 0;
 	int		lmode = 0;
+	int		vmode = 0;
+	int		dobld = 0;
 	int		isfd = -1;
 	int		k;
-	int		dobld;
 	struct dictinfo	di;			/* defined in (c|d|vb)isam.h */
 
-	dobld = 0;
+#if defined(ISVARLEN)
+	if (f->record_min != f->record_max) {
+		vmode = ISVARLEN;
+		isreclen = f->record_min;
+	}
+#endif
 	if (!f->lock_mode) {
 		if (mode != COB_OPEN_INPUT) {
 			lmode = ISEXCLLOCK;
@@ -1651,7 +1659,7 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 		lmode = ISEXCLLOCK;
 		omode = ISOUTPUT;
 		iserrno = 0;
-		isfd = isopen (filename, ISINPUT | ISEXCLLOCK);
+		isfd = isopen (filename, ISINPUT | ISEXCLLOCK | vmode);
 		if (iserrno == EFLOCKED) {
 			isclose (isfd);
 			return COB_STATUS_61_FILE_SHARING;
@@ -1693,13 +1701,13 @@ indexed_open (cob_file *f, char *filename, int mode, int flag)
 	fh->lmode = 0;
 	if (dobld) {
 dobuild:
-		isfd = isbuild (filename, f->record_max, &fh->key[0], ISINOUT | ISEXCLLOCK);
+		isfd = isbuild (filename, f->record_max, &fh->key[0], ISINOUT | ISEXCLLOCK | vmode);
 	} else {
 		if (lmode == ISAUTOLOCK) {
 			fh->lmode = ISLOCK;
 			lmode = ISMANULOCK;
 		}
-		isfd = isopen (filename, omode | lmode);
+		isfd = isopen (filename, omode | lmode | vmode);
 		if (isfd == -1) {
 			if (f->flag_optional) {
 				if (mode == COB_OPEN_EXTEND || mode == COB_OPEN_I_O) {
@@ -1722,8 +1730,9 @@ dobuild:
 				return COB_STATUS_05_SUCCESS_OPTIONAL;
 			}
 		} else {
+			memset(&di, 0, sizeof(di));
 			isindexinfo (isfd, (void *)&di, 0);
-			fh->nkeys = di.di_nkeys & 0x7FFF;
+			fh->nkeys = di.di_nkeys & 0x7F; /* Mask off ISVARLEN */
 			if (fh->nkeys > f->nkeys) {
 				fh = realloc (fh, sizeof(indexfile) + ((sizeof (struct keydesc)) * (fh->nkeys + 1)));
 			}
@@ -1732,6 +1741,21 @@ dobuild:
 				isindexinfo (isfd, &fh->key[k], k+1);
 				if (fh->lenkey < fh->key[k].k_leng) {
 					fh->lenkey = fh->key[k].k_leng;
+				}
+				/* Verify that COBOL definition matches the real ISAM file */
+				if (f->keys[k].flag) {
+					if ( !(fh->key[k].k_flags & ISDUPS) ) {
+						ret = COB_STATUS_39_CONFLICT_ATTRIBUTE;
+					}
+				} else {
+					if ( (fh->key[k].k_flags & ISDUPS) ) {
+						ret = COB_STATUS_39_CONFLICT_ATTRIBUTE;
+					}
+				}
+				if (fh->key[k].k_nparts != 1
+				||  fh->key[k].k_start != f->keys[k].offset
+				||  fh->key[k].k_leng != f->keys[k].field->size) {
+					ret = COB_STATUS_39_CONFLICT_ATTRIBUTE;
 				}
 			}
 		}
@@ -2380,6 +2404,11 @@ indexed_read (cob_file *f, cob_field *key, int read_opts)
 		f->flag_begin_of_file = 0;
 		memcpy (fh->savekey, f->record->data + fh->key[0].k_start, fh->key[0].k_leng);
 		fh->recnum = isrecnum;
+#if defined(ISVARLEN)
+		if (f->record_min != f->record_max) {
+			f->record->size = isreclen;
+		}
+#endif
 	} else {
 		memset (fh->savekey, 0, fh->key[0].k_leng);
 		fh->recnum = 0;
@@ -2627,6 +2656,12 @@ indexed_read_next (cob_file *f, int read_opts)
 		f->flag_begin_of_file = 0;
 		memcpy (fh->savekey, f->record->data + fh->key[0].k_start, fh->key[0].k_leng);
 		fh->recnum = isrecnum;
+#if defined(ISVARLEN)
+		if (f->record_min != f->record_max) {
+			f->record->size = isreclen;
+		}
+#endif
+#if defined(WITH_COBSTATUS02) 
 		if (fh->keyhasdups) {
 			if (isread (fh->isfd, (void *)fh->recwrk, fh->readdir) == -1) {
 				fh->eofpending = fh->readdir;
@@ -2642,6 +2677,11 @@ indexed_read_next (cob_file *f, int read_opts)
 				}
 			}
 		}
+#elif defined(WITH_DISAM)
+		if((isstat1 == '0') && (isstat2 == '2')) {
+			ret = COB_STATUS_02_SUCCESS_DUPLICATE;
+		}
+#endif
 	} else {
 		memset (fh->savekey, 0, fh->key[0].k_leng);
 		fh->recnum = 0;
@@ -3125,6 +3165,11 @@ indexed_write (cob_file *f, int opt)
 	if (f->flag_nonexistent) {
 		return COB_STATUS_30_PERMANENT_ERROR;
 	}
+#if defined(ISVARLEN)
+	if (f->record_min != f->record_max) {
+		isreclen = f->record->size;
+	}
+#endif
 	if (iswrite (fh->isfd, (void *)f->record->data) == -1) {
 		ret = isretsts (COB_STATUS_49_I_O_DENIED);
 		if (iserrno == EDUPL) {

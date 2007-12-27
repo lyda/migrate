@@ -61,8 +61,8 @@
 #include "lib/gettext.h"
 
 struct cob_exception {
-	const int	code;
 	const char	*name;
+	const int	code;
 	const int	critical;
 };
 
@@ -278,11 +278,11 @@ static const char	parm_msg[] = "CALL to %s requires %d parameters";
 #endif
 
 static const struct cob_exception	cob_exception_table[] = {
-	{0, NULL, 0},		/* COB_EC_ZERO */
+	{NULL, 0, 0},		/* COB_EC_ZERO */
 #undef COB_EXCEPTION
-#define COB_EXCEPTION(CODE,TAG,NAME,CRITICAL) { 0x##CODE, NAME, CRITICAL },
+#define COB_EXCEPTION(CODE,TAG,NAME,CRITICAL) { NAME, 0x##CODE, CRITICAL },
 #include "exception.def"
-	{0, NULL, 0}		/* COB_EC_MAX */
+	{NULL, 0, 0}		/* COB_EC_MAX */
 };
 
 #define EXCEPTION_TAB_SIZE	sizeof(cob_exception_table) / sizeof(struct cob_exception)

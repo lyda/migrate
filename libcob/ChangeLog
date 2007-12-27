@@ -1,3 +1,8 @@
+2007-12-15  Roger While <simrw@sim-basis.de>
+
+	* common.c : Change exception structure definition to optimize
+		64 bit allocation
+
 2007-11-21  Roger While <simrw@sim-basis.de>
 
 	* fileio.c : Add C/D/VB-ISAM code

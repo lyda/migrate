@@ -144,7 +144,8 @@ lookup_word (const char *name)
 static void
 file_error (cb_tree name, const char *clause)
 {
-	cb_error_x (name, _("%s clause is required for file '%s'"), clause, CB_NAME (name));
+	cb_error_x (name, _("%s clause is required for file '%s'"), clause,
+		    CB_NAME (name));
 }
 
 /*
@@ -164,8 +165,9 @@ make_tree (int tag, enum cb_category category, size_t size)
 static cb_tree
 make_constant (enum cb_category category, const char *val)
 {
-	struct cb_const *p = make_tree (CB_TAG_CONST, category, sizeof (struct cb_const));
+	struct cb_const *p;
 
+	p = make_tree (CB_TAG_CONST, category, sizeof (struct cb_const));
 	p->val = val;
 	return CB_TREE (p);
 }
@@ -173,8 +175,9 @@ make_constant (enum cb_category category, const char *val)
 static cb_tree
 make_constant_label (const char *name)
 {
-	struct cb_label *p = CB_LABEL (cb_build_label (cb_build_reference (name), NULL));
+	struct cb_label *p;
 
+	p = CB_LABEL (cb_build_label (cb_build_reference (name), NULL));
 	p->need_begin = 1;
 	return CB_TREE (p);
 }
@@ -182,8 +185,9 @@ make_constant_label (const char *name)
 struct cb_literal *
 build_literal (enum cb_category category, const unsigned char *data, size_t size)
 {
-	struct cb_literal *p = make_tree (CB_TAG_LITERAL, category, sizeof (struct cb_literal));
+	struct cb_literal *p;
 
+	p = make_tree (CB_TAG_LITERAL, category, sizeof (struct cb_literal));
 	p->data = cobc_malloc ((size_t) (size + 1));
 	p->size = size;
 	memcpy (p->data, data, (size_t) size);
@@ -621,9 +625,9 @@ cb_int (int n)
 cb_tree
 cb_build_string (const unsigned char *data, size_t size)
 {
-	struct cb_string *p =
-	    make_tree (CB_TAG_STRING, CB_CATEGORY_ALPHANUMERIC, sizeof (struct cb_string));
+	struct cb_string *p;
 
+	p = make_tree (CB_TAG_STRING, CB_CATEGORY_ALPHANUMERIC, sizeof (struct cb_string));
 	p->size = size;
 	p->data = data;
 	return CB_TREE (p);
@@ -1658,8 +1662,9 @@ cb_build_initialize (cb_tree var, cb_tree val, cb_tree rep, cb_tree def, int fla
 cb_tree
 cb_build_search (int flag_all, cb_tree table, cb_tree var, cb_tree end_stmt, cb_tree whens)
 {
-	struct cb_search *p = make_tree (CB_TAG_SEARCH, CB_CATEGORY_UNKNOWN, sizeof (struct cb_search));
+	struct cb_search *p;
 
+	p = make_tree (CB_TAG_SEARCH, CB_CATEGORY_UNKNOWN, sizeof (struct cb_search));
 	p->flag_all = flag_all;
 	p->table = table;
 	p->var = var;
@@ -1675,8 +1680,9 @@ cb_build_search (int flag_all, cb_tree table, cb_tree var, cb_tree end_stmt, cb_
 cb_tree
 cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2, cb_tree returning, int is_system_call)
 {
-	struct cb_call *p = make_tree (CB_TAG_CALL, CB_CATEGORY_UNKNOWN, sizeof (struct cb_call));
+	struct cb_call *p;
 
+	p = make_tree (CB_TAG_CALL, CB_CATEGORY_UNKNOWN, sizeof (struct cb_call));
 	p->name = name;
 	p->args = args;
 	p->stmt1 = stmt1;
@@ -1693,8 +1699,9 @@ cb_build_call (cb_tree name, cb_tree args, cb_tree stmt1, cb_tree stmt2, cb_tree
 cb_tree
 cb_build_goto (cb_tree target, cb_tree depending)
 {
-	struct cb_goto *p = make_tree (CB_TAG_GOTO, CB_CATEGORY_UNKNOWN, sizeof (struct cb_goto));
+	struct cb_goto *p;
 
+	p = make_tree (CB_TAG_GOTO, CB_CATEGORY_UNKNOWN, sizeof (struct cb_goto));
 	p->target = target;
 	p->depending = depending;
 	return CB_TREE (p);
@@ -1707,8 +1714,9 @@ cb_build_goto (cb_tree target, cb_tree depending)
 cb_tree
 cb_build_if (cb_tree test, cb_tree stmt1, cb_tree stmt2)
 {
-	struct cb_if *p = make_tree (CB_TAG_IF, CB_CATEGORY_UNKNOWN, sizeof (struct cb_if));
+	struct cb_if *p;
 
+	p = make_tree (CB_TAG_IF, CB_CATEGORY_UNKNOWN, sizeof (struct cb_if));
 	p->test = test;
 	p->stmt1 = stmt1;
 	p->stmt2 = stmt2;
@@ -1763,8 +1771,9 @@ cb_build_statement (const char *name)
 cb_tree
 cb_build_continue ()
 {
-	struct cb_continue *p = make_tree (CB_TAG_CONTINUE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_continue));
+	struct cb_continue *p;
 
+	p = make_tree (CB_TAG_CONTINUE, CB_CATEGORY_UNKNOWN, sizeof (struct cb_continue));
 	return CB_TREE (p);
 }
 
@@ -1775,8 +1784,9 @@ cb_build_continue ()
 cb_tree
 cb_build_list (cb_tree purpose, cb_tree value, cb_tree rest)
 {
-	struct cb_list *p = make_tree (CB_TAG_LIST, CB_CATEGORY_UNKNOWN, sizeof (struct cb_list));
+	struct cb_list *p;
 
+	p = make_tree (CB_TAG_LIST, CB_CATEGORY_UNKNOWN, sizeof (struct cb_list));
 	p->purpose = purpose;
 	p->value = value;
 	p->chain = rest;

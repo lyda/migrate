@@ -202,9 +202,10 @@ There are the following configure options:
   --with-patch-level=<n>	Set internal patch level to n (default 0)
 
   --with-varseq=<n>		Define the format for variable length sequential
-				files. For these files, 4 bytes are written
-				preceeding each record. The format of these 4
-				bytes for values of <n> is as follows :
+				files. For values of 0, 1 and 2, four bytes are
+				written preceeding each record. The format of
+				these four bytes for values of 0, 1, 2 is
+				as follows :
 				n = 0 (default)
 					The first 2 bytes are the record length
 					in big-endian order. This is compatible
@@ -217,6 +218,13 @@ There are the following configure options:
 					The 4 bytes are the record length in
 					native machine order (int).
 					(This was previously the default)
+
+				For the value of 3, two bytes are written
+				preceeding each record :
+				n = 3
+					The first 2 bytes are the record length
+					in big-endian order. The record follows
+					immediately after beginning at byte 3.
 
   --enable-debug		Add '-g' debug option to make
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2007-12-13 16:14+0100\n"
+"POT-Creation-Date: 2007-12-27 11:10+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -74,35 +74,35 @@ msgstr ""
 msgid "%s clause is required for file '%s'"
 msgstr ""
 
-#: cobc/tree.c:970
+#: cobc/tree.c:974
 msgid "Numeric field cannot be larger than 36 digits"
 msgstr ""
 
-#: cobc/tree.c:998
+#: cobc/tree.c:1002
 msgid "Invalid picture string"
 msgstr ""
 
-#: cobc/tree.c:1214
+#: cobc/tree.c:1218
 #, c-format
 msgid "Record size too small '%s'"
 msgstr ""
 
-#: cobc/tree.c:1219
+#: cobc/tree.c:1223
 #, c-format
 msgid "Record size too large '%s'"
 msgstr ""
 
-#: cobc/tree.c:1530 cobc/typeck.c:1477 cobc/typeck.c:1483 cobc/typeck.c:2044
+#: cobc/tree.c:1534 cobc/typeck.c:1477 cobc/typeck.c:1483 cobc/typeck.c:2044
 #: cobc/typeck.c:2126
 msgid "Invalid expression"
 msgstr ""
 
-#: cobc/tree.c:1904
+#: cobc/tree.c:1914
 #, c-format
 msgid "FUNCTION %s has wrong number of arguments"
 msgstr ""
 
-#: cobc/tree.c:2001
+#: cobc/tree.c:2011
 #, c-format
 msgid "FUNCTION %s not implemented"
 msgstr ""
