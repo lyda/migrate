@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301 USA
  */
 
-%expect 123
+%expect 122
 
 %defines
 %verbose
@@ -1231,7 +1231,7 @@ label_option:
 /* VALUE OF clause */
 
 value_of_clause:
-  WORD _is WORD
+  VALUE OF WORD _is reference_or_literal
   {
 	cb_verify (cb_value_of_clause, "VALUE OF");
   }

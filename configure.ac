@@ -21,7 +21,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([OpenCOBOL],[1.0],[open-cobol-list@lists.sourceforge.net],[open-cobol])
+AC_INIT([OpenCOBOL],[1.1],[open-cobol-list@lists.sourceforge.net],[open-cobol])
 AC_CONFIG_SRCDIR([libcob.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_TESTDIR([tests])
@@ -578,7 +578,7 @@ then
 fi
 
 # Include CFLAGS in COB_CFLAGS without optimization/debug options
-cob_temp_flags=`echo "$CFLAGS " | sed -e 's/[+-]O[0-9]//' | sed -e 's/-O / /' | sed -e 's/-g / /' | sed -e 's/$-O//' | sed -e 's/$-g//'`
+cob_temp_flags=`echo "$CFLAGS " | sed -e 's/@<:@+-@:>@O@<:@0-9@:>@//' | sed -e 's/-O / /' | sed -e 's/-g / /' | sed -e 's/$-O//' | sed -e 's/$-g//'`
 COB_CFLAGS="$COB_CFLAGS $cob_temp_flags"
 
 if test "$GEN_DEBUG_OPT" = "no"

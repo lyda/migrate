@@ -410,11 +410,11 @@ cob_string_append (cob_field *src)
 	}
 
 	if (src_size <= string_dst->size - string_offset) {
-		own_memcpy (string_dst->data + string_offset, src->data, src_size);
+		memcpy (string_dst->data + string_offset, src->data, src_size);
 		string_offset += (int) src_size;
 	} else {
 		size = (int)(string_dst->size - string_offset);
-		own_memcpy (string_dst->data + string_offset, src->data, (size_t)size);
+		memcpy (string_dst->data + string_offset, src->data, (size_t)size);
 		string_offset += size;
 		cob_set_exception (COB_EC_OVERFLOW_STRING);
 	}

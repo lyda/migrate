@@ -708,7 +708,7 @@ save_status (cob_file *f, int status, cob_field *fnstatus)
 	f->file_status[0] = cob_i2d (status / 10);
 	f->file_status[1] = cob_i2d (status % 10);
 	if (fnstatus) {
-		own_memcpy (fnstatus->data, f->file_status, 2);
+		memcpy (fnstatus->data, f->file_status, 2);
 	}
 	cob_error_file = f;
 	if (status != COB_STATUS_52_EOP &&
@@ -836,7 +836,7 @@ cob_file_open (cob_file *f, char *filename, int mode, int opt)
 #ifdef HAVE_FCNTL
 	/* lock the file */
 	if (memcmp (filename, "/dev/", 5)) {
-		own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
+		memset ((unsigned char *)&lock, 0, sizeof (struct flock));
 		lock.l_type = (opt || mode == COB_OPEN_OUTPUT) ? F_WRLCK : F_RDLCK;
 		lock.l_whence = SEEK_SET;
 		lock.l_start = 0;
@@ -880,7 +880,7 @@ cob_file_close (cob_file *f, int opt)
 		}
 #ifdef HAVE_FCNTL
 		/* unlock the file */
-		own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
+		memset ((unsigned char *)&lock, 0, sizeof (struct flock));
 		lock.l_type = F_UNLCK;
 		lock.l_whence = SEEK_SET;
 		lock.l_start = 0;
@@ -1162,7 +1162,7 @@ lineseq_read (cob_file *f, int read_opts)
 	}
 	if (i < f->record->size) {
 		/* fill the record with spaces */
-		own_memset ((unsigned char *)f->record->data + i, ' ', f->record->size - i);
+		memset ((unsigned char *)f->record->data + i, ' ', f->record->size - i);
 	}
 
 	return COB_STATUS_00_SUCCESS;
@@ -1560,8 +1560,8 @@ lock_record (cob_file *f, char *key, int keylen)
 		record_lock_object = cob_malloc (len);
 		rlo_size = len;
 	}
-	own_memcpy ((char *)record_lock_object, p->filename, p->filenamelen + 1);
-	own_memcpy ((char *)record_lock_object + p->filenamelen + 1, key, keylen);
+	memcpy ((char *)record_lock_object, p->filename, p->filenamelen + 1);
+	memcpy ((char *)record_lock_object + p->filenamelen + 1, key, keylen);
 	dbt.size = (cob_dbtsize_t) len;
 	dbt.data = record_lock_object;
 	ret = bdb_env->lock_get (bdb_env, p->bdb_lock_id, DB_LOCK_NOWAIT, 
@@ -1586,8 +1586,8 @@ test_record_lock (cob_file *f, char *key, int keylen)
 		record_lock_object = cob_malloc (len);
 		rlo_size = len;
 	}
-	own_memcpy ((char *)record_lock_object, p->filename, p->filenamelen + 1);
-	own_memcpy ((char *)record_lock_object + p->filenamelen + 1, key, keylen);
+	memcpy ((char *)record_lock_object, p->filename, p->filenamelen + 1);
+	memcpy ((char *)record_lock_object + p->filenamelen + 1, key, keylen);
 	dbt.size = (cob_dbtsize_t) len;
 	dbt.data = record_lock_object;
 	ret = bdb_env->lock_get (bdb_env, p->bdb_lock_id, DB_LOCK_NOWAIT, 
@@ -1895,7 +1895,7 @@ dobuild:
 			handle_created = 0;
 		}
 #else
-		own_memset ((unsigned char *)&info, 0, sizeof (info));
+		memset ((unsigned char *)&info, 0, sizeof (info));
 		if (f->keys[i].flag) {
 			info.flags = R_DUP;
 		}
@@ -1945,8 +1945,8 @@ dobuild:
 	p->key_index = 0;
 	p->last_key = NULL;
 
-	own_memset ((unsigned char *)&p->key, 0, sizeof (DBT));
-	own_memset ((unsigned char *)&p->data, 0, sizeof (DBT));
+	memset ((unsigned char *)&p->key, 0, sizeof (DBT));
+	memset ((unsigned char *)&p->data, 0, sizeof (DBT));
 #ifdef	USE_DB41
 	p->filename = cob_malloc (strlen (filename) + 1);
 	strcpy (p->filename, filename);
@@ -1965,7 +1965,7 @@ dobuild:
 	ret = DB_SEQ (p->db[p->key_index], R_FIRST);
 #endif
 	if (!ret) {
-		own_memcpy (p->last_readkey[0], p->key.data, p->key.size);
+		memcpy (p->last_readkey[0], p->key.data, p->key.size);
 	} else {
 		p->data.data = 0;
 	}
@@ -2148,9 +2148,9 @@ indexed_start_internal (cob_file *f, int cond, cob_field *key, int read_opts, in
 
 	if (ret == 0 && p->key_index > 0) {
 		/* temporarily save alternate key */
-		own_memcpy (p->temp_key, p->key.data, f->keys[p->key_index].field->size);
+		memcpy (p->temp_key, p->key.data, f->keys[p->key_index].field->size);
 		if (f->keys[p->key_index].flag) {
-			own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
+			memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
 		}
 		p->key.data = p->data.data;
 		p->key.size = f->keys[0].field->size;
@@ -2188,11 +2188,11 @@ indexed_start_internal (cob_file *f, int cond, cob_field *key, int read_opts, in
 
 	if (ret == 0) {
 		if (p->key_index == 0) {
-			own_memcpy (p->last_readkey[0], p->key.data, f->keys[0].field->size);
+			memcpy (p->last_readkey[0], p->key.data, f->keys[0].field->size);
 		} else {
-			own_memcpy (p->last_readkey[p->key_index],
+			memcpy (p->last_readkey[p->key_index],
 				    p->temp_key, f->keys[p->key_index].field->size);
-			own_memcpy (p->last_readkey[p->key_index + f->nkeys], p->key.data, f->keys[0].field->size);
+			memcpy (p->last_readkey[p->key_index + f->nkeys], p->key.data, f->keys[0].field->size);
 			if (f->keys[p->key_index].flag) {
 				p->last_dupno[p->key_index] = dupno;
 			}
@@ -2433,7 +2433,7 @@ indexed_read (cob_file *f, cob_field *key, int read_opts)
 	}
 
 	f->record->size = p->data.size;
-	own_memcpy (f->record->data, p->data.data, p->data.size);
+	memcpy (f->record->data, p->data.data, p->data.size);
 
 	return COB_STATUS_00_SUCCESS;
 #endif	/* WITH_INDEX_EXTFH */
@@ -2744,7 +2744,7 @@ indexed_read_next (cob_file *f, int read_opts)
 #endif
 		if (!ret && p->key_index > 0) {
 			if ( f->keys[p->key_index].flag) {
-				own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
+				memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
 				while (ret == 0 &&
 				      memcmp (p->key.data, p->last_readkey[p->key_index], p->key.size) == 0 &&
 				      dupno < p->last_dupno[p->key_index]) {
@@ -2753,7 +2753,7 @@ indexed_read_next (cob_file *f, int read_opts)
 #else
 					ret = DB_SEQ (p->db[p->key_index], R_NEXT); 
 #endif
-					own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
+					memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
 				}
 				if (ret == 0 &&
 				   memcmp (p->key.data, p->last_readkey[p->key_index], p->key.size) == 0 &&
@@ -2831,7 +2831,7 @@ indexed_read_next (cob_file *f, int read_opts)
 			} else {
 				if (memcmp (p->key.data, p->last_readkey[p->key_index], p->key.size) == 0) {
 					if (p->key_index > 0 && f->keys[p->key_index].flag) {
-						own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
+						memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
 						while (ret == 0 &&
 						memcmp (p->key.data, p->last_readkey[p->key_index], p->key.size) == 0 &&
 						dupno < p->last_dupno[p->key_index]) {
@@ -2840,7 +2840,7 @@ indexed_read_next (cob_file *f, int read_opts)
 #else
 							ret = DB_SEQ (p->db[p->key_index], R_NEXT); 
 #endif
-							own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
+							memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
 						}
 						if (ret != 0) {
 							if (nextprev == DB_PREV) {
@@ -2902,9 +2902,9 @@ indexed_read_next (cob_file *f, int read_opts)
 
 		if (p->key_index > 0) {
 			/* temporarily save alternate key */
-			own_memcpy (p->temp_key, p->key.data, p->key.size);
+			memcpy (p->temp_key, p->key.data, p->key.size);
 			if (f->keys[p->key_index].flag) {
-				own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
+				memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
 			}
 			p->key.data = p->data.data;
 			p->key.size = f->keys[0].field->size;
@@ -2947,11 +2947,11 @@ indexed_read_next (cob_file *f, int read_opts)
 		}
 #endif
 		if (p->key_index == 0) {
-			own_memcpy (p->last_readkey[0], p->key.data, p->key.size);
+			memcpy (p->last_readkey[0], p->key.data, p->key.size);
 		} else {
-			own_memcpy (p->last_readkey[p->key_index], p->temp_key,
+			memcpy (p->last_readkey[p->key_index], p->temp_key,
 				    f->keys[p->key_index].field->size);
-			own_memcpy (p->last_readkey[p->key_index + f->nkeys], p->key.data, f->keys[0].field->size);
+			memcpy (p->last_readkey[p->key_index + f->nkeys], p->key.data, f->keys[0].field->size);
 			if (f->keys[p->key_index].flag) {
 				p->last_dupno[p->key_index] = dupno;
 			}
@@ -2968,7 +2968,7 @@ indexed_read_next (cob_file *f, int read_opts)
 #endif
 
 	f->record->size = p->data.size;
-	own_memcpy (f->record->data, p->data.data, p->data.size);
+	memcpy (f->record->data, p->data.data, p->data.size);
 
 	return COB_STATUS_00_SUCCESS;
 #endif	/* WITH_INDEX_EXTFH */
@@ -2984,7 +2984,7 @@ get_dupno (cob_file *f, int i)
 	struct indexed_file	*p = f->file;
 
 	DBT_SET (p->key, f->keys[i].field);
-	own_memcpy (p->temp_key, p->key.data, p->key.size);
+	memcpy (p->temp_key, p->key.data, p->key.size);
 #ifdef	USE_DB41
 	p->db[i]->cursor (p->db[i], NULL, &p->cursor[i], 0);
 	ret = DB_SEQ (p->cursor[i], DB_SET_RANGE); 
@@ -2992,7 +2992,7 @@ get_dupno (cob_file *f, int i)
 	ret = DB_SEQ (p->db[i], R_CURSOR); 
 #endif
 	while (ret == 0 && memcmp (p->key.data, p->temp_key, p->key.size) == 0) {
-		own_memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
+		memcpy (&dupno, (ucharptr)p->data.data + f->keys[0].field->size, sizeof(unsigned int));
 #ifdef	USE_DB41
 		ret = DB_SEQ (p->cursor[i], DB_NEXT); 
 #else
@@ -3101,9 +3101,9 @@ indexed_write_internal (cob_file *f, int rewrite, int opt)
 		if (f->keys[i].flag) {
 			flags =  0;
 			dupno = get_dupno(f, i);
-			own_memcpy (p->temp_key, f->keys[0].field->data,
+			memcpy (p->temp_key, f->keys[0].field->data,
 				   f->keys[0].field->size);
-			own_memcpy (p->temp_key + f->keys[0].field->size, &dupno,
+			memcpy (p->temp_key + f->keys[0].field->size, &dupno,
 				   sizeof(unsigned int));
 			p->data.data = p->temp_key;
 			p->data.size = f->keys[0].field->size + sizeof(unsigned int);;
@@ -3198,7 +3198,7 @@ indexed_write (cob_file *f, int opt)
 		 && memcmp (p->last_key, p->key.data, p->key.size) > 0) {
 		return COB_STATUS_21_KEY_INVALID;
 	}
-	own_memcpy (p->last_key, p->key.data, p->key.size);
+	memcpy (p->last_key, p->key.data, p->key.size);
 
 	return indexed_write_internal (f, 0, opt);
 #endif	/* WITH_INDEX_EXTFH */
@@ -4135,7 +4135,7 @@ cob_commit (void)
 #ifdef HAVE_FCNTL
 				if (!(f->lock_mode & COB_LOCK_EXCLUSIVE)) {
 					/* unlock the file */
-					own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
+					memset ((unsigned char *)&lock, 0, sizeof (struct flock));
 					lock.l_type = F_UNLCK;
 					lock.l_whence = SEEK_SET;
 					lock.l_start = 0;
@@ -4192,7 +4192,7 @@ cob_rollback (void)
 #ifdef HAVE_FCNTL
 				if (!(f->lock_mode & COB_LOCK_EXCLUSIVE)) {
 					/* unlock the file */
-					own_memset ((unsigned char *)&lock, 0, sizeof (struct flock));
+					memset ((unsigned char *)&lock, 0, sizeof (struct flock));
 					lock.l_type = F_UNLCK;
 					lock.l_whence = SEEK_SET;
 					lock.l_start = 0;
@@ -5054,7 +5054,7 @@ cob_copy_check (cob_file *to, cob_file *from)
 	fromptr = from->record->data;
 	if (unlikely(tosize > fromsize)) {
 		memcpy (toptr, fromptr, fromsize);
-		own_memset (toptr + fromsize, ' ', tosize - fromsize);
+		memset (toptr + fromsize, ' ', tosize - fromsize);
 	} else {
 		memcpy (toptr, fromptr, tosize);
 	}

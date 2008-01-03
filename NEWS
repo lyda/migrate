@@ -1,5 +1,7 @@
 NEWS - user visible changes				-*- outline -*-
 
+* OpenCOBOL 1.0 released
+
 * Changes in OpenCOBOL 0.33
 
 ** New compile option '-x'. This causes the compiler to produce an

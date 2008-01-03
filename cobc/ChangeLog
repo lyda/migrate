@@ -1,3 +1,12 @@
+2008-01-03  Roger While <simrw@sim-basis.de>
+
+	* typeck.c, codegen.c : Remove references to own_memxxx and
+		SUPER_OPTIMIZE
+
+2008-01-02  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Fix up VALUE OF in FD clause
+
 2007-12-12  Roger While <simrw@sim-basis.de>
 
 	* typeck.c : numeric literal is not allowed with ALL

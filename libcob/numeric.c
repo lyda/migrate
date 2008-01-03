@@ -274,7 +274,7 @@ cob_decimal_set_display (cob_decimal *d, cob_field *f)
 		}
 		mpz_set_ui (d->value, n);
 	} else {
-		own_memcpy (buff, data, size);
+		memcpy (buff, data, size);
 		buff[size] = 0;
 		mpz_set_str (d->value, (char *)buff, 10);
 	}
@@ -314,11 +314,11 @@ cob_decimal_get_display (cob_decimal *d, cob_field *f, const int opt)
 		}
 
 		/* othersize, truncate digits */
-		own_memcpy (data, buff - diff, COB_FIELD_SIZE (f));
+		memcpy (data, buff - diff, COB_FIELD_SIZE (f));
 	} else {
 		/* no overflow */
-		own_memset (data, '0', (size_t)diff);
-		own_memcpy (data + diff, buff, size);
+		memset (data, '0', (size_t)diff);
+		memcpy (data + diff, buff, size);
 	}
 
 	cob_put_sign (f, sign);
@@ -391,7 +391,7 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, const int opt)
 #endif
 
 	if (unlikely(mpz_size (d->value) == 0)) {
-		own_memset (f->data, 0, f->size);
+		memset (f->data, 0, f->size);
 		return 0;
 	}
 	overflow = 0;
@@ -666,7 +666,7 @@ cob_decimal_get_packed (cob_decimal *d, cob_field *f, const int opt)
 		q += size - digits;
 		size = digits;
 	}
-	own_memset (data, 0, f->size);
+	memset (data, 0, f->size);
 	p = data + (digits / 2) - (size / 2);
 	diff = 1 - (int)(size % 2);
 	for (i = diff, n = 0; i < size + diff; i++, n++) {
@@ -695,7 +695,7 @@ cob_decimal_get_packed (cob_decimal *d, cob_field *f, const int opt)
 void
 cob_set_packed_zero (cob_field *f)
 {
-	own_memset (f->data, 0, f->size);
+	memset (f->data, 0, f->size);
 	if (!COB_FIELD_HAVE_SIGN (f)) {
 		*(f->data + f->size - 1) |= 0x0f;
 	} else {
@@ -716,7 +716,7 @@ cob_set_packed_int (cob_field *f, const int val)
 	} else {
 		n = val;
 	}
-	own_memset (f->data, 0, f->size);
+	memset (f->data, 0, f->size);
 	p = f->data + f->size - 1;
 	*p = (n % 10) << 4;
 	if (!COB_FIELD_HAVE_SIGN (f)) {
@@ -1003,7 +1003,7 @@ cob_display_add_int (cob_field *f, int n)
 	unsigned char	tfield[64];
 
 	osize = size;
-	own_memcpy (tfield, data, osize);
+	memcpy (tfield, data, osize);
 	sign = cob_get_sign (f);
 	/* -x + n = -(x - n) */
 	if (sign < 0) {
@@ -1035,7 +1035,7 @@ cob_display_add_int (cob_field *f, int n)
 		/* add n to the field */
 		if (display_add_int (data, size, n) != 0) {
 			/* if there was an overflow, recover the last value */
-			own_memcpy (data, tfield, osize);
+			memcpy (data, tfield, osize);
 			goto overflow;
 		}
 	} else if (n < 0) {
@@ -1215,7 +1215,7 @@ cob_cmp_packed (cob_field *f, int n)
 		if (n < 0) {
 			n = -n;
 		}
-		own_memset (&packed_value[14], 0, 6);
+		memset (&packed_value[14], 0, 6);
 		if (n) {
 			p = &packed_value[19];
 			*p =  (n % 10) << 4;

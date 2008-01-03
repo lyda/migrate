@@ -134,12 +134,12 @@ store_common_region (cob_field *f, const unsigned char *data,
 	lcf = cob_max_int (lf1, lf2);
 	gcf = cob_min_int (hf1, hf2);
 	if (gcf > lcf) {
-		own_memset (COB_FIELD_DATA (f), '0', (size_t)(hf2 - gcf));
-		own_memcpy (COB_FIELD_DATA (f) + hf2 - gcf, data + hf1 - gcf,
+		memset (COB_FIELD_DATA (f), '0', (size_t)(hf2 - gcf));
+		memcpy (COB_FIELD_DATA (f) + hf2 - gcf, data + hf1 - gcf,
 				(size_t)(gcf - lcf));
-		own_memset (COB_FIELD_DATA (f) + hf2 - lcf, '0', (size_t)(lcf - lf2));
+		memset (COB_FIELD_DATA (f) + hf2 - lcf, '0', (size_t)(lcf - lf2));
 	} else {
-		own_memset (f->data, '0', f->size);
+		memset (f->data, '0', f->size);
 	}
 }
 
@@ -159,7 +159,7 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
 	unsigned char	c;
 
 	/* initialize */
-	own_memset (f2->data, '0', f2->size);
+	memset (f2->data, '0', f2->size);
 
 	/* skip white spaces */
 	for (; s1 < e1; s1++) {
@@ -213,7 +213,7 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
 	return;
 
 error:
-	own_memset (f2->data, '0', f2->size);
+	memset (f2->data, '0', f2->size);
 	cob_put_sign (f2, 0);
 }
 
@@ -241,20 +241,20 @@ cob_move_display_to_alphanum (cob_field *f1, cob_field *f2)
 	unsigned char	*data2 = f2->data;
 
 	if (size1 >= size2) {
-		own_memcpy (data2, data1, size2);
+		memcpy (data2, data1, size2);
 	} else {
 		diff = (int)(size2 - size1);
 		zero_size = 0;
 		/* move */
-		own_memcpy (data2, data1, size1);
+		memcpy (data2, data1, size1);
 		/* implied 0 ('P's) */
 		if (COB_FIELD_SCALE(f1) < 0) {
 			zero_size = cob_min_int ((int)-COB_FIELD_SCALE(f1), diff);
-			own_memset (data2 + size1, '0', zero_size);
+			memset (data2 + size1, '0', zero_size);
 		}
 		/* padding */
 		if (diff - zero_size > 0) {
-			own_memset (data2 + size1 + zero_size, ' ', diff - zero_size);
+			memset (data2 + size1 + zero_size, ' ', diff - zero_size);
 		}
 	}
 
@@ -272,18 +272,18 @@ cob_move_alphanum_to_alphanum (cob_field *f1, cob_field *f2)
 	if (size1 >= size2) {
 		/* move string with truncation */
 		if (COB_FIELD_JUSTIFIED (f2)) {
-			own_memcpy (data2, data1 + size1 - size2, size2);
+			memcpy (data2, data1 + size1 - size2, size2);
 		} else {
-			own_memcpy (data2, data1, size2);
+			memcpy (data2, data1, size2);
 		}
 	} else {
 		/* move string with padding */
 		if (COB_FIELD_JUSTIFIED (f2)) {
-			own_memset (data2, ' ', size2 - size1);
-			own_memcpy (data2 + size2 - size1, data1, size1);
+			memset (data2, ' ', size2 - size1);
+			memcpy (data2 + size2 - size1, data1, size1);
 		} else {
-			own_memcpy (data2, data1, size1);
-			own_memset (data2 + size1, ' ', size2 - size1);
+			memcpy (data2, data1, size1);
+			memset (data2 + size1, ' ', size2 - size1);
 		}
 	}
 }
@@ -308,7 +308,7 @@ cob_move_display_to_packed (cob_field *f1, cob_field *f2)
 	unsigned char	n;
 
 	/* pack string */
-	own_memset (f2->data, 0, f2->size);
+	memset (f2->data, 0, f2->size);
 	offset = 1 - (digits2 % 2);
 	for (i = offset; i < digits2 + offset; i++, p++) {
 		n = (data1 <= p && p < data1 + digits1) ? cob_d2i (*p) : 0;
@@ -366,7 +366,7 @@ cob_move_display_to_fp (cob_field *f1, cob_field *f2)
 	char		*data1;
 	char		buff2[64];
 
-	own_memset ((ucharptr)buff2, 0, sizeof (buff2));
+	memset ((ucharptr)buff2, 0, sizeof (buff2));
 	size = size1 - COB_FIELD_SCALE(f1);
 	if (sign < 0) {
 		buff2[0] = '-';
@@ -403,8 +403,8 @@ cob_move_fp_to_display (cob_field *f1, cob_field *f2)
 	char		buff[64];
 	char		buff2[64];
 
-	own_memset ((ucharptr)buff, 0, sizeof (buff));
-	own_memset ((ucharptr)buff2, 0, sizeof (buff2));
+	memset ((ucharptr)buff, 0, sizeof (buff));
+	memset ((ucharptr)buff2, 0, sizeof (buff2));
 	if (COB_FIELD_TYPE (f1) == COB_TYPE_NUMERIC_FLOAT) {
 		float	flval;
 
@@ -683,7 +683,7 @@ cob_move_display_to_edited (cob_field *f1, cob_field *f2)
 	if (suppress_zero || (is_zero && COB_FIELD_BLANK_ZERO (f2))) {
 		/* all digits are zeros */
 		if (pad == ' ' || COB_FIELD_BLANK_ZERO (f2)) {
-			own_memset (f2->data, ' ', f2->size);
+			memset (f2->data, ' ', f2->size);
 		} else {
 			for (dst = f2->data; dst < f2->data + f2->size; dst++) {
 				if (*dst != cob_current_module->decimal_point) {
@@ -927,7 +927,7 @@ cob_move_all (cob_field *src, cob_field *dst)
 	temp.data = data;
 	temp.attr = &attr;
 	if (likely(src->size == 1)) {
-		own_memset (data, src->data[0], (size_t)digcount);
+		memset (data, src->data[0], (size_t)digcount);
 	} else {
 		for (i = 0; i < digcount; i++) {
 			data[i] = src->data[i % src->size];

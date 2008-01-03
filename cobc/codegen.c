@@ -3875,16 +3875,13 @@ codegen (struct cb_program *prog, int nested)
 #ifdef	WORDS_BIGENDIAN
 		output ("#define WORDS_BIGENDIAN 1\n");
 #endif
-/* Hmm, autoconf redefines inline and we do not have config.h here
-#ifdef	COB_HAS_INLINE
-		output ("#define COB_HAS_INLINE 1\n");
-#endif
-*/
 		if (optimize_flag) {
 			output ("#define COB_LOCAL_INLINE\n");
+/* RXW
 			if (optimize_flag > 1) {
 				output ("#define SUPER_OPTIMIZE\n");
 			}
+*/
 		}
 		output ("#include <libcob.h>\n\n");
 
