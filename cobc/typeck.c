@@ -1016,6 +1016,9 @@ cb_validate_program_data (struct cb_program *prog)
 				}
 			}
 			if (CB_REFERENCE_P (assign) && CB_REFERENCE (assign)->word->count == 0) {
+				if (cb_warn_implicit_define) {
+					cb_warning (_("'%s' will be implicitly defined"), CB_NAME (assign));
+				}
 				x = cb_build_implicit_field (assign, COB_SMALL_BUFF);
 				p = current_program->working_storage;
 				CB_FIELD (x)->count++;
@@ -2626,6 +2629,13 @@ cb_emit_call (cb_tree prog, cb_tree using, cb_tree returning,
 	struct system_table	*psyst;
 	int			is_sys_call = 0;
 
+	if (returning) {
+		if (CB_TREE_CLASS(returning) != CB_CLASS_NUMERIC &&
+		    CB_TREE_CLASS(returning) != CB_CLASS_POINTER) {
+			cb_error (_("Invalid RETURNING field"));
+			return;
+		}
+	}
 	for (l = using; l; l = CB_CHAIN (l)) {
 		x = CB_VALUE (l);
 		if ((CB_REFERENCE_P (x) && CB_FIELD_P(CB_REFERENCE(x)->value))
@@ -2790,6 +2800,13 @@ cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos, long
 			return;
 		}
 		cb_emit (cb_build_funcall_1 ("cob_display_arg_number", CB_VALUE (values)));
+	} else if (upon == cb_int5) {
+		/* DISPLAY x UPON COMMAND-LINE */
+		if (cb_list_length (values) != 1) {
+			cb_error (_("Wrong number of data items"));
+			return;
+		}
+		cb_emit (cb_build_funcall_1 ("cob_display_command_line", CB_VALUE (values)));
 	} else if (current_program->flag_screen) {
 		/* screen mode */
 		for (l = values; l; l = CB_CHAIN (l)) {

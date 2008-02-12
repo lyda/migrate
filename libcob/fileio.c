@@ -1067,7 +1067,8 @@ sequential_write (cob_file *f, int opt)
 	if (f->record_min != f->record_max) {
 #if	WITH_VARSEQ == 2
 		if (unlikely(fwrite (&f->record->size, sizeof (f->record->size), 1, (FILE *)f->file) != 1)) {
-#elif	WITH_VARSEQ == 1
+#else
+#if	WITH_VARSEQ == 1
 #ifdef WORDS_BIGENDIAN
 		recsize.sint = f->record->size;
 #else
@@ -1079,6 +1080,7 @@ sequential_write (cob_file *f, int opt)
 		recsize.sshort[0] = f->record->size;
 #else
 		recsize.sshort[0] = COB_BSWAP_16 ((unsigned short)f->record->size);
+#endif
 #endif
 #if	WITH_VARSEQ == 3
 		if (unlikely(fwrite (recsize.sbuff, 2, 1, (FILE *)f->file) != 1)) {

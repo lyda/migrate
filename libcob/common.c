@@ -78,6 +78,8 @@ static struct cob_alloc_cache	*cob_alloc_base = NULL;
 
 static char			*env = NULL;
 static int			current_arg = 1;
+static unsigned char		*commlnptr = NULL;
+static size_t			commlncnt = 0;
 
 static char			*locale_save = NULL;
 
@@ -85,38 +87,39 @@ static size_t			sort_nkeys;
 static cob_file_key		*sort_keys;
 static const unsigned char	*sort_collate;
 
+static const char		*cob_current_program_id = NULL;
+static const char		*cob_current_section = NULL;
+static const char		*cob_current_paragraph = NULL;
+static const char		*cob_source_file = NULL;
+static const char		*cob_source_statement = NULL;
+static unsigned int		cob_source_line = 0;
+static size_t			cob_line_trace = 0;
+
+#ifdef	HAVE_SIGNAL_H
+typedef void (*cob_sighandler_t) (int);
+static cob_sighandler_t		hupsig = NULL;
+static cob_sighandler_t		intsig = NULL;
+static cob_sighandler_t		qutsig = NULL;
+#endif
+
+static cob_field_attr	all_attr = { COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL };
+static cob_field_attr	one_attr = { COB_TYPE_NUMERIC, 1, 0, 0, NULL };
 
 int			cob_initialized = 0;
 int			cob_exception_code = 0;
 
 cob_module		*cob_current_module = NULL;
 
-const char		*cob_source_file = NULL;
-const char		*cob_source_statement = NULL;
 const char		*cob_orig_statement = NULL;
-const char		*cob_current_program_id = NULL;
-const char		*cob_current_section = NULL;
-const char		*cob_current_paragraph = NULL;
 const char		*cob_orig_program_id = NULL;
 const char		*cob_orig_section = NULL;
 const char		*cob_orig_paragraph = NULL;
-unsigned int		cob_source_line = 0;
 unsigned int		cob_orig_line = 0;
 
 int			cob_call_params = 0;
 int			cob_save_call_params = 0;
 int			cob_initial_external = 0;
 int			cob_got_exception = 0;
-
-#ifdef	HAVE_SIGNAL_H
-typedef void (*cob_sighandler_t) (int);
-static cob_sighandler_t	hupsig = NULL;
-static cob_sighandler_t	intsig = NULL;
-static cob_sighandler_t	qutsig = NULL;
-#endif
-
-static cob_field_attr	all_attr = { COB_TYPE_ALPHANUMERIC_ALL, 0, 0, 0, NULL };
-static cob_field_attr	one_attr = { COB_TYPE_NUMERIC, 1, 0, 0, NULL };
 
 cob_field		cob_zero = { 1, (ucharptr)"0", &all_attr };
 cob_field		cob_space = { 1, (ucharptr)" ", &all_attr };
@@ -305,6 +308,37 @@ static struct handlerlist {
  * General functions
  */
 
+void
+cob_set_location (const char *progid, const char *sfile, const unsigned int sline,
+		  const char *csect, const char *cpara, const char *cstatement)
+{
+	cob_current_program_id = progid;
+	cob_source_file = sfile;
+	cob_source_line = sline;
+	cob_current_section = csect;
+	cob_current_paragraph = cpara;
+	if (cstatement) {
+		cob_source_statement = cstatement;
+	}
+	if (cob_line_trace) {
+		fprintf (stderr, "PROGRAM-ID: %s \tLine: %d \tStatement: %s\n",
+			(char *)progid, sline, cstatement ? (char *)cstatement : "Unknown");
+		fflush (stderr);
+	}
+}
+
+void
+cob_ready_trace (void)
+{
+	cob_line_trace = 1;
+}
+
+void
+cob_reset_trace (void)
+{
+	cob_line_trace = 0;
+}
+
 unsigned char *
 cob_get_pointer (const unsigned char *srcptr)
 {
@@ -457,6 +491,11 @@ cob_init (int argc, char **argv)
 			if (s && strcasecmp (s, "ON") == 0) {
 				cob_switch[i] = 1;
 			}
+		}
+
+		s = getenv ("COB_LINE_TRACE");
+		if (s && (*s == 'Y' || *s == 'y')) {
+			cob_line_trace = 1;
 		}
 
 		cob_initialized = 1;
@@ -1442,12 +1481,27 @@ cob_accept_time (cob_field *f)
 }
 
 void
+cob_display_command_line (cob_field *f)
+{
+	if (commlnptr) {
+		free (commlnptr);
+	}
+	commlnptr = cob_malloc (f->size);
+	commlncnt = f->size;
+	memcpy (commlnptr, f->data, commlncnt);
+}
+
+void
 cob_accept_command_line (cob_field *f)
 {
 	size_t	i, size = 0;
 	size_t	len;
 	char	buff[COB_LARGE_BUFF] = "";
 
+	if (commlncnt) {
+		cob_memcpy (f, commlnptr, commlncnt);
+		return;
+	}
 	for (i = 1; i < (size_t)cob_argc; i++) {
 		len = strlen (cob_argv[i]);
 		if (size + len >= COB_LARGE_BUFF) {
@@ -1458,7 +1512,6 @@ cob_accept_command_line (cob_field *f)
 		size += len;
 		buff[size++] = ' ';
 	}
-
 	cob_memcpy (f, (ucharptr)buff, size);
 }
 

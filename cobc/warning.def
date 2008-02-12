@@ -29,22 +29,25 @@ CB_WARNDEF (2, cb_warn_archaic, "archaic", 1,
 	    N_("Warn if archaic features are used"))
 
 CB_WARNDEF (2, cb_warn_column_overflow, "column-overflow", 1,
-	    N_("Warn any text after column 72"))
+	    N_("Warn if any text after column 72"))
 
 CB_WARNDEF (2, cb_warn_redefinition, "redefinition", 1,
-	    N_("Warn redefinition of data items"))
+	    N_("Warn incompatible redefinition of data items"))
 
 CB_WARNDEF (2, cb_warn_constant, "constant", 1,
 	    N_("Warn inconsistent constant"))
 
 CB_WARNDEF (2, cb_warn_parentheses, "parentheses", 1,
-	    N_("Warn lacks of parentheses around AND within OR"))
+	    N_("Warn lack of parentheses around AND within OR"))
 
 CB_WARNDEF (3, cb_warn_terminator, "terminator", 1,
-	    N_("Warn lacks of scope terminator (END-XXX)"))
+	    N_("Warn lack of scope terminator (END-XXX)"))
 
 CB_WARNDEF (3, cb_warn_strict_typing, "strict-typing", 1,
 	    N_("Warn type mismatch strictly"))
+
+CB_WARNDEF (3, cb_warn_implicit_define, "implicit-define", 1,
+	    N_("Warn implicitly defined data items"))
 
 CB_WARNDEF (3, cb_warn_call_params, "call-params", 0,
 	    N_("Warn non 01/77 items for CALL params (NOT set with -Wall)"))

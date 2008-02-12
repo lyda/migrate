@@ -80,6 +80,7 @@ cb_tree cb_int1;
 cb_tree cb_int2;
 cb_tree cb_int3;
 cb_tree cb_int4;
+cb_tree cb_int5;
 cb_tree cb_i[8];
 cb_tree cb_error_node;
 
@@ -583,6 +584,7 @@ cb_init_constants (void)
 	cb_int2 = cb_int (2);
 	cb_int3 = cb_int (3);
 	cb_int4 = cb_int (4);
+	cb_int5 = cb_int (5);
 	for (i = 1; i < 8; i++) {
 		s = cobc_malloc (4);
 		sprintf (s, "i%d", i);
@@ -1209,6 +1211,9 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 
 	if (f->special) {
 		f->organization = COB_ORG_LINE_SEQUENTIAL;
+	}
+	if (f->fileid_assign && !f->assign) {
+		f->assign = cb_build_alphanumeric_literal (f->name, strlen (f->name));
 	}
 
 	/* check the record size if it is limited */

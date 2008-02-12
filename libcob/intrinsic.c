@@ -489,9 +489,9 @@ cob_intr_length (cob_field *srcfield)
 cob_field *
 cob_intr_integer (cob_field *srcfield)
 {
+	int		i, scale;
 	cob_field_attr	attr;
 	cob_field	field;
-	int		i, scale;
 
 	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL);
 	COB_FIELD_INIT (8, NULL, &attr);
@@ -544,9 +544,9 @@ cob_intr_fraction_part (cob_field *srcfield)
 cob_field *
 cob_intr_sign (cob_field *srcfield)
 {
+	int		n;
 	cob_field_attr	attr;
 	cob_field	field;
-	int		n;
 
 	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 8, 0, COB_FLAG_HAVE_SIGN, NULL);
 	COB_FIELD_INIT (4, NULL, &attr);
@@ -607,10 +607,10 @@ cob_intr_reverse (cob_field *srcfield)
 cob_field *
 cob_intr_trim (cob_field *srcfield, const int direction)
 {
-	size_t		i;
-	size_t		size = 0;
 	unsigned char	*begin;
 	unsigned char	*end;
+	size_t		i;
+	size_t		size = 0;
 
 	make_field_entry (srcfield);
 
@@ -865,8 +865,8 @@ cob_intr_ord (cob_field *srcfield)
 cob_field *
 cob_intr_stored_char_length (cob_field *srcfield)
 {
-	int		count;
 	unsigned char	*p;
+	int		count;
 	cob_field_attr	attr;
 	cob_field	field;
 
@@ -1236,9 +1236,9 @@ cob_intr_abs (cob_field *srcfield)
 cob_field *
 cob_intr_acos (cob_field *srcfield)
 {
-	int			i, tempres;
 	unsigned long long	result;
 	double			mathd2;
+	int			i, tempres;
 	cob_field_attr		attr;
 	cob_field		field;
 
@@ -1270,9 +1270,9 @@ cob_intr_acos (cob_field *srcfield)
 cob_field *
 cob_intr_asin (cob_field *srcfield)
 {
-	int			i, tempres;
 	long long		result;
 	double			mathd2;
+	int			i, tempres;
 	cob_field_attr		attr;
 	cob_field		field;
 
@@ -1303,9 +1303,9 @@ cob_intr_asin (cob_field *srcfield)
 cob_field *
 cob_intr_atan (cob_field *srcfield)
 {
-	int			i, tempres;
 	long long		result;
 	double			mathd2;
+	int			i, tempres;
 	cob_field_attr		attr;
 	cob_field		field;
 
@@ -1336,9 +1336,9 @@ cob_intr_atan (cob_field *srcfield)
 cob_field *
 cob_intr_cos (cob_field *srcfield)
 {
-	int			i, tempres;
 	long long		result;
 	double			mathd2;
+	int			i, tempres;
 	cob_field_attr		attr;
 	cob_field		field;
 
@@ -1405,9 +1405,9 @@ cob_intr_log10 (cob_field *srcfield)
 cob_field *
 cob_intr_sin (cob_field *srcfield)
 {
-	int			i, tempres;
 	long long		result;
 	double			mathd2;
+	int			i, tempres;
 	cob_field_attr		attr;
 	cob_field		field;
 
@@ -1474,13 +1474,13 @@ cob_intr_tan (cob_field *srcfield)
 cob_field *
 cob_intr_numval (cob_field *srcfield)
 {
+	long long	llval = 0;
+	double		val;
 	size_t		i;
 	int		integer_digits = 0;
 	int		decimal_digits = 0;
 	int		sign = 0;
 	int		decimal_seen = 0;
-	long long	llval = 0;
-	double		val;
 	cob_field_attr	attr;
 	cob_field	field;
 	unsigned char	integer_buff[64];
@@ -1553,14 +1553,14 @@ cob_intr_numval (cob_field *srcfield)
 cob_field *
 cob_intr_numval_c (cob_field *srcfield, cob_field *currency)
 {
+	unsigned char	*currency_data;
+	long long	llval = 0;
+	double		val;
 	size_t		i;
 	int		integer_digits = 0;
 	int		decimal_digits = 0;
 	int		sign = 0;
 	int		decimal_seen = 0;
-	unsigned char	*currency_data;
-	long long	llval = 0;
-	double		val;
 	cob_field_attr	attr;
 	cob_field	field;
 	unsigned char	integer_buff[64];
@@ -1673,11 +1673,11 @@ cob_intr_annuity (cob_field *srcfield1, cob_field *srcfield2)
 cob_field *
 cob_intr_sum (int params, ...)
 {
+	cob_field	*f;
+	va_list		args;
 	int		i;
 	int		digits = 0;
 	int		scale = 0;
-	cob_field	*f;
-	va_list		args;
 	cob_field_attr	attr;
 	cob_field	field;
 
@@ -1711,8 +1711,8 @@ cob_intr_sum (int params, ...)
 cob_field *
 cob_intr_ord_min (int params, ...)
 {
-	int		i;
 	cob_field	*f, *basef;
+	int		i;
 	int		ordmin = 0;
 	va_list		args;
 	cob_field_attr	attr;
@@ -1746,9 +1746,9 @@ cob_intr_ord_min (int params, ...)
 cob_field *
 cob_intr_ord_max (int params, ...)
 {
-	int		i;
 	cob_field	*f, *basef;
 	int		ordmin = 0;
+	int		i;
 	va_list		args;
 	cob_field_attr	attr;
 	cob_field	field;
@@ -1781,9 +1781,9 @@ cob_intr_ord_max (int params, ...)
 cob_field *
 cob_intr_min (int params, ...)
 {
-	int		i;
 	cob_field	*f, *basef;
 	va_list		args;
+	int		i;
 
 	va_start (args, params);
 
@@ -1802,9 +1802,9 @@ cob_intr_min (int params, ...)
 cob_field *
 cob_intr_max (int params, ...)
 {
-	int		i;
 	cob_field	*f, *basef;
 	va_list		args;
+	int		i;
 
 	va_start (args, params);
 
@@ -1823,9 +1823,9 @@ cob_intr_max (int params, ...)
 cob_field *
 cob_intr_midrange (int params, ...)
 {
-	int		i;
 	cob_field	*f, *basemin, *basemax;
 	va_list		args;
+	int		i;
 
 	make_double_entry ();
 	va_start (args, params);
@@ -1856,10 +1856,10 @@ cob_intr_midrange (int params, ...)
 cob_field *
 cob_intr_median (int params, ...)
 {
-	int		i;
 	cob_field	*f;
 	cob_field	**field_alloc;
 	va_list		args;
+	int		i;
 
 	va_start (args, params);
 
@@ -1900,13 +1900,13 @@ cob_intr_median (int params, ...)
 cob_field *
 cob_intr_mean (int params, ...)
 {
-	int		i;
 	cob_field	*f;
+	va_list		args;
+	long long	n;
+	int		i;
 	cob_field_attr	attr;
 	cob_field	field;
 	unsigned char	data[16];
-	long long	n;
-	va_list		args;
 
 
 	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL);
@@ -1963,9 +1963,9 @@ cob_intr_mod (cob_field *srcfield1, cob_field *srcfield2)
 cob_field *
 cob_intr_range (int params, ...)
 {
-	int		i;
 	cob_field	*f, *basemin, *basemax;
 	va_list		args;
+	int		i;
 	cob_field_attr	attr;
 	cob_field	field;
 
@@ -2026,12 +2026,12 @@ cob_intr_rem (cob_field *srcfield1, cob_field *srcfield2)
 cob_field *
 cob_intr_random (int params, ...)
 {
+	cob_field	*f;
+	va_list		args;
 	int		seed = 1;
 	int		randnum;
 	int		i;
 	int		exp10;
-	cob_field	*f;
-	va_list		args;
 	cob_field_attr	attr;
 	cob_field	field;
 
@@ -2069,13 +2069,13 @@ cob_intr_random (int params, ...)
 cob_field *
 cob_intr_variance (int params, ...)
 {
-	int		i;
 	cob_field	*f;
+	va_list		args;
+	long long	n;
+	int		i;
 	cob_field_attr	attr;
 	cob_field	field;
-	long long	n;
 	unsigned char	data[16];
-	va_list		args;
 
 	COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0, COB_FLAG_HAVE_SIGN, NULL);
 	COB_FIELD_INIT (8, NULL, &attr);
@@ -2137,9 +2137,9 @@ cob_intr_variance (int params, ...)
 cob_field *
 cob_intr_standard_deviation (int params, ...)
 {
-	int		i;
 	cob_field	*f;
 	va_list		args;
+	int		i;
 
 	va_start (args, params);
 	make_double_entry ();
@@ -2202,9 +2202,9 @@ cob_intr_standard_deviation (int params, ...)
 cob_field *
 cob_intr_present_value (int params, ...)
 {
-	int		i;
 	cob_field	*f;
 	va_list		args;
+	int		i;
 
 	va_start (args, params);
 	make_double_entry ();
@@ -2246,14 +2246,14 @@ cob_intr_present_value (int params, ...)
 cob_field *
 cob_intr_year_to_yyyy (int params, ...)
 {
+	cob_field	*f;
+	struct tm	*timeptr;
+	va_list		args;
+	time_t		t;
 	int		year;
 	int		interval;
 	int		xqtyear;
 	int		maxyear;
-	cob_field	*f;
-	va_list		args;
-	time_t		t;
-	struct tm	*timeptr;
 	cob_field_attr	attr;
 	cob_field	field;
 
@@ -2309,15 +2309,15 @@ cob_intr_year_to_yyyy (int params, ...)
 cob_field *
 cob_intr_date_to_yyyymmdd (int params, ...)
 {
+	cob_field	*f;
+	struct tm	*timeptr;
+	va_list		args;
+	time_t		t;
 	int		year;
 	int		mmdd;
 	int		interval;
 	int		xqtyear;
 	int		maxyear;
-	cob_field	*f;
-	va_list		args;
-	time_t		t;
-	struct tm	*timeptr;
 	cob_field_attr	attr;
 	cob_field	field;
 
@@ -2377,15 +2377,15 @@ cob_intr_date_to_yyyymmdd (int params, ...)
 cob_field *
 cob_intr_day_to_yyyyddd (int params, ...)
 {
+	cob_field	*f;
+	struct tm	*timeptr;
+	va_list		args;
+	time_t		t;
 	int		year;
 	int		days;
 	int		interval;
 	int		xqtyear;
 	int		maxyear;
-	cob_field	*f;
-	va_list		args;
-	time_t		t;
-	struct tm	*timeptr;
 	cob_field_attr	attr;
 	cob_field	field;
 
@@ -2445,9 +2445,9 @@ cob_intr_day_to_yyyyddd (int params, ...)
 cob_field *
 cob_intr_seconds_past_midnight ()
 {
-	int		seconds;
-	time_t		t;
 	struct tm	*timeptr;
+	time_t		t;
+	int		seconds;
 	cob_field_attr	attr;
 	cob_field	field;
 
@@ -2466,15 +2466,15 @@ cob_intr_seconds_past_midnight ()
 cob_field *
 cob_intr_seconds_from_formatted_time (cob_field *format, cob_field *value)
 {
+	unsigned char	*p1;
+	unsigned char	*p2;
+	size_t		n;
 	int		seconds = 0;
 	int		minutes = 0;
 	int		hours = 0;
 	int		seconds_seen = 0;
 	int		minutes_seen = 0;
 	int		hours_seen = 0;
-	unsigned char	*p1;
-	unsigned char	*p2;
-	size_t		n;
 	cob_field_attr	attr;
 	cob_field	field;
 

@@ -1,3 +1,7 @@
+2008-01-09  Roger While <simrw@sim-basis.de>
+
+	* BY CONTENT not allowed in PROCEDURE header
+
 2008-01-02  Roger While <simrw@sim-basis.de>
 
 	*  Cobol85 tests rechanged to cater for unsupported ALTER

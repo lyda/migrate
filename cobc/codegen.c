@@ -1991,7 +1991,12 @@ output_call (struct cb_call *p)
 	int			dynamic_link = 1;
 	size_t			n;
 	size_t			parmnum;
+	size_t			retptr;
 
+	retptr = 0;
+	if (p->returning && CB_TREE_CLASS(p->returning) == CB_CLASS_POINTER) {
+		retptr = 1;
+	}
 	/* User defined entry points */
 	if (CB_LITERAL_P (p->name)) {
 		lp = CB_LITERAL (p->name);
@@ -2033,7 +2038,11 @@ output_call (struct cb_call *p)
 	/* local variables */
 	output_indent ("{");
 	if (dynamic_link) {
-		output_line ("int (*func)();");
+		if (retptr) {
+			output_line ("void * (*func)();");
+		} else {
+			output_line ("int (*func)();");
+		}
 	}
 
 	if (CB_REFERENCE_P (p->name)
@@ -2046,36 +2055,59 @@ output_call (struct cb_call *p)
 	for (l = p->args, n = 1; l; l = CB_CHAIN (l), n++) {
 		x = CB_VALUE (l);
 		switch (CB_PURPOSE_INT (l)) {
-		case CB_CALL_BY_CONTENT:
-			output_prefix ();
-			output ("unsigned char content_%d[", (int)n);
-			if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x) || x == cb_null) {
-				output ("4");
-			} else {
-				output_size (x);
+		case CB_CALL_BY_REFERENCE:
+			if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x)) {
+				output_prefix ();
+				output ("unsigned char content_%d[4];\n", (int)n);
 			}
-			output ("];\n");
+			break;
+		case CB_CALL_BY_CONTENT:
+		case CB_CALL_BY_VALUE:
+			if (CB_TREE_TAG (x) != CB_TAG_INTRINSIC) {
+				output_prefix ();
+				output ("unsigned char content_%d[", (int)n);
+				if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x) ||
+				    x == cb_null) {
+					output ("4");
+				} else {
+					output_size (x);
+				}
+				output ("];\n");
+			}
 			break;
 		}
 	}
+	output ("\n");
 	for (l = p->args, n = 1; l; l = CB_CHAIN (l), n++) {
 		x = CB_VALUE (l);
 		switch (CB_PURPOSE_INT (l)) {
-		case CB_CALL_BY_CONTENT:
-			output_prefix ();
-			if (CB_NUMERIC_LITERAL_P (x) || x == cb_null
-			    || (CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC
-				&& cb_field (x)->usage == CB_USAGE_LENGTH)) {
+		case CB_CALL_BY_REFERENCE:
+			if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x)) {
+				output_prefix ();
 				output ("*(int *)content_%d = ", (int)n);
 				output_integer (x);
 				output (";\n");
-			} else {
-				output ("memcpy (content_%d, ", (int)n);
-				output_data (x);
-				output (", ");
-				output_size (x);
-				output (");\n");
 			}
+			break;
+		case CB_CALL_BY_VALUE:
+		case CB_CALL_BY_CONTENT:
+			if (CB_TREE_TAG (x) != CB_TAG_INTRINSIC) {
+				output_prefix ();
+				if (CB_NUMERIC_LITERAL_P (x) || x == cb_null
+				    || (CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC
+					&& cb_field (x)->usage == CB_USAGE_LENGTH)) {
+					output ("*(int *)content_%d = ", (int)n);
+					output_integer (x);
+					output (";\n");
+				} else {
+					output ("memcpy (content_%d, ", (int)n);
+					output_data (x);
+					output (", ");
+					output_size (x);
+					output (");\n");
+				}
+			}
+			break;
 		}
 	}
 
@@ -2115,18 +2147,27 @@ output_call (struct cb_call *p)
 	output ("cob_call_params = %d;\n", (int)n);
 	output_prefix ();
 	if (!dynamic_link) {
-		if (CB_REFERENCE_P (p->name) && CB_FIELD_P (CB_REFERENCE (p->name)->value) &&
+		if (CB_REFERENCE_P (p->name) &&
+		    CB_FIELD_P (CB_REFERENCE (p->name)->value) &&
 		    CB_FIELD (CB_REFERENCE (p->name)->value)->usage ==
 		    CB_USAGE_PROGRAM_POINTER) {
 			output ("func = ");
 			output_integer (p->name);
 			output (";\n");
 			output_prefix ();
-			output_integer (current_prog->cb_return_code);
+			if (retptr) {
+				output_integer (p->returning);
+			} else {
+				output_integer (current_prog->cb_return_code);
+			}
 			output (" = func");
 		} else {
 			/* static link */
-			output_integer (current_prog->cb_return_code);
+			if (retptr) {
+				output_integer (p->returning);
+			} else {
+				output_integer (current_prog->cb_return_code);
+			}
 			if (system_call) {
 				output (" = %s", system_call);
 			} else {
@@ -2165,7 +2206,11 @@ output_call (struct cb_call *p)
 			output_indent ("  {");
 		}
 		output_prefix ();
-		output_integer (current_prog->cb_return_code);
+		if (retptr) {
+			output_integer (p->returning);
+		} else {
+			output_integer (current_prog->cb_return_code);
+		}
 		output (" = func");
 	}
 
@@ -2175,42 +2220,20 @@ output_call (struct cb_call *p)
 		x = CB_VALUE (l);
 		switch (CB_PURPOSE_INT (l)) {
 		case CB_CALL_BY_REFERENCE:
-			if (CB_REFERENCE_P (x) && CB_FILE_P (cb_ref (x))) {
+			if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x)) {
+				output ("content_%d", (int)n);
+			} else if (CB_REFERENCE_P (x) && CB_FILE_P (cb_ref (x))) {
 				output_param (cb_ref (x), -1);
 			} else {
 				output_data (x);
 			}
 			break;
 		case CB_CALL_BY_CONTENT:
-			output ("content_%d", (int)n);
-			break;
 		case CB_CALL_BY_VALUE:
-			switch (CB_TREE_TAG (x)) {
-			case CB_TAG_LITERAL:
-				if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
-					output ("%d", cb_get_int (x));
-				} else {
-					output ("%d", CB_LITERAL (x)->data[0]);
-				}
-				break;
-			default:
-				switch (cb_field (x)->usage) {
-				case CB_USAGE_BINARY:
-				case CB_USAGE_COMP_5:
-				case CB_USAGE_COMP_X:
-				case CB_USAGE_INDEX:
-					output_integer (x);
-					break;
-				case CB_USAGE_LENGTH:
-					output_integer (x);
-					break;
-				default:
-					output ("*(");
-					output_data (x);
-					output (")");
-					break;
-				}
-				break;
+			if (CB_TREE_TAG (x) != CB_TAG_INTRINSIC) {
+				output ("content_%d", (int)n);
+			} else {
+				output_data (x);
 			}
 			break;
 		}
@@ -2227,7 +2250,7 @@ output_call (struct cb_call *p)
 		}
 	}
 	output (");\n");
-	if (p->returning) {
+	if (p->returning && !retptr) {
 		output_stmt (cb_build_move (current_prog->cb_return_code, p->returning));
 	}
 	if (p->stmt2) {
@@ -2496,21 +2519,24 @@ output_stmt (cb_tree x)
 				output ("#line %d \"%s\"\n", x->source_line, x->source_file);
 			}
 			if (cb_flag_source_location) {
-				output_line ("cob_current_program_id = \"%s\";", excp_current_program_id);
-				output_line ("cob_source_file = \"%s\";", x->source_file);
-				output_line ("cob_source_line = %d;", x->source_line);
+				output_prefix ();
+				output ("cob_set_location (\"%s\", \"%s\", %d, ",
+					excp_current_program_id, x->source_file,
+					x->source_line);
 				if (excp_current_section) {
-					output_line ("cob_current_section = \"%s\";", excp_current_section);
+					output ("\"%s\", ", excp_current_section);
 				} else {
-					output_line ("cob_current_section = NULL;");
+					output ("NULL, ");
 				}
 				if (excp_current_paragraph) {
-					output_line ("cob_current_paragraph = \"%s\";", excp_current_paragraph);
+					output ("\"%s\", ", excp_current_paragraph);
 				} else {
-					output_line ("cob_current_paragraph = NULL;");
+					output ("NULL, ");
 				}
 				if (p->name) {
-					output_line ("cob_source_statement = \"%s\";", p->name);
+					output ("\"%s\");\n", p->name);
+				} else {
+					output ("NULL);\n");
 				}
 			}
 			last_line = x->source_line;
@@ -3375,7 +3401,7 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		     "frame_stack[%d];", COB_STACK_SIZE);
 #else
 	output_line ("struct frame {");
-	output_line ("	int perform_through;");
+	output_line ("	int  perform_through;");
 	output_line ("	void *return_address;");
 	output_line ("} frame_stack[%d];", COB_STACK_SIZE);
 #endif
@@ -3384,9 +3410,13 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	output_line ("/* Start of function code */");
 #if defined (__GNUC__) && (__GNUC__ >= 3)
 	if (cb_flag_static_call == 2) {
+		output_newline ();
+		output_line ("/* Prototype for contained initialization function */");
 		output_line ("auto void init_%s (void);", prog->program_id);
 	}
 	if (has_external) {
+		output_newline ();
+		output_line ("/* Prototype for contained initialization function */");
 		output_line ("auto void init_external (void);");
 	}
 #endif
@@ -3715,30 +3745,10 @@ output_entry_function (struct cb_program *prog,
 	}
 	for (l = using_list; l; l = CB_CHAIN (l)) {
 		f = cb_field (CB_VALUE (l));
-		switch (CB_PURPOSE_INT (l)) {
-		case CB_CALL_BY_REFERENCE:
-		case CB_CALL_BY_CONTENT:
-			if (gencode) {
-				output ("unsigned char *%s%d", CB_PREFIX_BASE, f->id);
-			} else {
-				output ("unsigned char *");
-			}
-			break;
-		case CB_CALL_BY_VALUE:
-			if (CB_TREE_CLASS (CB_VALUE (l)) == CB_CLASS_NUMERIC) {
-				if (gencode) {
-					output ("int i_%d", f->id);
-				} else {
-					output ("int");
-				}
-			} else {
-				if (gencode) {
-					output ("unsigned char i_%d", f->id);
-				} else {
-					output ("unsigned char");
-				}
-			}
-			break;
+		if (gencode) {
+			output ("unsigned char *%s%d", CB_PREFIX_BASE, f->id);
+		} else {
+			output ("unsigned char *");
 		}
 		if (CB_CHAIN (l)) {
 			output (", ");
@@ -3751,45 +3761,14 @@ output_entry_function (struct cb_program *prog,
 		return;
 	}
 	output ("{\n");
-	for (l = using_list; l; l = CB_CHAIN (l)) {
-		if (CB_PURPOSE_INT (l) == CB_CALL_BY_CONTENT) {
-			f = cb_field (CB_VALUE (l));
-			if (cb_sticky_linkage) {
-				output ("  static unsigned char copy_%d[%d];  /* %s */\n",
-					f->id, f->size, f->name);
-			} else {
-				output ("  unsigned char copy_%d[%d];  /* %s */\n",
-					f->id, f->size, f->name);
-			}
-		}
-	}
 	parmnum = 1;
-	for (l = using_list; l; l = CB_CHAIN (l), parmnum++) {
-		if (CB_PURPOSE_INT (l) == CB_CALL_BY_CONTENT) {
-			f = cb_field (CB_VALUE (l));
-			output ("  if (cob_call_params >= %d)\n", parmnum);
-			output ("      memcpy (copy_%d, %s%d, %d);\n",
-				f->id, CB_PREFIX_BASE, f->id, f->size);
-		}
-	}
-
 	output ("  return %s_ (%d", prog->program_id, progid++);
 	for (l1 = parameter_list; l1; l1 = CB_CHAIN (l1)) {
 		for (l2 = using_list; l2; l2 = CB_CHAIN (l2)) {
 			if (strcasecmp (cb_field (CB_VALUE (l1))->name,
 					cb_field (CB_VALUE (l2))->name) == 0) {
 				f = cb_field (CB_VALUE (l2));
-				switch (CB_PURPOSE_INT (l2)) {
-				case CB_CALL_BY_REFERENCE:
-					output (", %s%d", CB_PREFIX_BASE, f->id);
-					break;
-				case CB_CALL_BY_CONTENT:
-					output (", copy_%d", f->id);
-					break;
-				case CB_CALL_BY_VALUE:
-					output (", (unsigned char *) &i_%d", f->id);
-					break;
-				}
+				output (", %s%d", CB_PREFIX_BASE, f->id);
 				break;
 			}
 		}

@@ -247,13 +247,6 @@ DLL_EXPIMP extern int			cob_exception_code;
 
 DLL_EXPIMP extern cob_module		*cob_current_module;
 
-DLL_EXPIMP extern const char		*cob_source_file;
-DLL_EXPIMP extern const char		*cob_source_statement;
-DLL_EXPIMP extern const char		*cob_current_program_id;
-DLL_EXPIMP extern const char		*cob_current_section;
-DLL_EXPIMP extern const char		*cob_current_paragraph;
-DLL_EXPIMP extern unsigned int		cob_source_line;
-
 DLL_EXPIMP extern int			cob_call_params;
 DLL_EXPIMP extern int			cob_save_call_params;
 DLL_EXPIMP extern int			cob_initial_external;
@@ -301,6 +294,7 @@ extern void cob_accept_day (cob_field *f);
 extern void cob_accept_day_yyyyddd (cob_field *f);
 extern void cob_accept_day_of_week (cob_field *f);
 extern void cob_accept_time (cob_field *f);
+extern void cob_display_command_line (cob_field *f);
 extern void cob_accept_command_line (cob_field *f);
 extern void cob_set_environment (cob_field *f1, cob_field *f2);
 extern void cob_display_environment (cob_field *f);
@@ -342,6 +336,10 @@ extern int cob_acuw_justify (unsigned char *data, ...);
 extern unsigned char *cob_external_addr (const char *exname, const int exlength);
 extern unsigned char *cob_get_pointer (const unsigned char *srcptr);
 extern void *cob_get_prog_pointer (const unsigned char *srcptr);
+extern void cob_set_location (const char *progid, const char *sfile, const unsigned int sline,
+			      const char *csect, const char *cpara, const char *cstatement);
+extern void cob_ready_trace (void);
+extern void cob_reset_trace (void);
 
 /* Switch */
 

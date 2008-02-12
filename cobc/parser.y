@@ -117,7 +117,7 @@ static int literal_value (cb_tree x);
 %token END_SUBTRACT END_UNSTRING END_WRITE ENVIRONMENT
 %token EBCDIC ENVIRONMENT_NAME ENVIRONMENT_VALUE YYYYMMDD YYYYDDD
 %token EOL EOS EOP EQUAL ERASE ERROR EXCEPTION EXIT EXTEND EXTERNAL FD GOBACK
-%token FILE_CONTROL FILLER FIRST FOR FOREGROUND_COLOR FROM FULL GE GIVING
+%token FILE_CONTROL FILE_ID FILLER FIRST FOR FOREGROUND_COLOR FROM FULL GE GIVING
 %token GLOBAL GO GREATER HIGHLIGHT HIGH_VALUE IDENTIFICATION IN INDEX INDEXED
 %token INPUT INPUT_OUTPUT INTO INVALID IS I_O I_O_CONTROL JUSTIFIED KEY LABEL
 %token LE LEADING LEFT LENGTH LESS LINE LINES LINKAGE LOCK LOWLIGHT LOW_VALUE
@@ -765,6 +765,10 @@ assign_clause:
   {
 	current_file->assign = cb_build_assignment_name (current_file, $5);
   }
+| ASSIGN _to _ext_clause DISK
+  {
+	current_file->fileid_assign = 1;
+  }
 ;
 
 _ext_clause:
@@ -1231,12 +1235,22 @@ label_option:
 /* VALUE OF clause */
 
 value_of_clause:
-  VALUE OF WORD _is reference_or_literal
+  VALUE OF WORD _is valueof_name
   {
 	cb_verify (cb_value_of_clause, "VALUE OF");
   }
+| VALUE OF FILE_ID _is valueof_name
+  {
+	if (!current_file->assign) {
+		current_file->assign = cb_build_assignment_name (current_file, $5);
+	}
+  }
 ;
 
+valueof_name:
+  alnum_literal
+| qualified_word
+;
 
 /* DATA RECORDS clause */
 
@@ -2451,13 +2465,39 @@ call_statement:
 using_chaining:
   /* empty */			{ $$ = NULL; }
 | USING				{ call_mode = cb_int (CB_CALL_BY_REFERENCE); }
-  call_param_list		{ $$ = $3; }
+  prcd_param_list		{ $$ = $3; }
 | CHAINING
   {
 	call_mode = cb_int (CB_CALL_BY_REFERENCE);
 	current_program->is_chained = 1;
   }
-  call_param_list		{ $$ = $3; }
+  prcd_param_list		{ $$ = $3; }
+;
+
+prcd_param_list:
+  prcd_param			{ $$ = $1; }
+| prcd_param_list
+  prcd_param			{ $$ = cb_list_append ($1, $2); }
+;
+
+prcd_param:
+  x				{ $$ = cb_build_pair (call_mode, $1); }
+| _by prcd_mode x		{ $$ = cb_build_pair (call_mode, $3); }
+;
+
+prcd_mode:
+  REFERENCE
+  {
+	call_mode = cb_int (CB_CALL_BY_REFERENCE);
+  }
+| VALUE
+  {
+	if (current_program->is_chained) {
+		cb_error (_("BY VALUE not allowed in CHAINED program"));
+	} else {
+		call_mode = cb_int (CB_CALL_BY_VALUE);
+	}
+  }
 ;
 
 call_using:
@@ -2674,6 +2714,7 @@ display_upon:
 | UPON ENVIRONMENT_NAME		{ $$ = cb_true; }
 | UPON ENVIRONMENT_VALUE	{ $$ = cb_int3; }
 | UPON ARGUMENT_NUMBER		{ $$ = cb_int4; }
+| UPON COMMAND_LINE		{ $$ = cb_int5; }
 ;
 
 with_clause:

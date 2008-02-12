@@ -450,7 +450,9 @@ AT_DATA([prog.cob], [
            STOP RUN.
 ])
 
-AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob])
+AT_CHECK([${COMPILE} -conf=test.conf -o prog prog.cob], [0], ,
+[prog.cob:12: Warning: 'FILENAME' will be implicitly defined
+])
 AT_CHECK([./prog], [0])
 
 AT_CLEANUP
@@ -645,7 +647,7 @@ AT_DATA([callee.cob], [
        01 Y             PIC 99.
        01 Z             PIC 99 USAGE COMP.
        PROCEDURE        DIVISION
-           USING BY VALUE X BY REFERENCE Y BY CONTENT Z.
+           USING BY VALUE X BY REFERENCE Y Z.
            DISPLAY "X = " X " Y = " Y " Z = " Z.
            MOVE "Z" TO X.
            MOVE 56 TO Y.
@@ -665,7 +667,8 @@ AT_DATA([caller.cob], [
            MOVE "X" TO X.
            MOVE 12 TO Y.
            MOVE 34 TO Z.
-           CALL "callee" USING BY VALUE X BY REFERENCE Y Z.
+           CALL "callee" USING BY VALUE X BY REFERENCE Y
+                BY CONTENT Z.
            DISPLAY "X = " X " Y = " Y " Z = " Z.
            STOP RUN.
 ])

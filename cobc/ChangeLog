@@ -1,3 +1,29 @@
+2008-02-12  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Use new function cob_set_location
+
+2008-01-19  Roger While <simrw@sim-basis.de>
+
+	* warning.def, typeck.c : Warn when ASSIGN references implicit field
+
+2008-01-10  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix up BY REFERENCE/CONTENT/VALUE processing
+
+2008-01-09  Roger While <simrw@sim-basis.de>
+
+	* parser.y : BY CONTENT is not allowed in PROCEDURE header
+
+2008-01-07  Roger While <simrw@sim-basis.de>
+
+	* parser.y, reserved.c, tree.c : Allow MF syntax for ASSIGN DISK/FILE-ID
+	* parser.y, typeck.c, tree.c, tree.h : DISPLAY .. UPON COMMAND-LINE
+
+2008-01-06  Roger While <simrw@sim-basis.de>
+
+	* typeck.c, codegen.c : Fix CALL statement returning a pointer
+		Note, this needs fixing for alignment intolerant machines
+
 2008-01-03  Roger While <simrw@sim-basis.de>
 
 	* typeck.c, codegen.c : Remove references to own_memxxx and

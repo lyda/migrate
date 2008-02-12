@@ -1,3 +1,12 @@
+2008-02-12  Roger While <simrw@sim-basis.de>
+
+	* common.[ch] :  Rationalize some previously exported variables
+		New function - cob_set_location for line debugging
+
+2008-01-07  Roger While <simrw@sim-basis.de>
+
+	* common.[ch] : DISPLAY .. UPON COMMAND-LINE
+
 2008-01-03  Roger While <simrw@sim-basis.de>
 
 	* move.h : Remove own_memxxx routines

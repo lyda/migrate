@@ -277,6 +277,7 @@ static const struct reserved reserved_words[] = {
   {"FD",		FD},			/* 2002 */
   {"FILE",		TOK_FILE},		/* 2002 */
   {"FILE-CONTROL",	FILE_CONTROL},		/* 2002 */
+  {"FILE-ID",		FILE_ID},		/* extension */
   {"FILLER",		FILLER},		/* 2002 */
   {"FINAL",		-1},			/* 2002 */
   {"FIRST",		FIRST},			/* 2002 */

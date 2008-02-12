@@ -256,6 +256,7 @@ extern cb_tree cb_int1;
 extern cb_tree cb_int2;
 extern cb_tree cb_int3;
 extern cb_tree cb_int4;
+extern cb_tree cb_int5;
 extern cb_tree cb_i[8];
 extern cb_tree cb_error_node;
 
@@ -568,6 +569,7 @@ struct cb_file {
 	struct cb_label		*handler;		/* error handler */
 	int			special;		/* Special file */
 	int			external_assign;	/* ASSIGN EXTERNAL */
+	int			fileid_assign;		/* ASSIGN DISK */
 };
 
 #define CB_FILE(x)	(CB_TREE_CAST (CB_TAG_FILE, struct cb_file, x))
