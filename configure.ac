@@ -563,6 +563,7 @@ then
 fi
 
 COB_CONFIG_DIR="$datadir/$PACKAGE_TARNAME/config"
+COB_COPY_DIR="$datadir/$PACKAGE_TARNAME/copy"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE_TARNAME"
 COB_MODULE_EXT=`echo "$shlibext" | sed 's/dll\.a/dll/'`
 LIBS="$save_libs"
@@ -622,6 +623,7 @@ case $host_os in
 	if test "$prefix" = "NONE"
 	then
 	COB_CONFIG_DIR="`cd /usr && pwd -W`/local/share/$PACKAGE_TARNAME/config"
+	COB_COPY_DIR="`cd /usr && pwd -W`/local/share/$PACKAGE_TARNAME/copy"
 	fi
 	COB_EXPORT_DYN="-Wl,--export-all-symbols -Wl,--enable-auto-import"
 	;;
@@ -691,6 +693,7 @@ AC_SUBST(COB_CFLAGS)
 AC_SUBST(COB_LDFLAGS)
 AC_SUBST(COB_LIBS)
 AC_SUBST(COB_CONFIG_DIR)
+AC_SUBST(COB_COPY_DIR)
 AC_SUBST(COB_LIBRARY_PATH)
 AC_SUBST(COB_MODULE_EXT)
 AC_SUBST(COBC_LIBS)
@@ -706,7 +709,7 @@ AC_SUBST(COB_HAS_INLINE)
 AC_CONFIG_FILES([cob-config
 		Makefile lib/Makefile libcob/Makefile
 		cobc/Makefile bin/Makefile po/Makefile.in texi/Makefile config/Makefile
-		tests/atlocal tests/Makefile tests/cobol85/Makefile])
+		copy/Makefile tests/atlocal tests/Makefile tests/cobol85/Makefile])
 AC_OUTPUT
 
 echo ""
@@ -725,6 +728,7 @@ then
 fi
 echo "  COB_LIBS             ${COB_LIBS}"
 echo "  COB_CONFIG_DIR       ${COB_CONFIG_DIR}"
+echo "  COB_COPY_DIR         ${COB_COPY_DIR}"
 echo "  COB_LIBRARY_PATH     ${COB_LIBRARY_PATH}"
 echo "  COB_MODULE_EXT       ${COB_MODULE_EXT}"
 echo "  COB_SHARED_OPT       ${COB_SHARED_OPT}"

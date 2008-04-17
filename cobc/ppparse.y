@@ -30,12 +30,15 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "cobc.h"
 
 #define pperror cb_error
 
 static char *fix_filename (char *name);
+static char *fold_lower (char *name);
+static char *fold_upper (char *name);
 
 static struct cb_replace_list *cb_replace_list_add (struct cb_replace_list *replace_list, struct cb_text_list *old_text, struct cb_text_list *new_text);
 %}
@@ -76,8 +79,18 @@ copy_statement:
   {
 	fputc ('\n', ppout);
 	$2 = fix_filename ($2);
+	if (cb_flag_fold_copy_lower) {
+		$2 = fold_lower ($2);
+	} else if (cb_flag_fold_copy_upper) {
+		$2 = fold_upper ($2);
+	}
 	if ($3) {
 		$3 = fix_filename ($3);
+		if (cb_flag_fold_copy_lower) {
+			$3 = fold_lower ($3);
+		} else if (cb_flag_fold_copy_upper) {
+			$3 = fold_upper ($3);
+		}
 	}
 	ppcopy ($2, $3, $5);
   }
@@ -168,10 +181,36 @@ _printing: | PRINTING ;
 static char *
 fix_filename (char *name)
 {
-	/* remove quotation form alphanumeric literals */
+	/* remove quotation from alphanumeric literals */
 	if (name[0] == '\'' || name[0] == '\"') {
 		name++;
 		name[strlen (name) - 1] = 0;
+	}
+	return name;
+}
+
+static char *
+fold_lower (char *name)
+{
+	unsigned char	*p;
+
+	for (p = (unsigned char *)name; *p; p++) {
+		if (isupper (*p)) {
+			*p = tolower (*p);
+		}
+	}
+	return name;
+}
+
+static char *
+fold_upper (char *name)
+{
+	unsigned char	*p;
+
+	for (p = (unsigned char *)name; *p; p++) {
+		if (islower (*p)) {
+			*p = toupper (*p);
+		}
 	}
 	return name;
 }

@@ -465,7 +465,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP EGREP LN_S build build_cpu build_vendor build_os host host_cpu host_vendor host_os SED ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXXCPP LIBTOOL ALLOCA LIBICONV LTLIBICONV LIBOBJS MKINSTALLDIRS USE_NLS MSGFMT GMSGFMT XGETTEXT MSGMERGE INTLLIBS LIBINTL LTLIBINTL POSUB COB_CC COB_CFLAGS COB_LDFLAGS COB_LIBS COB_CONFIG_DIR COB_LIBRARY_PATH COB_MODULE_EXT COBC_LIBS LIBCOB_CFLAGS LIBCOB_LIBS COB_EXPORT_DYN COB_PIC_FLAGS COB_SHARED_OPT COB_BIGENDIAN COB_HAS_INLINE LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP EGREP LN_S build build_cpu build_vendor build_os host host_cpu host_vendor host_os SED ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXXCPP LIBTOOL ALLOCA LIBICONV LTLIBICONV LIBOBJS MKINSTALLDIRS USE_NLS MSGFMT GMSGFMT XGETTEXT MSGMERGE INTLLIBS LIBINTL LTLIBINTL POSUB COB_CC COB_CFLAGS COB_LDFLAGS COB_LIBS COB_CONFIG_DIR COB_COPY_DIR COB_LIBRARY_PATH COB_MODULE_EXT COBC_LIBS LIBCOB_CFLAGS LIBCOB_LIBS COB_EXPORT_DYN COB_PIC_FLAGS COB_SHARED_OPT COB_BIGENDIAN COB_HAS_INLINE LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -26076,6 +26076,7 @@ then
 fi
 
 COB_CONFIG_DIR="$datadir/$PACKAGE_TARNAME/config"
+COB_COPY_DIR="$datadir/$PACKAGE_TARNAME/copy"
 COB_LIBRARY_PATH=".:$libdir/$PACKAGE_TARNAME"
 COB_MODULE_EXT=`echo "$shlibext" | sed 's/dll\.a/dll/'`
 LIBS="$save_libs"
@@ -26218,6 +26219,7 @@ case $host_os in
 	if test "$prefix" = "NONE"
 	then
 	COB_CONFIG_DIR="`cd /usr && pwd -W`/local/share/$PACKAGE_TARNAME/config"
+	COB_COPY_DIR="`cd /usr && pwd -W`/local/share/$PACKAGE_TARNAME/copy"
 	fi
 	COB_EXPORT_DYN="-Wl,--export-all-symbols -Wl,--enable-auto-import"
 	;;
@@ -26319,11 +26321,12 @@ fi
 
 
 
+
 COB_BIGENDIAN="$ac_cv_c_bigendian"
 
 
 
-                                                                                                                        ac_config_files="$ac_config_files cob-config Makefile lib/Makefile libcob/Makefile cobc/Makefile bin/Makefile po/Makefile.in texi/Makefile config/Makefile tests/atlocal tests/Makefile tests/cobol85/Makefile"
+                                                                                                                                  ac_config_files="$ac_config_files cob-config Makefile lib/Makefile libcob/Makefile cobc/Makefile bin/Makefile po/Makefile.in texi/Makefile config/Makefile copy/Makefile tests/atlocal tests/Makefile tests/cobol85/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -26897,6 +26900,7 @@ do
   "po/Makefile.in" ) CONFIG_FILES="$CONFIG_FILES po/Makefile.in" ;;
   "texi/Makefile" ) CONFIG_FILES="$CONFIG_FILES texi/Makefile" ;;
   "config/Makefile" ) CONFIG_FILES="$CONFIG_FILES config/Makefile" ;;
+  "copy/Makefile" ) CONFIG_FILES="$CONFIG_FILES copy/Makefile" ;;
   "tests/atlocal" ) CONFIG_FILES="$CONFIG_FILES tests/atlocal" ;;
   "tests/Makefile" ) CONFIG_FILES="$CONFIG_FILES tests/Makefile" ;;
   "tests/cobol85/Makefile" ) CONFIG_FILES="$CONFIG_FILES tests/cobol85/Makefile" ;;
@@ -27074,6 +27078,7 @@ s,@COB_CFLAGS@,$COB_CFLAGS,;t t
 s,@COB_LDFLAGS@,$COB_LDFLAGS,;t t
 s,@COB_LIBS@,$COB_LIBS,;t t
 s,@COB_CONFIG_DIR@,$COB_CONFIG_DIR,;t t
+s,@COB_COPY_DIR@,$COB_COPY_DIR,;t t
 s,@COB_LIBRARY_PATH@,$COB_LIBRARY_PATH,;t t
 s,@COB_MODULE_EXT@,$COB_MODULE_EXT,;t t
 s,@COBC_LIBS@,$COBC_LIBS,;t t
@@ -27946,6 +27951,7 @@ then
 fi
 echo "  COB_LIBS             ${COB_LIBS}"
 echo "  COB_CONFIG_DIR       ${COB_CONFIG_DIR}"
+echo "  COB_COPY_DIR         ${COB_COPY_DIR}"
 echo "  COB_LIBRARY_PATH     ${COB_LIBRARY_PATH}"
 echo "  COB_MODULE_EXT       ${COB_MODULE_EXT}"
 echo "  COB_SHARED_OPT       ${COB_SHARED_OPT}"

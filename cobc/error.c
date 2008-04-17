@@ -74,7 +74,7 @@ cb_warning (const char *fmt, ...)
 	va_list ap;
 
 	va_start (ap, fmt);
-	print_error (0, 0, "Warning: ", fmt, ap);
+	print_error (NULL, 0, "Warning: ", fmt, ap);
 	va_end (ap);
 
 	warningcount++;
@@ -86,7 +86,7 @@ cb_error (const char *fmt, ...)
 	va_list ap;
 
 	va_start (ap, fmt);
-	print_error (0, 0, "Error: ", fmt, ap);
+	print_error (NULL, 0, "Error: ", fmt, ap);
 	va_end (ap);
 
 	errorcount++;

@@ -430,7 +430,7 @@ cob_sig_handler (int sig)
 #endif
 
 void
-cob_set_signal ()
+cob_set_signal (void)
 {
 #ifdef	HAVE_SIGNAL_H
 	if ((intsig = signal (SIGINT, cob_sig_handler)) == SIG_IGN) {
@@ -930,7 +930,7 @@ cob_set_switch (const int n, const int flag)
  */
 
 static int
-cmpc (const unsigned char *s1, const unsigned char c, const size_t size)
+cmpc (const unsigned char *s1, const unsigned int c, const size_t size)
 {
 	size_t			i;
 	int			ret;
@@ -976,7 +976,7 @@ cmps (const unsigned char *s1, const unsigned char *s2, const size_t size)
 }
 
 static int
-cob_cmp_char (cob_field *f, const unsigned char c)
+cob_cmp_char (cob_field *f, const unsigned int c)
 {
 	int	sign = cob_get_sign (f);
 	int	ret = cmpc (f->data, c, f->size);
@@ -1499,7 +1499,7 @@ cob_accept_command_line (cob_field *f)
 	char	buff[COB_LARGE_BUFF] = "";
 
 	if (commlncnt) {
-		cob_memcpy (f, commlnptr, commlncnt);
+		cob_memcpy (f, commlnptr, (int)commlncnt);
 		return;
 	}
 	for (i = 1; i < (size_t)cob_argc; i++) {
@@ -1512,7 +1512,7 @@ cob_accept_command_line (cob_field *f)
 		size += len;
 		buff[size++] = ' ';
 	}
-	cob_memcpy (f, (ucharptr)buff, size);
+	cob_memcpy (f, (ucharptr)buff, (int)size);
 }
 
 /*
@@ -1952,6 +1952,18 @@ CBL_XF5 (unsigned char *data_1, unsigned char *data_2)
 
 	for (n = 0; n < 8; n++) {
 		data_2[n] = (*data_1 & (1 << (7 - n))) ? 1 : 0;
+	}
+	return 0;
+}
+
+int
+CBL_X91 (unsigned char *result, unsigned char *func, unsigned char *parm)
+{
+	if (*func == 16) {
+		*parm = cob_save_call_params;
+		*result = 0;
+	} else {
+		*result = 1;
 	}
 	return 0;
 }

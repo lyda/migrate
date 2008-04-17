@@ -42,17 +42,17 @@
 #include "cobc.h"
 #include "ppparse.h"
 
-static int within_comment = 0;
-static size_t newline_count = 0;
-static int inside_bracket = 0;
-static int quotation_mark = 0;
-static int consecutive_quotation = 0;
-static int last_line_1 = -1;
-static int last_line_2 = -1;
+static int	within_comment = 0;
+static size_t	newline_count = 0;
+static int	inside_bracket = 0;
+static int	quotation_mark = 0;
+static int	consecutive_quotation = 0;
+static int	last_line_1 = -1;
+static int	last_line_2 = -1;
 
-static struct cb_replace_list *current_replace_list = NULL;
+static struct cb_replace_list	*current_replace_list = NULL;
 
-static struct cb_text_list *text_queue = NULL;
+static struct cb_text_list	*text_queue = NULL;
 
 static struct copy_info {
 	struct copy_info	*next;
@@ -64,6 +64,7 @@ static struct copy_info {
 } *copy_stack = NULL;
 
 #define YY_INPUT(buf,result,max_size) result = ppinput (buf, max_size);
+
 static int ppinput (char *buf, int max_size);
 static void ppecho (const char *text);
 
@@ -296,31 +297,34 @@ ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
 {
 	struct cb_text_list	*il;
 	struct cb_text_list	*el;
+	char			*s;
 	struct stat		st;
-	char			buff1[COB_MEDIUM_BUFF];
-	char			buff2[COB_MEDIUM_BUFF];
+	char			buff1[COB_SMALL_BUFF];
+	char			buff2[COB_SMALL_BUFF];
 
+	memset (buff1, 0, sizeof(buff1));
+	memset (buff2, 0, sizeof(buff2));
 	if (lib) {
 		sprintf (buff1, "%s/%s", lib, name);
-		name = buff1;
+		s = buff1;
+	} else {
+		s = name;
 	}
 
 	/* Find the file */
-	if (stat (name, &st) == -1) {
+	if (stat (s, &st) == -1) {
 		for (el = cb_extension_list; el; el = el->next) {
-			sprintf (buff2, "%s%s", name, el->text);
+			sprintf (buff2, "%s%s", s, el->text);
 			if (stat (buff2, &st) == 0) {
-				name = buff2;
-				return ppopen (name, replace_list);
+				return ppopen (buff2, replace_list);
 			}
 		}
-		if (name[0] != '/') {
+		if (*s != '/') {
 			for (il = cb_include_list; il; il = il->next) {
 				for (el = cb_extension_list; el; el = el->next) {
 					sprintf (buff2, "%s/%s%s", il->text, name, el->text);
 					if (stat (buff2, &st) == 0) {
-						name = buff2;
-						return ppopen (name, replace_list);
+						return ppopen (buff2, replace_list);
 					}
 				}
 			}
@@ -329,7 +333,7 @@ ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
 		return -1;
 	}
 
-	return ppopen (name, replace_list);
+	return ppopen (s, replace_list);
 }
 
 /*
@@ -340,9 +344,9 @@ static int
 ppinput (char *buff, int max_size)
 {
 
+	char	*bp;
 	int	i, n;
 	int	continuation = 0;
-	char	*bp;
 	char	line[COB_MEDIUM_BUFF];
 
 start:

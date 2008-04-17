@@ -74,6 +74,10 @@ static int		expr_index;			/* stack index */
 static int		expr_stack_size;		/* stack max size */
 static struct expr_node *expr_stack;			/* expr node stack */
 
+#define START_STACK_SIZE	32
+#define TOKEN(offset)	(expr_stack[expr_index + offset].token)
+#define VALUE(offset)	(expr_stack[expr_index + offset].value)
+
 static char		expr_prio[256];
 
 int			sending_id = 0;
@@ -310,10 +314,6 @@ static const char	* const align_bin_sub_funcs[] = {
 static void cb_expr_shift_class (const char *name);
 static void cb_expr_shift_sign (const int op);
 
-#define START_STACK_SIZE	16
-#define TOKEN(offset)	(expr_stack[expr_index + offset].token)
-#define VALUE(offset)	(expr_stack[expr_index + offset].value)
-
 #define cb_emit(x) \
 	current_statement->body = cb_list_add (current_statement->body, x)
 #define cb_emit_list(l) \
@@ -453,16 +453,16 @@ cb_build_registers (void)
 	char	buff[48];
 
 	/* RETURN-CODE */
-	current_program->cb_return_code = cb_build_index (cb_build_reference ("RETURN-CODE"));
-	CB_FIELD (cb_ref (current_program->cb_return_code))->values = cb_list (cb_zero);
+	current_program->cb_return_code =
+		cb_build_index (cb_build_reference ("RETURN-CODE"), cb_zero, 0, NULL);
 
 	/* SORT-RETURN */
-	current_program->cb_sort_return = cb_build_index (cb_build_reference ("SORT-RETURN"));
-	CB_FIELD (cb_ref (current_program->cb_sort_return))->values = cb_list (cb_zero);
+	current_program->cb_sort_return =
+		cb_build_index (cb_build_reference ("SORT-RETURN"), cb_zero, 0, NULL);
 
 	/* NUMBER-OF-CALL-PARAMETERS */
-	current_program->cb_call_params = cb_build_index (cb_build_reference ("NUMBER-OF-CALL-PARAMETERS"));
-	CB_FIELD (cb_ref (current_program->cb_call_params))->values = cb_list (cb_zero);
+	current_program->cb_call_params =
+		cb_build_index (cb_build_reference ("NUMBER-OF-CALL-PARAMETERS"), cb_zero, 0, NULL);
 
 	/* TALLY */
 	/* 01 TALLY GLOBAL PICTURE 9(9) USAGE COMP-5 VALUE ZERO. */
@@ -690,25 +690,21 @@ org:
 }
 
 cb_tree
-cb_build_index (cb_tree x)
+cb_build_index (cb_tree x, cb_tree values, int indexed_by, struct cb_field *qual)
 {
 	struct cb_field	*f;
 
-	if (CB_REFERENCE (x)->word->count == 0) {
-		f = CB_FIELD (cb_build_field (x));
-		f->usage = CB_USAGE_INDEX;
-		cb_validate_field (f);
-
-		current_program->working_storage = cb_field_add (current_program->working_storage, f);
-
-		return x;
+	f = CB_FIELD (cb_build_field (x));
+	f->usage = CB_USAGE_INDEX;
+	cb_validate_field (f);
+	if (values) {
+		f->values = cb_list (values);
 	}
-
-	if (!CB_INDEX_P (x)) {
-		redefinition_error (x);
-		return cb_error_node;
+	if (qual) {
+		f->index_qual = qual;
 	}
-
+	f->flag_indexed_by = indexed_by;
+	current_program->working_storage = cb_field_add (current_program->working_storage, f);
 	return x;
 }
 
@@ -909,12 +905,15 @@ cb_build_length (cb_tree x)
 	}
 	if (CB_FIELD_P (x) || CB_REFERENCE_P (x)) {
 		f = CB_FIELD (cb_ref (x));
+		if (f->flag_any_length) {
+			return cb_build_any_intrinsic (cb_list(x));
+		}
 		if (cb_field_variable_size (f) == NULL) {
 			sprintf (buff, "%d", cb_field_size (x));
 			return cb_build_numeric_literal (0, (ucharptr)buff, 0);
 		}
 	}
-	temp = cb_build_index (cb_build_filler ());
+	temp = cb_build_index (cb_build_filler (), NULL, 0, NULL);
 	CB_FIELD (cb_ref (temp))->usage = CB_USAGE_LENGTH;
 	CB_FIELD (cb_ref (temp))->count++;
 	cb_emit (cb_build_assign (temp, cb_build_length_1 (x)));
@@ -1402,11 +1401,7 @@ cb_expr_shift (int token, cb_tree value)
 	/* allocate sufficient stack memory */
 	if (expr_index >= expr_stack_size) {
 		expr_stack_size *= 2;
-		expr_stack = realloc (expr_stack, sizeof (struct expr_node) * expr_stack_size);
-		if (!expr_stack) {
-			fprintf (stderr, "Memory realloc failed - Aborting\n");
-			(void)longjmp (cob_jmpbuf, 1);
-		}
+		expr_stack = cobc_realloc (expr_stack, sizeof (struct expr_node) * expr_stack_size);
 	}
 
 	/* put on the stack */
@@ -2333,7 +2328,8 @@ cb_build_sub (cb_tree v, cb_tree n, cb_tree round_opt)
 }
 
 static void
-emit_corresponding (cb_tree (*func) (), cb_tree x1, cb_tree x2, cb_tree opt)
+emit_corresponding (cb_tree (*func) (cb_tree f1, cb_tree f2, cb_tree f3),
+		    cb_tree x1, cb_tree x2, cb_tree opt)
 {
 	struct cb_field *f1, *f2;
 	cb_tree		t1;
@@ -2359,7 +2355,8 @@ emit_corresponding (cb_tree (*func) (), cb_tree x1, cb_tree x2, cb_tree opt)
 }
 
 void
-cb_emit_corresponding (cb_tree (*func) (), cb_tree x1, cb_tree x2, cb_tree opt)
+cb_emit_corresponding (cb_tree (*func) (cb_tree f1, cb_tree f2, cb_tree f3),
+		       cb_tree x1, cb_tree x2, cb_tree opt)
 {
 	x1 = cb_check_group_name (x1);
 	x2 = cb_check_group_name (x2);
@@ -2708,7 +2705,7 @@ cb_emit_close (cb_tree file, cb_tree opt)
  */
 
 void
-cb_emit_commit ()
+cb_emit_commit (void)
 {
 	cb_emit (cb_build_funcall_0 ("cob_commit"));
 }
@@ -2718,7 +2715,7 @@ cb_emit_commit ()
  */
 
 void
-cb_emit_continue ()
+cb_emit_continue (void)
 {
 	cb_emit (cb_build_continue ());
 }
@@ -3126,7 +3123,7 @@ cb_emit_goto (cb_tree target, cb_tree depending)
 		} else if (CB_CHAIN (target)) {
 			cb_error (_("GO TO with multiple procedure-names"));
 		} else {
-			cb_emit (cb_build_goto (CB_VALUE (target), 0));
+			cb_emit (cb_build_goto (CB_VALUE (target), NULL));
 		}
 	}
 }
@@ -3135,9 +3132,9 @@ void
 cb_emit_exit (size_t goback)
 {
 	if (goback) {
-		cb_emit (cb_build_goto (cb_int1, 0));
+		cb_emit (cb_build_goto (cb_int1, NULL));
 	} else {
-		cb_emit (cb_build_goto (0, 0));
+		cb_emit (cb_build_goto (NULL, NULL));
 	}
 }
 
@@ -3999,25 +3996,32 @@ cb_build_move_literal (cb_tree src, cb_tree dst)
 	unsigned char		bbyte;
 
 	if (l->all) {
-		if (f->size > 128 || cat == CB_CATEGORY_NUMERIC ||
-		    cat == CB_CATEGORY_NUMERIC_EDITED) {
+		if (cat == CB_CATEGORY_NUMERIC || cat == CB_CATEGORY_NUMERIC_EDITED) {
+			return cb_build_move_call (src, dst);
+		}
+		if (l->size == 1) {
+			return cb_build_funcall_3 ("memset",
+					   cb_build_cast_address (dst),
+					   cb_int (l->data[0]), cb_build_cast_length (dst));
+		}
+		bbyte = l->data[0];
+		for (i = 0; i < l->size; i++) {
+			if (bbyte != l->data[i]) {
+				break;
+			}
+			bbyte = l->data[i];
+		}
+		if (i == l->size) {
+			return cb_build_funcall_3 ("memset",
+					   cb_build_cast_address (dst),
+					   cb_int (l->data[0]), cb_build_cast_length (dst));
+		}
+		if (f->size > 128) {
 			return cb_build_move_call (src, dst);
 		}
 		buff = cobc_malloc (f->size);
 		for (i = 0; i < f->size; i++) {
 			buff[i] = l->data[i % l->size];
-		}
-		bbyte = *buff;
-		for (i = 0; i < f->size; i++) {
-			if (bbyte != buff[i]) {
-				break;
-			}
-		}
-		if (i == f->size) {
-			free (buff);
-			return cb_build_funcall_3 ("memset",
-					   cb_build_cast_address (dst),
-					   cb_int (bbyte), cb_build_cast_length (dst));
 		}
 		return cb_build_funcall_3 ("memcpy",
 					   cb_build_cast_address (dst),
@@ -4504,7 +4508,7 @@ cb_emit_return (cb_tree ref, cb_tree into)
  */
 
 void
-cb_emit_rollback ()
+cb_emit_rollback (void)
 {
 	cb_emit (cb_build_funcall_0 ("cob_rollback"));
 }
@@ -4557,7 +4561,7 @@ cb_build_search_all (cb_tree table, cb_tree cond)
 
 	/* set keys */
 	for (i = 0; i < f->nkeys; i++) {
-		f->keys[i].ref = 0;
+		f->keys[i].ref = NULL;
 	}
 	search_set_keys (f, cond);
 

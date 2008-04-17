@@ -768,6 +768,7 @@ cb_build_picture (const char *str)
 	int			category = 0;
 	size_t			idx = 0;
 	int			size = 0;
+	int			allocated = 0;
 	int			digits = 0;
 	int			scale = 0;
 	int			s_count = 0;
@@ -795,12 +796,23 @@ repeat:
 		/* add parenthesized numbers */
 		if (p[1] == '(') {
 			i = 0;
-			for (p += 2; *p != ')'; p++) {
+			p += 2;
+			for (; *p == '0'; p++) {
+				;
+			}
+			for (; *p != ')'; p++) {
 				if (!isdigit (*p)) {
 					goto error;
 				} else {
+					allocated++;
+					if (allocated > 9) {
+						goto error;
+					}
 					i = i * 10 + (*p - '0');
 				}
+			}
+			if (i == 0) {
+				goto error;
 			}
 			n += i - 1;
 			goto repeat;
@@ -1213,7 +1225,8 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 		f->organization = COB_ORG_LINE_SEQUENTIAL;
 	}
 	if (f->fileid_assign && !f->assign) {
-		f->assign = cb_build_alphanumeric_literal (f->name, strlen (f->name));
+		f->assign = cb_build_alphanumeric_literal ((unsigned char *)f->name,
+							    strlen (f->name));
 	}
 
 	/* check the record size if it is limited */
@@ -1225,7 +1238,8 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 		}
 		if (f->record_max > 0) {
 			if (p->size > f->record_max) {
-				cb_error (_("Record size too large '%s'"), p->name);
+				cb_error (_("Record size too large '%s' (%d)"),
+					     p->name, p->size);
 			}
 		}
 	}
@@ -1278,6 +1292,10 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 	}
 	/* create record */
 	sprintf (buff, "%s_record", f->name);
+	if (f->record_max == 0) {
+		f->record_max = 32;
+		f->record_min = 32;
+	}
 	f->record = CB_FIELD (cb_build_implicit_field (cb_build_reference (buff),
 				f->record_max));
 	f->record->sister = records;
@@ -1300,7 +1318,7 @@ finalize_file (struct cb_file *f, struct cb_field *records)
 		CB_FIELD (x)->values = cb_list (cb_zero);
 		CB_FIELD (x)->count++;
 		cb_validate_field (CB_FIELD (x));
-		f->linage_ctr = cb_build_field_reference (CB_FIELD (x), 0);
+		f->linage_ctr = cb_build_field_reference (CB_FIELD (x), NULL);
 		current_program->working_storage =
 		    cb_field_add (current_program->working_storage, CB_FIELD (x));
 	}
@@ -1390,18 +1408,21 @@ cb_ref (cb_tree x)
 	if (r->value) {
 		return r->value;
 	}
-
 	/* resolve the value */
+
 	for (items = r->word->items; items; items = CB_CHAIN (items)) {
 		/* find a candidate value by resolving qualification */
 		v = CB_VALUE (items);
 		c = r->chain;
-
 		switch (CB_TREE_TAG (v)) {
 		case CB_TAG_FIELD:
 			/* in case the value is a field, it might be qualified
 			   by its parent names and a file name */
-			p = CB_FIELD (v)->parent;
+			if (CB_FIELD (v)->flag_indexed_by) {
+				p = CB_FIELD (v)->index_qual;
+			} else {
+				p = CB_FIELD (v)->parent;
+			}
 			/* resolve by parents */
 			for (; p; p = p->parent) {
 				if (c && strcasecmp (CB_NAME (c), p->name) == 0) {
@@ -1410,7 +1431,7 @@ cb_ref (cb_tree x)
 			}
 
 			/* resolve by file */
-			if (c && CB_REFERENCE (c)->chain == 0) {
+			if (c && CB_REFERENCE (c)->chain == NULL) {
 				if (CB_REFERENCE (c)->word->count == 1 && CB_FILE_P (cb_ref (c))
 				    && (CB_FILE (cb_ref (c)) == cb_field_founder (CB_FIELD (v))->file)) {
 					c = CB_REFERENCE (c)->chain;
@@ -1498,7 +1519,7 @@ cb_tree
 cb_build_binary_op (cb_tree x, int op, cb_tree y)
 {
 	struct cb_binary_op	*p;
-	enum cb_category	category;
+	enum cb_category	category = CB_CATEGORY_UNKNOWN;
 
 	switch (op) {
 	case '+':
@@ -1774,7 +1795,7 @@ cb_build_statement (const char *name)
  */
 
 cb_tree
-cb_build_continue ()
+cb_build_continue (void)
 {
 	struct cb_continue *p;
 
@@ -1873,7 +1894,8 @@ cb_build_program (void)
  */
 
 static cb_tree
-make_intrinsic (cb_tree name, struct cb_intrinsic_table *cbp, cb_tree args, cb_tree field)
+make_intrinsic (cb_tree name, struct cb_intrinsic_table *cbp, cb_tree args,
+		cb_tree field, cb_tree refmod)
 {
 	struct cb_intrinsic *x;
 
@@ -1901,13 +1923,27 @@ make_intrinsic (cb_tree name, struct cb_intrinsic_table *cbp, cb_tree args, cb_t
 	x->args = args;
 	x->intr_tab = cbp;
 	x->intr_field = field;
+	if (refmod) {
+		x->offset = CB_PAIR_X (refmod);
+		x->length = CB_PAIR_Y (refmod);
+	}
 	return CB_TREE (x);
 }
 
 cb_tree
-cb_build_intrinsic (cb_tree name, cb_tree args)
+cb_build_any_intrinsic (cb_tree args)
 {
 	struct cb_intrinsic_table	*cbp;
+
+	cbp = lookup_intrinsic ("LENGTH");
+	return make_intrinsic (NULL, cbp, args, NULL, NULL);
+}
+
+cb_tree
+cb_build_intrinsic (cb_tree name, cb_tree args, cb_tree refmod)
+{
+	struct cb_intrinsic_table	*cbp;
+	cb_tree				x;
 	int				numargs;
 
 	numargs = cb_list_length (args);
@@ -1919,18 +1955,43 @@ cb_build_intrinsic (cb_tree name, cb_tree args)
 			cb_error_x (name, _("FUNCTION %s has wrong number of arguments"), cbp->name);
 			return cb_error_node;
 		}
+		if (refmod) {
+			if (!cbp->refmod) {
+				cb_error_x (name, _("FUNCTION %s can not have reference modification"), cbp->name);
+				return cb_error_node;
+			}
+			if (CB_LITERAL_P(CB_PAIR_X(refmod)) &&
+			    cb_get_int (CB_PAIR_X(refmod))< 1) {
+				cb_error_x (name, _("FUNCTION %s has invalid reference modification"), cbp->name);
+				return cb_error_node;
+			}
+			if (CB_PAIR_Y(refmod) && CB_LITERAL_P(CB_PAIR_Y(refmod)) &&
+			    cb_get_int (CB_PAIR_Y(refmod))< 1) {
+				cb_error_x (name, _("FUNCTION %s has invalid reference modification"), cbp->name);
+				return cb_error_node;
+			}
+		}
 		/* cb_tree      x; */
 		switch (cbp->intr_enum) {
 		case CB_INTR_LENGTH:
 		case CB_INTR_BYTE_LENGTH:
-			if (CB_INTRINSIC_P (CB_VALUE (args))) {
-				return make_intrinsic (name, cbp, args, NULL);
+			x = CB_VALUE (args);
+			if (CB_INTRINSIC_P (x)) {
+				return make_intrinsic (name, cbp, args, NULL, NULL);
+			} else if ((CB_FIELD_P (x) || CB_REFERENCE_P (x)) &&
+				    cb_field(x)->flag_any_length) {
+				return make_intrinsic (name, cbp, args, NULL, NULL);
 			} else {
 				return cb_build_length (CB_VALUE (args));
 			}
 
 		case CB_INTR_WHEN_COMPILED:
-			return cb_intr_whencomp;
+			if (refmod) {
+				return make_intrinsic (name, cbp,
+					cb_list(cb_intr_whencomp), NULL, refmod);
+			} else {
+				return cb_intr_whencomp;
+			}
 		case CB_INTR_PI:
 			return cb_intr_pi;
 		case CB_INTR_E:
@@ -1954,6 +2015,7 @@ RXW */
 		case CB_INTR_ASIN:
 		case CB_INTR_ATAN:
 		case CB_INTR_CHAR:
+		case CB_INTR_COMBINED_DATETIME:
 		case CB_INTR_COS:
 		case CB_INTR_CURRENT_DATE:
 		case CB_INTR_DATE_OF_INTEGER:
@@ -1972,6 +2034,7 @@ RXW */
 		case CB_INTR_INTEGER_PART:
 		case CB_INTR_LOCALE_DATE:
 		case CB_INTR_LOCALE_TIME:
+		case CB_INTR_LOCALE_TIME_FROM_SECS:
 		case CB_INTR_LOG:
 		case CB_INTR_LOG10:
 		case CB_INTR_MOD:
@@ -1989,7 +2052,7 @@ RXW */
 		case CB_INTR_TEST_DATE_YYYYMMDD:
 		case CB_INTR_TEST_DAY_YYYYDDD:
 		case CB_INTR_TRIM:
-			return make_intrinsic (name, cbp, args, NULL);
+			return make_intrinsic (name, cbp, args, NULL, refmod);
 
 		case CB_INTR_DATE_TO_YYYYMMDD:
 		case CB_INTR_DAY_TO_YYYYDDD:
@@ -2007,7 +2070,7 @@ RXW */
 		case CB_INTR_SUM:
 		case CB_INTR_VARIANCE:
 		case CB_INTR_YEAR_TO_YYYY:
-			return make_intrinsic (name, cbp, args, cb_int1);
+			return make_intrinsic (name, cbp, args, cb_int1, NULL);
 
 		default:
 			break;

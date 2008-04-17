@@ -41,11 +41,7 @@
 #endif
 #endif
 
-#define ABORT()								      \
-do {									      \
-	fprintf (stderr, "%s:%d: Internal compiler error\n", __FILE__, __LINE__); \
-	(void)longjmp (cob_jmpbuf, 1);					\
-} while (0)
+#define ABORT()		cobc_abort(__FILE__,__LINE__)
 
 #define CB_FORMAT_AUTO	0
 #define CB_FORMAT_FREE	1
@@ -113,7 +109,7 @@ extern int			has_external;
 extern char			*cb_source_file;
 extern int			cb_source_line;
 
-extern char			cob_config_dir[];
+extern const char		*cob_config_dir;
 
 extern char			*source_name;
 extern char			*demangle_name;
@@ -131,10 +127,15 @@ extern struct cb_program	*current_program;
 extern struct cb_statement	*current_statement;
 extern struct cb_label		*current_section, *current_paragraph;
 
-extern jmp_buf			cob_jmpbuf;
-
 extern struct cb_text_list	*cb_text_list_add (struct cb_text_list *list, const char *name);
 extern void			*cobc_malloc (const size_t size);
+extern void			*cobc_realloc (void *prevptr, const size_t size);
+
+#ifdef	__GNUC__
+extern void	cobc_abort (const char *filename, const int linenum) __attribute__ ((noreturn));
+#else
+extern void	cobc_abort (const char *filename, const int linenum);
+#endif
 
 
 /* config.c */

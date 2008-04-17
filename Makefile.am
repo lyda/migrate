@@ -2,7 +2,7 @@ bin_SCRIPTS=cob-config
 
 include_HEADERS = libcob.h
 
-SUBDIRS = lib libcob cobc bin po texi config tests
+SUBDIRS = lib libcob cobc bin config copy po texi tests
 
 ACLOCAL_AMFLAGS = -I m4
 BUILT_SOURCES = defaults.h
@@ -18,6 +18,7 @@ defaults.h: Makefile.am $(top_builddir)/config.status
 	  echo "#define COB_LDFLAGS      \"$(COB_LDFLAGS)\"";		\
 	  echo "#define COB_LIBS         \"$(COB_LIBS)\"";		\
 	  echo "#define COB_CONFIG_DIR   \"$(COB_CONFIG_DIR)\"";	\
+	  echo "#define COB_COPY_DIR     \"$(COB_COPY_DIR)\"";		\
 	  echo "#define COB_LIBRARY_PATH \"$(COB_LIBRARY_PATH)\"";	\
 	  echo "#define COB_MODULE_EXT   \"$(COB_MODULE_EXT)\"";	\
 	  echo "#define LOCALEDIR        \"$(datadir)/locale\"";	\

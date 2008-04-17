@@ -250,11 +250,11 @@ cob_move_display_to_alphanum (cob_field *f1, cob_field *f2)
 		/* implied 0 ('P's) */
 		if (COB_FIELD_SCALE(f1) < 0) {
 			zero_size = cob_min_int ((int)-COB_FIELD_SCALE(f1), diff);
-			memset (data2 + size1, '0', zero_size);
+			memset (data2 + size1, '0', (size_t)zero_size);
 		}
 		/* padding */
 		if (diff - zero_size > 0) {
-			memset (data2 + size1 + zero_size, ' ', diff - zero_size);
+			memset (data2 + size1 + zero_size, ' ', (size_t)(diff - zero_size));
 		}
 	}
 
@@ -1246,7 +1246,7 @@ cob_binary_set_uint64 (cob_field *f, unsigned long long n)
 void
 cob_binary_set_int (cob_field *f, int n)
 {
-	cob_binary_set_int64 (f, n);
+	cob_binary_set_int64 (f, (long long)n);
 }
 
 void

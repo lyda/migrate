@@ -1,3 +1,16 @@
+2008-03-25  Roger While <simrw@sim-basis.de>
+
+	* Add OC tests for reference modification of FUNCTIONS
+	* Add OC test for COB_LOAD_CASE
+
+2008-02-18  Roger While <simrw@sim-basis.de>
+
+	* Add OC test for ANY LENGTH
+
+2008-02-14  Roger While <simrw@sim-basis.de>
+
+	* atlocal.in : Fix up library search order
+
 2008-01-09  Roger While <simrw@sim-basis.de>
 
 	* BY CONTENT not allowed in PROCEDURE header
@@ -5,6 +18,10 @@
 2008-01-02  Roger While <simrw@sim-basis.de>
 
 	*  Cobol85 tests rechanged to cater for unsupported ALTER
+
+2007-12-27  Roger While <simrw@sim-basis.de>
+
+	** Mark 1.0 RELEASE
 
 2007-12-27  Roger While <simrw@sim-basis.de>
 

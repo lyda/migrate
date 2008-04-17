@@ -1,3 +1,73 @@
+2008-04-15  Roger While <simrw@sim-basis.de>
+
+	* tree.[ch], parser.y, typeck.c : Handle qualified INDEXED BY items
+	* cobc.c, codegen.c : Add build date to info lines
+
+2008-04-02  Roger While <simrw@sim-basis.de>
+
+	* reserved.c, tree.[ch] : Implement FUNCTION COMBINED-DATETIME
+
+2008-03-31  Roger While <simrw@sim-basis.de>
+
+	* reserved.c, scanner.l, tree.[ch] : Implement function
+		LOCALE-TIME-FROM-SECONDS
+
+2008-03-29  Roger While <simrw@sim-basis.de>
+
+	* General : Fix up sparse warnings
+
+2008-03-24  Roger While <simrw@sim-basis.de>
+
+	* parser.y, tree.[ch], codegen.c : Refmodding for some FUNCTIONS
+
+2008-03-19  Roger While <simrw@sim-basis.de>
+
+	* ppparse.y, pplex.l : Correct COPY ... IN .. processing
+	* parser.y : Relax syntax for MF
+	* parser.y, reserved.c : Allow PRINTER
+
+2008-03-17  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Optimize MOVE ALL
+
+2008-03-06  Roger While <simrw@sim-basis.de>
+
+	* flag.def : Remove line-directive, tidy up comments
+	* codegen.c : Take out line directive
+	* cobc.c : Turn on source location for -g 
+	* cobc.[ch] : Define ABORT to cobc_abort,
+		make cob_jmpbuf static
+	* cobc.[ch], scanner.l, typeck.c : Use new routine cobc_realloc
+	* cobc.c : In case of unrecognized option, exit immediately
+
+2008-03-05  Roger While <simrw@sim-basis.de>
+
+	* tree.c : Cater for SELECT without corresponding FD clause
+	* cobc.c : Retain .c and .c.h files when -g option specified
+
+2008-03-04  Roger While <simrw@sim-basis.de>
+
+	* cobc.c : The -ext option must take precedence over default
+		suffixes
+
+2008-02-22  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : NULL terminate CALL, clean up
+
+2008-02-19  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix INITIALIZE on field reference modification
+
+2008-02-16  Roger While <simrw@sim-basis.de>
+
+	* parser.y, codegen.c, tree.[ch], field.c : Preliminary ANY LENGTH support
+
+2008-02-14  Roger While <simrw@sim-basis.de>
+
+	* tree.c : Tighten checking on field size
+	* parser.y : Produce real names instead of tokenized names on error
+		Change "$end" to "end of file"
+
 2008-02-12  Roger While <simrw@sim-basis.de>
 
 	* codegen.c : Use new function cob_set_location
@@ -32,6 +102,10 @@
 2008-01-02  Roger While <simrw@sim-basis.de>
 
 	* parser.y : Fix up VALUE OF in FD clause
+
+2007-12-27  Roger While <simrw@sim-basis.de>
+
+	** Mark 1.0 RELEASE
 
 2007-12-12  Roger While <simrw@sim-basis.de>
 

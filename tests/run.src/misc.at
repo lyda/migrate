@@ -1323,6 +1323,28 @@ AT_CHECK([export COB_PRE_LOAD=callee; ./caller], [0], [OK])
 
 AT_CLEANUP
 
+AT_SETUP([COB_LOAD_CASE=UPPER test])
+
+AT_DATA([CALLEE.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      callee.
+       PROCEDURE        DIVISION.
+           DISPLAY "OK" NO ADVANCING.
+])
+
+AT_DATA([caller.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      caller.
+       PROCEDURE        DIVISION.
+           CALL "callee".
+])
+
+AT_CHECK([${COMPILE_MODULE} CALLEE.cob])
+AT_CHECK([${COMPILE} caller.cob])
+AT_CHECK([export COB_LOAD_CASE=UPPER; ./caller], [0], [OK])
+
+AT_CLEANUP
+
 AT_SETUP([88 level with FALSE IS clause])
 
 AT_DATA([prog.cob], [
@@ -1370,6 +1392,28 @@ AT_CHECK([./prog], [0],
 
 AT_CLEANUP
 
+AT_SETUP([INITIZIALIZE with reference modification])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01  MYFLD        PIC X(6) VALUE "ABCDEF".
+       PROCEDURE        DIVISION.
+       ASTART SECTION.
+       A01.
+           INITIALIZE MYFLD (1:2).
+           DISPLAY MYFLD.
+])
+
+AT_CHECK([${COMPILE} prog.cob])
+AT_CHECK([./prog], [0],
+[  CDEF
+])
+
+AT_CLEANUP
+
 AT_SETUP([CALL with OMITTED parameter])
 
 AT_DATA([callee.cob], [
@@ -1402,6 +1446,43 @@ AT_CHECK([${COMPILE_MODULE} callee.cob])
 AT_CHECK([${COMPILE} -o caller caller.cob])
 AT_CHECK([./caller], [0],
 [OKOKOK
+])
+
+AT_CLEANUP
+
+AT_SETUP([ANY LENGTH])
+
+AT_DATA([callee.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      callee.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 P2            PIC 99.
+       LINKAGE          SECTION.
+       01 P1            PIC X ANY LENGTH.
+       PROCEDURE        DIVISION USING P1.
+           MOVE LENGTH OF P1 TO P2.
+           DISPLAY P2.
+           DISPLAY P1.
+           EXIT PROGRAM.
+])
+
+AT_DATA([caller.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      caller.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 P1            PIC X(6) VALUE "OKOKOK".
+       PROCEDURE        DIVISION.
+           CALL "callee" USING P1.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE_MODULE} callee.cob])
+AT_CHECK([${COMPILE} -o caller caller.cob])
+AT_CHECK([./caller], [0],
+[06
+OKOKOK
 ])
 
 AT_CLEANUP

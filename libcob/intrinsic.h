@@ -23,7 +23,8 @@
 #include <libcob/common.h>
 
 extern cob_field	*cob_intr_binop (cob_field *f1, int op, cob_field *f2);
-extern cob_field	*cob_intr_current_date (void);
+extern cob_field	*cob_intr_current_date (const int offset, const int length);
+extern cob_field	*cob_intr_when_compiled (const int offset, const int length, cob_field *f);
 extern cob_field	*cob_intr_exception_file (void);
 extern cob_field	*cob_intr_exception_location (void);
 extern cob_field	*cob_intr_exception_status (void);
@@ -31,6 +32,7 @@ extern cob_field	*cob_intr_exception_statement (void);
 extern cob_field	*cob_intr_char (cob_field *srcfield);
 extern cob_field	*cob_intr_ord (cob_field *srcfield);
 extern cob_field	*cob_intr_stored_char_length (cob_field *srcfield);
+extern cob_field	*cob_intr_combined_datetime (cob_field *srcdays, cob_field *srctime);
 extern cob_field	*cob_intr_date_of_integer (cob_field *srcdays);
 extern cob_field	*cob_intr_day_of_integer (cob_field *srcdays);
 extern cob_field	*cob_intr_integer_of_date (cob_field *srcfield);
@@ -50,10 +52,14 @@ extern cob_field	*cob_intr_log10 (cob_field *srcfield);
 extern cob_field	*cob_intr_sin (cob_field *srcfield);
 extern cob_field	*cob_intr_sqrt (cob_field *srcfield);
 extern cob_field	*cob_intr_tan (cob_field *srcfield);
-extern cob_field	*cob_intr_upper_case (cob_field *srcfield);
-extern cob_field	*cob_intr_lower_case (cob_field *srcfield);
-extern cob_field	*cob_intr_reverse (cob_field *srcfield);
-extern cob_field	*cob_intr_trim (cob_field *srcfield, const int direction);
+extern cob_field	*cob_intr_upper_case (const int offset, const int length,
+					      cob_field *srcfield);
+extern cob_field	*cob_intr_lower_case (const int offset, const int length,
+					      cob_field *srcfield);
+extern cob_field	*cob_intr_reverse (const int offset, const int length,
+					   cob_field *srcfield);
+extern cob_field	*cob_intr_trim (const int offset, const int length,
+					cob_field *srcfield, const int direction);
 extern cob_field	*cob_intr_length (cob_field *srcfield);
 extern cob_field	*cob_intr_integer (cob_field *srcfield);
 extern cob_field	*cob_intr_integer_part (cob_field *srcfield);
@@ -82,7 +88,11 @@ extern cob_field	*cob_intr_date_to_yyyymmdd (int params, ...);
 extern cob_field	*cob_intr_day_to_yyyyddd (int params, ...);
 extern cob_field	*cob_intr_seconds_past_midnight (void);
 extern cob_field	*cob_intr_seconds_from_formatted_time (cob_field *format, cob_field *value);
-extern cob_field	*cob_intr_locale_date (cob_field *srcfield, cob_field *locale_field);
-extern cob_field	*cob_intr_locale_time (cob_field *srcfield, cob_field *locale_field);
+extern cob_field	*cob_intr_locale_date (const int offset, const int length,
+				cob_field *srcfield, cob_field *locale_field);
+extern cob_field	*cob_intr_locale_time (const int offset, const int length,
+				cob_field *srcfield, cob_field *locale_field);
+extern cob_field	*cob_intr_lcl_time_from_secs (const int offset, const int length,
+				cob_field *srcfield, cob_field *locale_field);
 
 #endif /* COB_INTRINSIC_H */

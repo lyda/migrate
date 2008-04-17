@@ -362,7 +362,7 @@ cob_string_init (cob_field *dst, cob_field *ptr)
 {
 	string_dst_copy = *dst;
 	string_dst = &string_dst_copy;
-	string_ptr = 0;
+	string_ptr = NULL;
 	if (ptr) {
 		string_ptr_copy = *ptr;
 		string_ptr = &string_ptr_copy;
@@ -381,7 +381,7 @@ cob_string_init (cob_field *dst, cob_field *ptr)
 void
 cob_string_delimited (cob_field *dlm)
 {
-	string_dlm = 0;
+	string_dlm = NULL;
 	if (dlm) {
 		string_dlm_copy = *dlm;
 		string_dlm = &string_dlm_copy;
@@ -439,7 +439,7 @@ cob_unstring_init (cob_field *src, cob_field *ptr, const size_t num_dlm)
 
 	unstring_src_copy = *src;
 	unstring_src = &unstring_src_copy;
-	unstring_ptr = 0;
+	unstring_ptr = NULL;
 	if (ptr) {
 		unstring_ptr_copy = *ptr;
 		unstring_ptr = &unstring_ptr_copy;

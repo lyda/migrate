@@ -1,3 +1,48 @@
+2008-04-02  Roger While <simrw@sim-basis.de>
+
+	* intrinsic.[ch] : Implement FUNCTION COMBINED-DATETIME
+
+2008-03-31  Roger While <simrw@sim-basis.de>
+
+	* intrinsic:[ch] : Implement LOCALE-TIME-FROM-SECONDS
+		More refmodding for functions
+
+2008-03-29  Roger While <simrw@sim-basis.de>
+
+	* General : Fix up sparse warnings
+
+2008-03-24  Roger While <simrw@sim-basis.de>
+
+	* intrinsic.[ch] : Refmodding for some FUNCTIONS
+
+2008-03-11  Roger While <simrw@sim-basis.de>
+
+	* call.c : New environment variable to control case conversion on
+		dynamic program loads.
+		COB_LOAD_CASE=UPPER|LOWER
+
+2008-03-05  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : New environment variables to control LINE SEQUENTIAL
+		files.
+		COB_LS_NULLS - Equivalent to MF's -N switch.
+		Bytes less than ASCII space are preceded by a null
+		byte on write.
+		COB_LS_FIXED - Write the record without trailing space
+		removal.
+
+2008-03-01  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : BDB CLOSE must close secondary files first
+
+2008-02-19  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Clean up and comment
+
+2008-02-14  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Fix ifdef's for variable sequential files
+
 2008-02-12  Roger While <simrw@sim-basis.de>
 
 	* common.[ch] :  Rationalize some previously exported variables
@@ -11,6 +56,10 @@
 
 	* move.h : Remove own_memxxx routines
 	* General : Remove references to own_memxxx routines
+
+2007-12-27  Roger While <simrw@sim-basis.de>
+
+	** Mark 1.0 RELEASE
 
 2007-12-15  Roger While <simrw@sim-basis.de>
 

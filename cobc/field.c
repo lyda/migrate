@@ -279,6 +279,28 @@ validate_field_1 (struct cb_field *f)
 	int		need_picture;
 	char		pic[16];
 
+	if (f->flag_any_length) {
+		if (f->storage != CB_STORAGE_LINKAGE) {
+			cb_error_x (x, _("'%s' ANY LENGTH only allowed in LINKAGE"), name);
+			return -1;
+		}
+		if (f->level != 01) {
+			cb_error_x (x, _("'%s' ANY LENGTH must be 01 level"), name);
+			return -1;
+		}
+		if (f->flag_item_based || f->flag_external) {
+			cb_error_x (x, _("'%s' ANY LENGTH can not be BASED/EXTERNAL"), name);
+			return -1;
+		}
+		if (f->flag_occurs || f->occurs_depending ||
+		    f->children || f->values || f->flag_blank_zero) {
+			cb_error_x (x, _("'%s' ANY LENGTH has invalid definition"), name);
+			return -1;
+		}
+		f->count++;
+		return 0;
+	}
+
 	if (f->level == 77) {
 		if (f->storage != CB_STORAGE_WORKING &&
 		    f->storage != CB_STORAGE_LOCAL &&
@@ -733,7 +755,7 @@ compute_size (struct cb_field *f)
 
 				/* word alignment */
 				if (c->flag_synchronized
-				    && cb_verify (cb_synchronized_clause, 0)) {
+				    && cb_verify (cb_synchronized_clause, "SYNC")) {
 					align_size = 1;
 					switch (c->usage) {
 					case CB_USAGE_BINARY:

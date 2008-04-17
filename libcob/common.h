@@ -321,6 +321,7 @@ extern int CBL_EQ (unsigned char *data_1, unsigned char *data_2, const int lengt
 extern int CBL_NOT (unsigned char *data_1, const int length);
 extern int CBL_XF4 (unsigned char *data_1, unsigned char *data_2);
 extern int CBL_XF5 (unsigned char *data_1, unsigned char *data_2);
+extern int CBL_X91 (unsigned char *result, unsigned char *func, unsigned char *parm);
 extern int CBL_TOUPPER (unsigned char *data, const int length);
 extern int CBL_TOLOWER (unsigned char *data, const int length);
 extern int cob_return_args (unsigned char *data);

@@ -36,6 +36,8 @@
 #include "tree.h"
 #include "parser.h"
 
+#define	COB_MINI_BUFF	192
+
 #define SET_LOCATION(x)				\
   (x)->source_file = (unsigned char *)cb_source_file;		\
   (x)->source_line = cb_source_line
@@ -201,6 +203,12 @@ H\"[^\"\n]*\" {
 	return NOT_OVERFLOW;
 	}
 
+"NOT"[ \t\n]+"AT"[ \t\n]+"END"[ \t\n] |
+"NOT"[ \t\n]+"END"[ \t\n] {	
+	count_lines (yytext);
+	return NOT_END;
+	}
+
 "ON"[ \t\n]+"OVERFLOW"[ \t\n] |
 "OVERFLOW"[ \t\n] {	
 	count_lines (yytext);
@@ -302,7 +310,7 @@ H\"[^\"\n]*\" {
 	/* reserved word */
 	token = lookup_reserved_word (yytext);
 	if (token != 0) {
-		yylval = 0;
+		yylval = NULL;
 		return token;
 	}
 
@@ -329,12 +337,12 @@ H\"[^\"\n]*\" {
 	return WORD;
 }
 
-"<="		{ yylval = 0; return LE; }
-">="		{ yylval = 0; return GE; }
-"<>"		{ yylval = 0; return NE; }
-"**"		{ yylval = 0; return '^'; }
-"."		{ last_token_is_dot = 1; yylval = 0; return '.'; }
-.		{ yylval = 0; return yytext[0]; }
+"<="		{ yylval = NULL; return LE; }
+">="		{ yylval = NULL; return GE; }
+"<>"		{ yylval = NULL; return NE; }
+"**"		{ yylval = NULL; return '^'; }
+"."		{ last_token_is_dot = 1; yylval = NULL; return '.'; }
+.		{ yylval = NULL; return yytext[0]; }
 
 <PICTURE_STATE>{
   "IS"		{ /* ignore */ }
@@ -349,8 +357,23 @@ H\"[^\"\n]*\" {
 	BEGIN INITIAL;
 	yylval = cb_build_reference (yytext);
 	SET_LOCATION (yylval);
+	if (strcasecmp (yytext, "CURRENT-DATE") == 0) {
+		return CURRENT_DATE_FUNC;
+	}
+	if (strcasecmp (yytext, "UPPER-CASE") == 0) {
+		return UPPER_CASE_FUNC;
+	}
+	if (strcasecmp (yytext, "LOWER-CASE") == 0) {
+		return LOWER_CASE_FUNC;
+	}
+	if (strcasecmp (yytext, "REVERSE") == 0) {
+		return REVERSE_FUNC;
+	}
 	if (strcasecmp (yytext, "TRIM") == 0) {
 		return TRIM_FUNCTION;
+	}
+	if (strcasecmp (yytext, "WHEN-COMPILED") == 0) {
+		return WHEN_COMPILED_FUNC;
 	}
 	if (strcasecmp (yytext, "NUMVAL-C") == 0) {
 		return NUMVALC_FUNC;
@@ -361,9 +384,12 @@ H\"[^\"\n]*\" {
 	if (strcasecmp (yytext, "LOCALE-TIME") == 0) {
 		return LOCALE_DT_FUNC;
 	}
+	if (strcasecmp (yytext, "LOCALE-TIME-FROM-SECONDS") == 0) {
+		return LOCALE_DT_FUNC;
+	}
 	return FUNCTION_NAME;
   }
-  .		{ yylval = 0; return yytext[0]; }
+  .		{ yylval = NULL; return yytext[0]; }
 }
 
 <<EOF>> {
@@ -379,10 +405,10 @@ H\"[^\"\n]*\" {
 static int
 read_literal (char mark)
 {
-	static size_t	size = 192;
 	static char	*buff = NULL;
-	int		c;
+	static size_t	size = COB_MINI_BUFF;
 	size_t		i = 0;
+	int		c;
 
 	if (!buff) {
 		buff = cobc_malloc (size);
@@ -397,12 +423,7 @@ read_literal (char mark)
 		}
 		if (i >= size) {
 			size *= 2;
-			buff = realloc (buff, size);
-			if (!buff) {
-				fprintf (stderr, "Memory realloc failed - Aborting\n");
-				fflush (stderr);
-				(void)longjmp (cob_jmpbuf, 1);
-			}
+			buff = cobc_realloc (buff, size);
 		}
 	}
 	buff[i] = 0;
@@ -421,12 +442,13 @@ scan_x (char *text)
 	unsigned char		*dst;
 	size_t			currlen;
 	int			high = 1;
+	int			c;
 
 	currlen = strlen (text);
 	if (!buff) {
-		if (currlen <= COB_SMALL_BUFF) {
-			buff = cobc_malloc (COB_SMALL_BUFF);
-			lastlen = COB_SMALL_BUFF;
+		if (currlen <= COB_MINI_BUFF) {
+			buff = cobc_malloc (COB_MINI_BUFF);
+			lastlen = COB_MINI_BUFF;
 		} else {
 			buff = cobc_malloc (currlen);
 			lastlen = currlen;
@@ -442,8 +464,7 @@ scan_x (char *text)
 	}
 	dst = buff;
 	while (isalnum (*src)) {
-		int c = toupper (*src);
-
+		c = toupper (*src);
 		if ('0' <= c && c <= '9') {
 			c = c - '0';
 		} else if ('A' <= c && c <= 'F') {
@@ -479,11 +500,11 @@ scan_h (char *text)
 {
 	unsigned char	*p;
 	long long	val = 0;
+	int		c;
 	char		buff[48];
 
 	for (p = (unsigned char *)text; *p != '\'' && *p != '\"'; p++) {
-		int c = toupper (*p);
-
+		c = toupper (*p);
 		if ('0' <= c && c <= '9') {
 			c = c - '0';
 		} else if ('A' <= c && c <= 'F') {
@@ -513,8 +534,9 @@ error:
 static int
 scan_numeric (char *text)
 {
-	int		sign, scale = 0;
 	unsigned char	*s;
+	int		sign;
+	int		scale = 0;
 
 	/* get sign */
 	sign = (*text == '+') ? 1 : (*text == '-') ? -1 : 0;

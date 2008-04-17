@@ -442,9 +442,9 @@ cob_decimal_get_binary (cob_decimal *d, cob_field *f, const int opt)
 #else
 	if (f->size <= 4) {
 		if (!sign || overflow) {
-			cob_binary_set_uint64 (f, mpz_get_ui (d->value));
+			cob_binary_set_uint64 (f, (unsigned long long)mpz_get_ui (d->value));
 		} else {
-			cob_binary_set_int64 (f, mpz_get_si (d->value));
+			cob_binary_set_int64 (f, (long long)mpz_get_si (d->value));
 		}
 	} else {
 		mpz_fdiv_r_2exp (cob_mpzt, d->value, 32);
@@ -644,7 +644,7 @@ cob_decimal_get_packed (cob_decimal *d, cob_field *f, const int opt)
 	unsigned char	*p;
 	unsigned char	*q;
 	unsigned char	x;
-	unsigned char	buff[COB_MEDIUM_BUFF];
+	unsigned char	buff[COB_SMALL_BUFF];
 
 	/* build string */
 	mpz_abs (d->value, d->value);
@@ -1098,7 +1098,7 @@ cob_add_int (cob_field *f, const int n)
 		mpz_set_si (cob_d2.value, n);
 		cob_d2.scale = 0;
 		if (cob_d1.scale) {
-			mpz_ui_pow_ui (cob_mexp, 10, cob_d1.scale);
+			mpz_ui_pow_ui (cob_mexp, 10, (unsigned int)cob_d1.scale);
 			mpz_mul (cob_d2.value, cob_d2.value, cob_mexp);
 			cob_d2.scale = cob_d1.scale;
 		}

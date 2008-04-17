@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301 USA
  */
 
-%expect 122
+%expect 108
 
 %defines
 %verbose
@@ -34,7 +34,7 @@
 #include "tree.h"
 
 #define yyerror			cb_error
-#define YYDEBUG			COB_DEBUG
+#define YYDEBUG			1
 #define YYERROR_VERBOSE		1
 
 #define PENDING(x)		cb_warning (_("'%s' not implemented"), x)
@@ -94,54 +94,380 @@ static void terminator_error (void);
 static int literal_value (cb_tree x);
 %}
 
-%token WORD LITERAL PICTURE MNEMONIC_NAME
-%token FUNCTION_NAME TRIM_FUNCTION NUMVALC_FUNC LOCALE_DT_FUNC
+%token TOKEN_EOF 0 "end of file"
 
-%token ACCEPT ADD ADDRESS CALL CANCEL CLOSE COMPUTE DELETE DISPLAY DIVIDE ENTRY
-%token EVALUATE IF INITIALIZE INSPECT MERGE MOVE MULTIPLY OPEN PERFORM
-%token READ RELEASE RETURN REWRITE SEARCH SET SORT START STRING
-%token SUBTRACT UNSTRING WRITE WORKING_STORAGE ZERO PACKED_DECIMAL RECURSIVE
-%token LINAGE FOOTING TOP BOTTOM SHARING ONLY RECORDING LOCAL_STORAGE
-%token ACCESS ADVANCING AFTER ALL ALPHABET ALPHABETIC ALPHABETIC_LOWER AS
-%token ALPHABETIC_UPPER ALPHANUMERIC ALPHANUMERIC_EDITED ALSO ALTER ALTERNATE
-%token AND ANY ARE AREA ARGUMENT_NUMBER ARGUMENT_VALUE ASCENDING ASSIGN
-%token AT AUTO BACKGROUND_COLOR BEFORE BELL
-%token BINARY BLANK BLINK BLOCK BY CHARACTER CHARACTERS CLASS CODE_SET CYCLE
-%token COLLATING COLUMN COMMA COMMAND_LINE COMMIT COMMON CONFIGURATION CONTAINS
-%token CONTENT CONTINUE CONVERTING CORRESPONDING COUNT CRT CURRENCY CURSOR
-%token DATA DATE DAY DAY_OF_WEEK DEBUGGING DECIMAL_POINT DECLARATIVES DEFAULT
-%token DELIMITED DELIMITER DEPENDING DESCENDING DIVISION DOWN DUPLICATES
-%token DYNAMIC ELSE END END_ACCEPT END_ADD END_CALL END_COMPUTE END_DELETE
-%token END_DISPLAY END_DIVIDE END_EVALUATE END_IF END_MULTIPLY END_PERFORM
-%token END_READ END_RETURN END_REWRITE END_SEARCH END_START END_STRING
-%token END_SUBTRACT END_UNSTRING END_WRITE ENVIRONMENT
-%token EBCDIC ENVIRONMENT_NAME ENVIRONMENT_VALUE YYYYMMDD YYYYDDD
-%token EOL EOS EOP EQUAL ERASE ERROR EXCEPTION EXIT EXTEND EXTERNAL FD GOBACK
-%token FILE_CONTROL FILE_ID FILLER FIRST FOR FOREGROUND_COLOR FROM FULL GE GIVING
-%token GLOBAL GO GREATER HIGHLIGHT HIGH_VALUE IDENTIFICATION IN INDEX INDEXED
-%token INPUT INPUT_OUTPUT INTO INVALID IS I_O I_O_CONTROL JUSTIFIED KEY LABEL
-%token LE LEADING LEFT LENGTH LESS LINE LINES LINKAGE LOCK LOWLIGHT LOW_VALUE
-%token MEMORY MINUS MODE MULTIPLE NATIONAL NATIONAL_EDITED NATIVE NE NEGATIVE
-%token NEXT NO NOT NUMBER NUMERIC NUMERIC_EDITED OBJECT_COMPUTER OCCURS OF OFF
-%token OMITTED ON OPTIONAL OR ORDER ORGANIZATION OTHER OUTPUT OVERFLOW PADDING
-%token PAGE PLUS POINTER POSITION POSITIVE PROCEDURE PROCEDURES PROCEED PROGRAM
-%token PROGRAM_ID QUOTE RANDOM RECORD RECORDS REDEFINES REEL REFERENCE
-%token RELATIVE REMAINDER REMOVAL RENAMES REPLACING REQUIRED RESERVE RETURNING
-%token REVERSE_VIDEO REWIND RIGHT ROUNDED RUN SAME SCREEN SD SECTION SECURE
-%token SELECT SENTENCE SEPARATE SEQUENCE SEQUENTIAL SIGN SIZE SORT_MERGE
-%token SOURCE_COMPUTER SPACE SPECIAL_NAMES STANDARD STANDARD_1 STANDARD_2
-%token STATUS STOP SYMBOLIC SYNCHRONIZED TALLYING TAPE TEST THAN THEN THRU
-%token TIME TIMES TO TOK_FILE TOK_INITIAL TOK_TRUE TOK_FALSE TOK_NULL TRAILING
-%token UNDERLINE UNIT UNTIL UP UPON USAGE USE USING VALUE VARYING WHEN WITH
-%token MANUAL AUTOMATIC EXCLUSIVE ROLLBACK OVERLINE PROMPT UPDATE ESCAPE
-%token COMP COMP_1 COMP_2 COMP_3 COMP_4 COMP_5 COMP_X
-%token SOURCE SCREEN_CONTROL EVENT_STATUS LOCALE IGNORING
-%token SIGNED_SHORT SIGNED_INT SIGNED_LONG UNSIGNED_SHORT UNSIGNED_INT UNSIGNED_LONG
-%token BINARY_CHAR BINARY_SHORT BINARY_LONG BINARY_DOUBLE SIGNED UNSIGNED
-%token LINAGE_COUNTER PROGRAM_POINTER CHAINING BLANK_SCREEN BLANK_LINE
-%token NOT_EXCEPTION SIZE_ERROR NOT_SIZE_ERROR NOT_OVERFLOW NOT_EOP
-%token INVALID_KEY NOT_INVALID_KEY COMMA_DELIM DISK NO_ADVANCING
-%token PREVIOUS UNLOCK ALLOCATE INITIALIZED FREE BASED PARAGRAPH
+%token ACCEPT
+%token ACCESS
+%token ADD
+%token ADDRESS
+%token ADVANCING
+%token AFTER
+%token ALL
+%token ALLOCATE
+%token ALPHABET
+%token ALPHABETIC
+%token ALPHABETIC_LOWER		"ALPHABETIC-LOWER"
+%token ALPHABETIC_UPPER		"ALPHABETIC-UPPER"
+%token ALPHANUMERIC
+%token ALPHANUMERIC_EDITED	"ALPHANUMERIC-EDITED"
+%token ALSO
+%token ALTER
+%token ALTERNATE
+%token AND
+%token ANY
+%token ARE
+%token AREA
+%token ARGUMENT_NUMBER		"ARGUMENT-NUMBER"
+%token ARGUMENT_VALUE		"ARGUMENT-VALUE"
+%token AS
+%token ASCENDING
+%token ASSIGN
+%token AT
+%token AUTO
+%token AUTOMATIC
+%token BACKGROUND_COLOR		"BACKGROUND-COLOR"
+%token BASED
+%token BEFORE
+%token BELL
+%token BINARY
+%token BINARY_CHAR		"BINARY-CHAR"
+%token BINARY_DOUBLE		"BINARY-DOUBLE"
+%token BINARY_LONG		"BINARY-LONG"
+%token BINARY_SHORT		"BINARY-SHORT"
+%token BLANK
+%token BLANK_LINE		"BLANK-LINE"
+%token BLANK_SCREEN		"BLANK-SCREEN"
+%token BLINK
+%token BLOCK
+%token BOTTOM
+%token BY
+%token CALL
+%token CANCEL
+%token CHAINING
+%token CHARACTER
+%token CHARACTERS
+%token CLASS
+%token CLOSE
+%token CODE_SET			"CODE-SET"
+%token COLLATING
+%token COLUMN
+%token COMMA
+%token COMMAND_LINE		"COMMAND-LINE"
+%token COMMA_DELIM		"comma delimiter"
+%token COMMIT
+%token COMMON
+%token COMP
+%token COMPUTE
+%token COMP_1			"COMP-1"
+%token COMP_2			"COMP-2"
+%token COMP_3			"COMP-3"
+%token COMP_4			"COMP-4"
+%token COMP_5			"COMP-5"
+%token COMP_X			"COMP-X"
+%token CONFIGURATION
+%token CONTAINS
+%token CONTENT
+%token CONTINUE
+%token CONVERTING
+%token CORRESPONDING
+%token COUNT
+%token CRT
+%token CURRENCY
+%token CURRENT_DATE_FUNC	"FUNCTION CURRENT-DATE"
+%token CURSOR
+%token CYCLE
+%token DATA
+%token DATE
+%token DAY
+%token DAY_OF_WEEK		"DAY-OF-WEEK"
+%token DEBUGGING
+%token DECIMAL_POINT		"DECIMAL-POINT"
+%token DECLARATIVES
+%token DEFAULT
+%token DELETE
+%token DELIMITED
+%token DELIMITER
+%token DEPENDING
+%token DESCENDING
+%token DISK
+%token DISPLAY
+%token DIVIDE
+%token DIVISION
+%token DOWN
+%token DUPLICATES
+%token DYNAMIC
+%token EBCDIC
+%token ELSE
+%token END
+%token END_ACCEPT		"END-ACCEPT"
+%token END_ADD			"END-ADD"
+%token END_CALL			"END-CALL"
+%token END_COMPUTE		"END-COMPUTE"
+%token END_DELETE		"END-DELETE"
+%token END_DISPLAY		"END-DISPLAY"
+%token END_DIVIDE		"END-DIVIDE"
+%token END_EVALUATE		"END-EVALUATE"
+%token END_IF			"END-IF"
+%token END_MULTIPLY		"END-MULTIPLY"
+%token END_PERFORM		"END-PERFORM"
+%token END_READ			"END-READ"
+%token END_RETURN		"END-RETURN"
+%token END_REWRITE		"END-REWRITE"
+%token END_SEARCH		"END-SEARCH"
+%token END_START		"END-START"
+%token END_STRING		"END-STRING"
+%token END_SUBTRACT		"END-SUBTRACT"
+%token END_UNSTRING		"END-UNSTRING"
+%token END_WRITE		"END-WRITE"
+%token ENTRY
+%token ENVIRONMENT
+%token ENVIRONMENT_NAME		"ENVIRONMENT-NAME"
+%token ENVIRONMENT_VALUE	"ENVIRONMENT-VALUE"
+%token EOL
+%token EOP
+%token EOS
+%token EQUAL
+%token EQUALS
+%token ERASE
+%token ERROR
+%token ESCAPE
+%token EVALUATE
+%token EVENT_STATUS		"EVENT-STATUS"
+%token EXCEPTION
+%token EXCLUSIVE
+%token EXIT
+%token EXTEND
+%token EXTERNAL
+%token FD
+%token FILE_CONTROL		"FILE-CONTROL"
+%token FILE_ID			"FILE-ID"
+%token FILLER
+%token FIRST
+%token FOOTING
+%token FOR
+%token FOREGROUND_COLOR		"FOREGROUND-COLOR"
+%token FREE
+%token FROM
+%token FULL
+%token FUNCTION_NAME		"FUNCTION"
+%token GE
+%token GIVING
+%token GLOBAL
+%token GO
+%token GOBACK
+%token GREATER
+%token HIGHLIGHT
+%token HIGH_VALUE		"HIGH-VALUE"
+%token IDENTIFICATION
+%token IF
+%token IGNORING
+%token IN
+%token INDEX
+%token INDEXED
+%token INITIALIZE
+%token INITIALIZED
+%token INPUT
+%token INPUT_OUTPUT		"INPUT-OUTPUT"
+%token INSPECT
+%token INTO
+%token INVALID
+%token INVALID_KEY		"INVALID KEY"
+%token IS
+%token I_O			"I-O"
+%token I_O_CONTROL		"I-O-CONTROL"
+%token JUSTIFIED
+%token KEY
+%token LABEL
+%token LE
+%token LEADING
+%token LEFT
+%token LENGTH
+%token LESS
+%token LINAGE
+%token LINAGE_COUNTER		"LINAGE-COUNTER"
+%token LINE
+%token LINES
+%token LINKAGE
+%token LITERAL			"Literal"
+%token LOCALE
+%token LOCALE_DT_FUNC		"FUNCTION LOCALE"
+%token LOCAL_STORAGE		"LOCAL-STORAGE"
+%token LOCK
+%token LOWER_CASE_FUNC		"FUNCTION LOWER-CASE"
+%token LOWLIGHT
+%token LOW_VALUE		"LOW-VALUE"
+%token MANUAL
+%token MEMORY
+%token MERGE
+%token MINUS
+%token MNEMONIC_NAME		"MNEMONIC NAME"
+%token MODE
+%token MOVE
+%token MULTIPLE
+%token MULTIPLY
+%token NATIONAL
+%token NATIONAL_EDITED		"NATIONAL-EDITED"
+%token NATIVE
+%token NE
+%token NEGATIVE
+%token NEXT
+%token NO
+%token NOT
+%token NOT_END			"NOT END"
+%token NOT_EOP			"NOT EOP"
+%token NOT_EXCEPTION		"NOT EXCEPTION"
+%token NOT_INVALID_KEY		"NOT INVALID KEY"
+%token NOT_OVERFLOW		"NOT OVERFLOW"
+%token NOT_SIZE_ERROR		"NOT SIZE ERROR"
+%token NO_ADVANCING		"NO ADVANCING"
+%token NUMBER
+%token NUMERIC
+%token NUMERIC_EDITED		"NUMERIC-EDITED"
+%token NUMVALC_FUNC		"FUNCTION NUMVALC"
+%token OBJECT_COMPUTER		"OBJECT-COMPUTER"
+%token OCCURS
+%token OF
+%token OFF
+%token OMITTED
+%token ON
+%token ONLY
+%token OPEN
+%token OPTIONAL
+%token OR
+%token ORDER
+%token ORGANIZATION
+%token OTHER
+%token OUTPUT
+%token OVERFLOW
+%token OVERLINE
+%token PACKED_DECIMAL		"PACKED-DECIMAL"
+%token PADDING
+%token PAGE
+%token PARAGRAPH
+%token PERFORM
+%token PICTURE
+%token PLUS
+%token POINTER
+%token POSITION
+%token POSITIVE
+%token PREVIOUS
+%token PRINTER
+%token PROCEDURE
+%token PROCEDURES
+%token PROCEED
+%token PROGRAM
+%token PROGRAM_ID		"PROGRAM-ID"
+%token PROGRAM_POINTER		"PROGRAM-POINTER"
+%token PROMPT
+%token QUOTE
+%token RANDOM
+%token READ
+%token RECORD
+%token RECORDING
+%token RECORDS
+%token RECURSIVE
+%token REDEFINES
+%token REEL
+%token REFERENCE
+%token RELATIVE
+%token RELEASE
+%token REMAINDER
+%token REMOVAL
+%token RENAMES
+%token REPLACING
+%token REQUIRED
+%token RESERVE
+%token RETURN
+%token RETURNING
+%token REVERSE_FUNC		"FUNCTION REVERSE"
+%token REVERSE_VIDEO		"REVERSE-VIDEO"
+%token REWIND
+%token REWRITE
+%token RIGHT
+%token ROLLBACK
+%token ROUNDED
+%token RUN
+%token SAME
+%token SCREEN
+%token SCREEN_CONTROL		"SCREEN-CONTROL"
+%token SD
+%token SEARCH
+%token SECTION
+%token SECURE
+%token SELECT
+%token SENTENCE
+%token SEPARATE
+%token SEQUENCE
+%token SEQUENTIAL
+%token SET
+%token SHARING
+%token SIGN
+%token SIGNED
+%token SIGNED_INT		"SIGNED-INT"
+%token SIGNED_LONG		"SIGNED-LONG"
+%token SIGNED_SHORT		"SIGNED-SHORT"
+%token SIZE
+%token SIZE_ERROR		"SIZE ERROR"
+%token SORT
+%token SORT_MERGE		"SORT-MERGE"
+%token SOURCE
+%token SOURCE_COMPUTER		"SOURCE-COMPUTER"
+%token SPACE
+%token SPECIAL_NAMES		"SPECIAL-NAMES"
+%token STANDARD
+%token STANDARD_1		"STANDARD-1"
+%token STANDARD_2		"STANDARD-2"
+%token START
+%token STATUS
+%token STOP
+%token STRING
+%token SUBTRACT
+%token SYMBOLIC
+%token SYNCHRONIZED
+%token TALLYING
+%token TAPE
+%token TEST
+%token THAN
+%token THEN
+%token THRU
+%token TIME
+%token TIMES
+%token TO
+%token TOK_FALSE		"FALSE"
+%token TOK_FILE			"FILE"
+%token TOK_INITIAL		"INITIAL"
+%token TOK_NULL			"NULL"
+%token TOK_TRUE			"TRUE"
+%token TOP
+%token TRAILING
+%token TRIM_FUNCTION		"FUNCTION TRIM"
+%token UNDERLINE
+%token UNIT
+%token UNLOCK
+%token UNSIGNED
+%token UNSIGNED_INT		"UNSIGNED-INT"
+%token UNSIGNED_LONG		"UNSIGNED-LONG"
+%token UNSIGNED_SHORT		"UNSIGNED-SHORT"
+%token UNSTRING
+%token UNTIL
+%token UP
+%token UPDATE
+%token UPON
+%token UPPER_CASE_FUNC		"FUNCTION UPPER-CASE"
+%token USAGE
+%token USE
+%token USING
+%token VALUE
+%token VARYING
+%token WHEN
+%token WHEN_COMPILED_FUNC	"FUNCTION WHEN-COMPILED"
+%token WITH
+%token WORD			"Identifier"
+%token WORKING_STORAGE		"WORKING-STORAGE"
+%token WRITE
+%token YYYYDDD
+%token YYYYMMDD
+%token ZERO
 
 %left '+' '-'
 %left '*' '/'
@@ -244,7 +570,7 @@ end_program:
  *****************************************************************************/
 
 identification_division:
-  PROGRAM_ID '.' program_name as_literal program_type dot
+  PROGRAM_ID '.' program_name as_literal program_type '.'
   {
 	current_section = NULL;
 	current_paragraph = NULL;
@@ -302,8 +628,6 @@ program_type:
 | _is RECURSIVE _program	{ current_program->flag_recursive = 1; }
 ;
 
-dot: | '.' ;
-
 
 /*****************************************************************************
  * Environment division
@@ -345,10 +669,8 @@ source_computer_paragraph:
 ;
 
 source_computer_entry:
-| '.'
 | computer_name '.'
 | computer_name with_debugging_mode '.'
-| with_debugging_mode '.'
 ;
 
 with_debugging_mode:
@@ -372,24 +694,23 @@ object_computer_paragraph:
 ;
 
 object_computer_entry:
-| '.'
 | computer_name '.'
-| computer_name object_computer_phrase_sequence '.'
-| object_computer_phrase_sequence '.'
+| computer_name object_computer_memory '.'
+| computer_name object_computer_sequence '.'
+| computer_name object_computer_memory object_computer_sequence '.'
 ;
 
-object_computer_phrase_sequence:
-| object_computer_phrase_sequence object_computer_phrase
+object_computer_memory:
+  MEMORY SIZE _is integer CHARACTERS
+  {
+	cb_verify (cb_memory_size_clause, "MEMORY SIZE");
+  }
 ;
 
-object_computer_phrase:
+object_computer_sequence:
   _program _collating SEQUENCE _is reference
   {
 	current_program->collating_sequence = $5;
-  }
-| MEMORY SIZE _is integer CHARACTERS
-  {
-	cb_verify (cb_memory_size_clause, "MEMORY SIZE");
   }
 ;
 
@@ -525,11 +846,6 @@ symbolic_characters_clause:
 ;
 
 symbolic_characters_list:
-  symbolic_characters
-| symbolic_characters_list symbolic_characters
-;
-
-symbolic_characters:
   char_list is_are integer_list
 ;
 
@@ -700,6 +1016,24 @@ input_output_section:
 | INPUT_OUTPUT SECTION '.'
   file_control_paragraph
   i_o_control_paragraph
+| FILE_CONTROL '.'
+  {
+	/* hack for MF compatibility */
+	if (cb_relaxed_syntax_check) {
+		cb_warning (_("INPUT-OUTPUT SECTION header missing - assumed"));
+	} else {
+		cb_error (_("INPUT-OUTPUT SECTION header missing"));
+	}
+  } file_control_sequence
+| I_O_CONTROL '.'
+  {
+	/* hack for MF compatibility */
+	if (cb_relaxed_syntax_check) {
+		cb_warning (_("INPUT-OUTPUT SECTION header missing - assumed"));
+	} else {
+		cb_error (_("INPUT-OUTPUT SECTION header missing"));
+	}
+  } opt_i_o_control
 ;
 
 
@@ -761,7 +1095,7 @@ select_clause:
 /* ASSIGN clause */
 
 assign_clause:
-  ASSIGN _to _ext_clause _disk assignment_name
+  ASSIGN _to _ext_clause _device assignment_name
   {
 	current_file->assign = cb_build_assignment_name (current_file, $5);
   }
@@ -769,6 +1103,11 @@ assign_clause:
   {
 	current_file->fileid_assign = 1;
   }
+;
+
+_device:
+| DISK
+| PRINTER	{ current_file->organization = COB_ORG_LINE_SEQUENTIAL; }
 ;
 
 _ext_clause:
@@ -887,7 +1226,7 @@ organization:
 		organized_seen = 1;
 	}
   }
-| SEQUENTIAL
+| _record SEQUENTIAL
   {
 	if (organized_seen) {
 		cb_error (_("Invalid or duplicate ORGANIZED clause"));
@@ -1173,28 +1512,64 @@ record_clause:
   RECORD _contains integer _characters
   {
 	if (current_file->organization == COB_ORG_LINE_SEQUENTIAL) {
-		cb_error (_("RECORD clause invalid for LINE SEQUENTIAL"));
+		cb_warning (_("RECORD clause ignored for LINE SEQUENTIAL"));
 	} else {
 		current_file->record_max = cb_get_int ($3);
+		if (current_file->record_max < 1)  {
+			current_file->record_max = 1;
+			cb_error (_("RECORD clause invalid"));
+		}
 	}
   }
 | RECORD _contains integer TO integer _characters
   {
+	int	error_ind = 0;
+
 	if (current_file->organization == COB_ORG_LINE_SEQUENTIAL) {
-		cb_error (_("RECORD clause invalid for LINE SEQUENTIAL"));
+		cb_warning (_("RECORD clause ignored for LINE SEQUENTIAL"));
 	} else {
 		current_file->record_min = cb_get_int ($3);
 		current_file->record_max = cb_get_int ($5);
+		if (current_file->record_min < 0)  {
+			current_file->record_min = 0;
+			error_ind = 1;
+		}
+		if (current_file->record_max < 1)  {
+			current_file->record_max = 1;
+			error_ind = 1;
+		}
+		if (current_file->record_max <= current_file->record_min)  {
+			error_ind = 1;
+		}
+		if (error_ind) {
+			cb_error (_("RECORD clause invalid"));
+		}
 	}
   }
 | RECORD _is VARYING _in _size opt_from_integer opt_to_integer _characters
   record_depending
   {
+	int	error_ind = 0;
+
 	if (current_file->organization == COB_ORG_LINE_SEQUENTIAL) {
-		cb_error (_("RECORD clause invalid for LINE SEQUENTIAL"));
+		cb_warning (_("RECORD clause ignored for LINE SEQUENTIAL"));
 	} else {
 		current_file->record_min = $6 ? cb_get_int ($6) : 0;
 		current_file->record_max = $7 ? cb_get_int ($7) : 0;
+		if ($6 && current_file->record_min < 0)  {
+			current_file->record_min = 0;
+			error_ind = 1;
+		}
+		if ($7 && current_file->record_max < 1)  {
+			current_file->record_max = 1;
+			error_ind = 1;
+		}
+		if (($6 || $7) && current_file->record_max <= current_file->record_min)  {
+			error_ind = 1;
+		}
+		if (error_ind) {
+			cb_error (_("RECORD clause invalid"));
+		}
 	}
   }
 ;
@@ -1435,6 +1810,7 @@ data_description_clause:
 | based_clause
 | value_clause
 | renames_clause
+| any_length_clause
 ;
 
 
@@ -1444,7 +1820,12 @@ redefines_clause:
   REDEFINES identifier_1
   {
 	if ($0 != NULL) {
-		cb_error_x ($2, _("REDEFINES clause must follow entry-name"));
+		/* hack for MF compatibility */
+		if (cb_relaxed_syntax_check) {
+			cb_warning_x ($2, _("REDEFINES clause should follow entry-name"));
+		} else {
+			cb_error_x ($2, _("REDEFINES clause must follow entry-name"));
+		}
 	}
 
 	current_field->redefines = cb_resolve_redefines (current_field, $2);
@@ -1626,7 +2007,10 @@ ascending_or_descending:
 ;
 
 occurs_indexed:
-| INDEXED _by occurs_index_list	{ current_field->index_list = $3; }
+| INDEXED _by occurs_index_list
+  {
+	current_field->index_list = $3;
+  }
 ;
 
 occurs_index_list:
@@ -1638,10 +2022,7 @@ occurs_index_list:
 occurs_index:
   WORD
   {
-	$$ = cb_build_index ($1);
-	if ($$ != cb_error_node) {
-		CB_FIELD (cb_ref ($$))->values = cb_list (cb_int1);
-	}
+	$$ = cb_build_index ($1, cb_int1, 1, current_field);
   }
 ;
 
@@ -1675,7 +2056,7 @@ blank_clause:
 /* BASED clause */
 
 based_clause:
-  BASED					{ current_field->flag_item_based = 1; }
+  BASED				{ current_field->flag_item_based = 1; }
 ;
 
 /* VALUE clause */
@@ -1738,6 +2119,14 @@ renames_clause:
   }
 ;
 
+/* ANY LENGTH clause */
+
+any_length_clause:
+  ANY LENGTH
+  {
+	current_field->flag_any_length = 1;
+  }
+;
 
 /*******************
  * LOCAL-STORAGE SECTION
@@ -1857,14 +2246,14 @@ screen_option:
   {
 	/* Nothing yet */
   }
-| LINE _number _is screen_line_plus_minus x
+| LINE _number _is screen_line_plus_minus num_id_or_lit
   {
 	current_field->screen_line = $5;
 	if (CB_LITERAL_P ($5)) {
 		current_field->screen_flag |= COB_SCREEN_LINE_CONST;
 	}
   }
-| COLUMN _number _is screen_col_plus_minus x
+| COLUMN _number _is screen_col_plus_minus num_id_or_lit
   {
 	current_field->screen_column = $5;
 	if (CB_LITERAL_P ($5)) {
@@ -2078,7 +2467,7 @@ procedure:
 
 		sprintf (name, "L$%d", next_label_id);
 		label = cb_build_reference (name);
-		emit_statement (cb_build_label (label, 0));
+		emit_statement (cb_build_label (label, NULL));
 		current_program->label_list =
 			cb_list_append (current_program->label_list, next_label_list);
 		next_label_list = NULL;
@@ -2173,7 +2562,7 @@ section_name:
 ;
 
 opt_segment:
-| x				{ /* ignore */ }
+| LITERAL			{ /* ignore */ }
 ;
 
 
@@ -2275,7 +2664,7 @@ statement:
 		sprintf (name, "L$%d", next_label_id);
 		label = cb_build_reference (name);
 		next_label_list = cb_list_add (next_label_list, label);
-		emit_statement (cb_build_goto (label, 0));
+		emit_statement (cb_build_goto (label, NULL));
 	}
   }
 ;
@@ -2409,19 +2798,15 @@ allocate_statement:
 ;
 
 allocate_body:
-  allocate_expr_or_x CHARACTERS flag_initialized RETURNING target_x
+  expr CHARACTERS flag_initialized RETURNING target_x
   {
 	cb_emit_allocate (NULL, $5, $1, $3);
   }
-| target_x flag_initialized allocate_returning
+| identifier flag_initialized allocate_returning
   {
 	cb_emit_allocate ($1, $3, NULL, $2);
   }
 ;
-
-allocate_expr_or_x:
-  expr				{ $$ = $1; }
-| x				{ $$ = $1; }
 
 allocate_returning:
   /* empty */			{ $$ = NULL; }
@@ -2465,27 +2850,33 @@ call_statement:
 using_chaining:
   /* empty */			{ $$ = NULL; }
 | USING				{ call_mode = cb_int (CB_CALL_BY_REFERENCE); }
-  prcd_param_list		{ $$ = $3; }
+  procedure_param_list		{ $$ = $3; }
 | CHAINING
   {
 	call_mode = cb_int (CB_CALL_BY_REFERENCE);
 	current_program->is_chained = 1;
   }
-  prcd_param_list		{ $$ = $3; }
+  procedure_param_list		{ $$ = $3; }
 ;
 
-prcd_param_list:
-  prcd_param			{ $$ = $1; }
-| prcd_param_list
-  prcd_param			{ $$ = cb_list_append ($1, $2); }
+procedure_param_list:
+  procedure_param		{ $$ = $1; }
+| procedure_param_list
+  procedure_param		{ $$ = cb_list_append ($1, $2); }
 ;
 
-prcd_param:
-  x				{ $$ = cb_build_pair (call_mode, $1); }
-| _by prcd_mode x		{ $$ = cb_build_pair (call_mode, $3); }
+procedure_param:
+  qualified_word
+  {
+	$$ = cb_build_pair (call_mode, cb_build_identifier ($1));
+  }
+| _by procedure_mode qualified_word
+  {
+	$$ = cb_build_pair (call_mode, cb_build_identifier ($3));
+  }
 ;
 
-prcd_mode:
+procedure_mode:
   REFERENCE
   {
 	call_mode = cb_int (CB_CALL_BY_REFERENCE);
@@ -2588,7 +2979,7 @@ cancel_statement:
 ;
 
 cancel_list:
-| cancel_list x
+| cancel_list id_or_lit
   {
 	cb_emit_cancel ($2);
   }
@@ -2710,6 +3101,7 @@ display_upon:
   /* empty */			{ $$ = cb_int1; }
 | UPON mnemonic_name		{ $$ = cb_build_display_upon ($2); }
 | UPON WORD			{ $$ = cb_build_display_upon_direct ($2); }
+| UPON PRINTER			{ $$ = cb_int1; }
 | UPON CRT			{ $$ = cb_int1; }
 | UPON ENVIRONMENT_NAME		{ $$ = cb_true; }
 | UPON ENVIRONMENT_VALUE	{ $$ = cb_int3; }
@@ -2970,7 +3362,7 @@ evaluate_object:
 			cb_error_x (e1, _("FIXME: change it into \"WHEN (NOT ... AND/OR ...)\" for now"));
 		}
  */
-		$$ = cb_build_pair (not, cb_build_pair (e1, 0));
+		$$ = cb_build_pair (not, cb_build_pair (e1, NULL));
 	} else {
 		/* WHEN expr THRU expr */
 		$$ = cb_build_pair (not, cb_build_pair (e1, e2));
@@ -3016,9 +3408,9 @@ exit_body:
 		if (!p->exit_label) {
 			sprintf (name, "EXIT PERFORM %d", cb_id);
 			p->exit_label = cb_build_reference (name);
-			CB_LABEL (cb_build_label (p->exit_label, 0))->need_begin = 1;
+			CB_LABEL (cb_build_label (p->exit_label, NULL))->need_begin = 1;
 		}
-		cb_emit_goto (cb_list (p->exit_label), 0);
+		cb_emit_goto (cb_list (p->exit_label), NULL);
 	}
   }
 | PERFORM CYCLE
@@ -3033,9 +3425,9 @@ exit_body:
 		if (!p->cycle_label) {
 			sprintf (name, "EXIT PERFORM CYCLE %d", cb_id);
 			p->cycle_label = cb_build_reference (name);
-			CB_LABEL (cb_build_label (p->cycle_label, 0))->need_begin = 1;
+			CB_LABEL (cb_build_label (p->cycle_label, NULL))->need_begin = 1;
 		}
-		cb_emit_goto (cb_list (p->cycle_label), 0);
+		cb_emit_goto (cb_list (p->cycle_label), NULL);
 	}
   }
 | SECTION
@@ -3053,7 +3445,7 @@ exit_body:
 			current_section->exit_label_ref = plabel;
 			CB_LABEL (current_section->exit_label)->need_begin = 1;
 		}
-		cb_emit_goto (cb_list (current_section->exit_label_ref), 0);
+		cb_emit_goto (cb_list (current_section->exit_label_ref), NULL);
 	}
   }
 | PARAGRAPH
@@ -3071,7 +3463,7 @@ exit_body:
 			current_paragraph->exit_label_ref = plabel;
 			CB_LABEL (current_paragraph->exit_label)->need_begin = 1;
 		}
-		cb_emit_goto (cb_list (current_paragraph->exit_label_ref), 0);
+		cb_emit_goto (cb_list (current_paragraph->exit_label_ref), NULL);
 	}
   }
 ;
@@ -3104,7 +3496,7 @@ goto_statement:
 
 goto_depending:
   /* empty */			{ $$ = NULL; }
-| DEPENDING _on x		{ $$ = $3; }
+| DEPENDING _on identifier	{ $$ = $3; }
 ;
 
 
@@ -3263,7 +3655,7 @@ replacing_list:
 ;
 
 replacing_item:
-  CHARACTERS BY x inspect_region
+  CHARACTERS BY simple_value inspect_region
   {
 	$$ = cb_build_replacing_characters ($3, $4);
 	inspect_keyword = 0;
@@ -3280,7 +3672,7 @@ rep_keyword:
 ;
 
 replacing_region:
-  x BY x inspect_region
+  simple_value BY simple_value inspect_region
   {
 	switch (inspect_keyword) {
 		case 1:
@@ -3306,7 +3698,10 @@ replacing_region:
 /* INSPECT CONVERTING */
 
 inspect_converting:
-  CONVERTING x TO x inspect_region { $$ = cb_build_converting ($2, $4, $5); }
+  CONVERTING simple_value TO simple_value inspect_region
+  {
+	$$ = cb_build_converting ($2, $4, $5);
+  }
 ;
 
 /* INSPECT BEFORE/AFTER */
@@ -3478,7 +3873,7 @@ perform_option:
   }
 | perform_test UNTIL condition
   {
-	cb_tree varying = cb_list (cb_build_perform_varying (0, 0, 0, $3));
+	cb_tree varying = cb_list (cb_build_perform_varying (NULL, NULL, NULL, $3));
 	$$ = cb_build_perform_until ($1, varying);
   }
 | perform_test VARYING perform_varying_list
@@ -3535,7 +3930,7 @@ read_statement:
 
 read_into:
   /* empty */			{ $$ = NULL; }
-| INTO x			{ $$ = $2; }
+| INTO identifier		{ $$ = $2; }
 ;
 
 with_lock:
@@ -3556,7 +3951,7 @@ with_lock:
 
 read_key:
   /* empty */			{ $$ = NULL; }
-| KEY _is x			{ $$ = $3; }
+| KEY _is identifier		{ $$ = $3; }
 ;
 
 read_handler:
@@ -3671,7 +4066,7 @@ search_body:
 
 search_varying:
   /* empty */			{ $$ = NULL; }
-| VARYING x			{ $$ = $2; }
+| VARYING identifier		{ $$ = $2; }
 ;
 
 search_at_end:
@@ -3685,7 +4080,7 @@ search_whens:
 ;
 
 search_when:
-  WHEN condition statement_list	{ $$ = cb_build_if ($2, $3, 0); }
+  WHEN condition statement_list	{ $$ = cb_build_if ($2, $3, NULL); }
 ;
 
 end_search:
@@ -3723,7 +4118,11 @@ set_environment:
 /* SET name ... TO expr */
 
 set_to:
-  target_x_list TO x
+  target_x_list TO ENTRY alnum_or_id
+  {
+	cb_emit_set_to ($1, cb_build_ppointer ($4));
+  }
+| target_x_list TO x
   {
 	cb_emit_set_to ($1, $3);
   }
@@ -3972,13 +4371,13 @@ string_item_list:
 
 string_item:
   x				{ $$ = $1; }
-| DELIMITED _by SIZE		{ $$ = cb_build_pair (cb_int0, 0); }
-| DELIMITED _by x		{ $$ = cb_build_pair ($3, 0); }
+| DELIMITED _by SIZE		{ $$ = cb_build_pair (cb_int0, NULL); }
+| DELIMITED _by x		{ $$ = cb_build_pair ($3, NULL); }
 ;
 
 opt_with_pointer:
   /* empty */			{ $$ = cb_int0; }
-| _with POINTER x		{ $$ = $3; }
+| _with POINTER identifier	{ $$ = $3; }
 ;
 
 end_string:
@@ -4006,7 +4405,7 @@ subtract_body:
   {
 	cb_emit_arithmetic ($5, 0, cb_build_binary_list (cb_cons ($3, $1), '-'));
   }
-| CORRESPONDING x FROM x flag_rounded on_size_error
+| CORRESPONDING identifier FROM identifier flag_rounded on_size_error
   {
 	cb_emit_corresponding (cb_build_sub, $4, $2, $5);
   }
@@ -4176,7 +4575,7 @@ write_statement:
 
 write_from:
   /* empty */			{ $$ = NULL; }
-| FROM x			{ $$ = $2; }
+| FROM identifier		{ $$ = $2; }
 ;
 
 write_option:
@@ -4184,7 +4583,7 @@ write_option:
   {
 	$$ = cb_int0;
   }
-| before_or_after _advancing x _line_or_lines
+| before_or_after _advancing num_id_or_lit _line_or_lines
   {
 	$$ = cb_build_write_advancing_lines ($1, $3);
   }
@@ -4272,8 +4671,7 @@ opt_not_on_size_error:
  */
 
 on_overflow:
-  opt_on_overflow
-  opt_not_on_overflow
+  opt_on_overflow opt_not_on_overflow
   {
 	current_statement->handler_id = COB_EC_OVERFLOW;
   }
@@ -4317,7 +4715,7 @@ at_end_sentence:
 ;
 
 not_at_end_sentence:
-  NOT _at END statement_list	{ $$ = $4; }
+  NOT_END statement_list	{ $$ = $2; }
 ;
 
 
@@ -4372,8 +4770,7 @@ invalid_key:
 	current_statement->handler_id = COB_EC_I_O_INVALID_KEY;
 	current_statement->handler2 = $1;
   }
-| invalid_key_sentence
-  not_invalid_key_sentence
+| invalid_key_sentence not_invalid_key_sentence
   {
 	current_statement->handler_id = COB_EC_I_O_INVALID_KEY;
 	current_statement->handler1 = $1;
@@ -4432,38 +4829,38 @@ expr_tokens:
 expr_token:
   x				{ push_expr ('x', $1); }
 /* parenthesis */
-| '('				{ push_expr ('(', 0); }
-| ')'				{ push_expr (')', 0); }
+| '('				{ push_expr ('(', NULL); }
+| ')'				{ push_expr (')', NULL); }
 /* arithmetic operators */
-| '+'				{ push_expr ('+', 0); }
-| '-'				{ push_expr ('-', 0); }
-| '*'				{ push_expr ('*', 0); }
-| '/'				{ push_expr ('/', 0); }
-| '^'				{ push_expr ('^', 0); }
+| '+'				{ push_expr ('+', NULL); }
+| '-'				{ push_expr ('-', NULL); }
+| '*'				{ push_expr ('*', NULL); }
+| '/'				{ push_expr ('/', NULL); }
+| '^'				{ push_expr ('^', NULL); }
 /* conditional operators */
-| eq				{ push_expr ('=', 0); }
-| gt				{ push_expr ('>', 0); }
-| lt				{ push_expr ('<', 0); }
-| GE				{ push_expr (']', 0); }
-| LE				{ push_expr ('[', 0); }
-| NE				{ push_expr ('~', 0); }
+| eq				{ push_expr ('=', NULL); }
+| gt				{ push_expr ('>', NULL); }
+| lt				{ push_expr ('<', NULL); }
+| GE				{ push_expr (']', NULL); }
+| LE				{ push_expr ('[', NULL); }
+| NE				{ push_expr ('~', NULL); }
 /* logical operators */
-| NOT				{ push_expr ('!', 0); }
-| AND				{ push_expr ('&', 0); }
-| OR				{ push_expr ('|', 0); }
+| NOT				{ push_expr ('!', NULL); }
+| AND				{ push_expr ('&', NULL); }
+| OR				{ push_expr ('|', NULL); }
 /* class condition */
-| OMITTED			{ push_expr ('O', 0); }
-| NUMERIC			{ push_expr ('9', 0); }
-| ALPHABETIC			{ push_expr ('A', 0); }
-| ALPHABETIC_LOWER		{ push_expr ('L', 0); }
-| ALPHABETIC_UPPER		{ push_expr ('U', 0); }
+| OMITTED			{ push_expr ('O', NULL); }
+| NUMERIC			{ push_expr ('9', NULL); }
+| ALPHABETIC			{ push_expr ('A', NULL); }
+| ALPHABETIC_LOWER		{ push_expr ('L', NULL); }
+| ALPHABETIC_UPPER		{ push_expr ('U', NULL); }
 /* sign condition */
-  /* ZERO is defined in 'x' */
-| POSITIVE			{ push_expr ('P', 0); }
-| NEGATIVE			{ push_expr ('N', 0); }
+/* ZERO is defined in 'x' */
+| POSITIVE			{ push_expr ('P', NULL); }
+| NEGATIVE			{ push_expr ('N', NULL); }
 ;
 
-eq: '=' | EQUAL _to ;
+eq: '=' | EQUAL _to | EQUALS;
 gt: '>' | GREATER _than ;
 lt: '<' | LESS _than ;
 ge: GE | GREATER _than OR EQUAL _to ;
@@ -4539,7 +4936,7 @@ arithmetic_x:
 /* Record name */
 
 record_name:
-  x
+  qualified_word		{ cb_build_identifier ($1); }
 ;
 
 /* Table name */
@@ -4678,9 +5075,7 @@ target_x_list:
 
 target_x:
   identifier
-| ADDRESS _of prog_or_entry alnum_or_id		{ $$ = cb_build_ppointer ($4); }
-| ADDRESS _of identifier_1			{ $$ = cb_build_address ($3); }
-| linage_counter
+| ADDRESS _of identifier_1	{ $$ = cb_build_address ($3); }
 ;
 
 x_list:
@@ -4707,7 +5102,6 @@ prog_or_entry:
 alnum_or_id:
   identifier_1		{ $$ = $1; }
 | alnum_literal		{ $$ = $1; }
-| TOK_NULL		{ $$ = cb_null; }
 ;
 
 simple_value:
@@ -4725,6 +5119,12 @@ numeric_value:
 id_or_lit:
   identifier
 | LITERAL
+;
+
+num_id_or_lit:
+  identifier
+| LITERAL
+| ZERO                          { $$ = cb_zero; }
 ;
 
 /*
@@ -4806,22 +5206,48 @@ alnum_literal:
  */
 
 function:
-  FUNCTION_NAME func_args
+  CURRENT_DATE_FUNC func_refmod
   {
-	$$ = cb_build_intrinsic ($1, $2);
+	$$ = cb_build_intrinsic ($1, NULL, $2);
   }
-| TRIM_FUNCTION '(' trim_args ')'
+| WHEN_COMPILED_FUNC func_refmod
   {
-	$$ = cb_build_intrinsic ($1, $3);
+	$$ = cb_build_intrinsic ($1, NULL, $2);
+  }
+| UPPER_CASE_FUNC '(' e ')' func_refmod
+  {
+	$$ = cb_build_intrinsic ($1, cb_list($3), $5);
+  }
+| LOWER_CASE_FUNC '(' e ')' func_refmod
+  {
+	$$ = cb_build_intrinsic ($1, cb_list($3), $5);
+  }
+| REVERSE_FUNC '(' e ')' func_refmod
+  {
+	$$ = cb_build_intrinsic ($1, cb_list($3), $5);
+  }
+| TRIM_FUNCTION '(' trim_args ')' func_refmod
+  {
+	$$ = cb_build_intrinsic ($1, $3, $5);
   }
 | NUMVALC_FUNC '(' numvalc_args ')'
   {
-	$$ = cb_build_intrinsic ($1, $3);
+	$$ = cb_build_intrinsic ($1, $3, NULL);
   }
-| LOCALE_DT_FUNC '(' locale_dt_args ')'
+| LOCALE_DT_FUNC '(' locale_dt_args ')' func_refmod
   {
-	$$ = cb_build_intrinsic ($1, $3);
+	$$ = cb_build_intrinsic ($1, $3, $5);
   }
+| FUNCTION_NAME func_args
+  {
+	$$ = cb_build_intrinsic ($1, $2, NULL);
+  }
+;
+
+func_refmod:
+  /* empty */			{ $$ = NULL; }
+| '(' e ':' ')'			{ $$ = cb_build_pair ($2, NULL); }
+| '(' e ':' e ')'		{ $$ = cb_build_pair ($2, $4); }
 ;
 
 func_args:
@@ -4965,7 +5391,6 @@ _characters:	| CHARACTERS ;
 _collating:	| COLLATING ;
 _contains:	| CONTAINS ;
 _data:		| DATA ;
-_disk:		| DISK ;
 _file:		| TOK_FILE ;
 _for:		| FOR ;
 _from:		| FROM ;

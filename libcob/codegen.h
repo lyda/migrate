@@ -517,6 +517,9 @@ cob_cmp_s8_binary (const unsigned char *p, const int n)
 COB_STATIC int
 cob_cmp_u16_binary (const unsigned char *p, const int n)
 {
+#ifndef ALLOW_MISALIGNED
+	unsigned char	*x;
+#endif
 	unsigned short	val;
 
 	if ( n < 0 ) {
@@ -525,8 +528,6 @@ cob_cmp_u16_binary (const unsigned char *p, const int n)
 #ifdef ALLOW_MISALIGNED
 	val = *(unsigned short MISALIGNED *)p;
 #else
-	unsigned char	*x;
-
 	x = (unsigned char *)&val;
 	*x = *p;
 	*(x + 1) = *(p + 1);
@@ -592,6 +593,9 @@ cob_cmp_s24_binary (const unsigned char *p, const int n)
 COB_STATIC int
 cob_cmp_u32_binary (const unsigned char *p, const int n)
 {
+#ifndef ALLOW_MISALIGNED
+	unsigned char	*x;
+#endif
 	unsigned int	val;
 
 	if ( n < 0 ) {
@@ -600,8 +604,6 @@ cob_cmp_u32_binary (const unsigned char *p, const int n)
 #ifdef ALLOW_MISALIGNED
 	val = *(unsigned int MISALIGNED *)p;
 #else
-	unsigned char	*x;
-
 	x = (unsigned char *)&val;
 	*x = *p;
 	*(x + 1) = *(p + 1);
@@ -765,6 +767,9 @@ cob_cmp_s56_binary (const unsigned char *p, const int n)
 COB_STATIC int
 cob_cmp_u64_binary (const unsigned char *p, const int n)
 {
+#ifndef ALLOW_MISALIGNED
+	unsigned char		*x;
+#endif
 	unsigned long long	val;
 
 	if ( n < 0 ) {
@@ -773,8 +778,6 @@ cob_cmp_u64_binary (const unsigned char *p, const int n)
 #ifdef ALLOW_MISALIGNED
 	val = *(unsigned long long MISALIGNED *)p;
 #else
-	unsigned char		*x;
-
 	x = (unsigned char *)&val;
 	*x = *p;
 	*(x + 1) = *(p + 1);
@@ -1563,6 +1566,9 @@ cob_sub_s64_binary (unsigned char *p, const int val)
 COB_STATIC int
 cob_cmpswp_u16_binary (const unsigned char *p, const int n)
 {
+#ifndef ALLOW_MISALIGNED
+	unsigned char	*x;
+#endif
 	unsigned short	val;
 
 	if ( n < 0 ) {
@@ -1571,8 +1577,6 @@ cob_cmpswp_u16_binary (const unsigned char *p, const int n)
 #ifdef ALLOW_MISALIGNED
 	val = COB_BSWAP_16 (*(unsigned short MISALIGNED *)p);
 #else
-	unsigned char	*x;
-
 	x = (unsigned char *)&val;
 	*x = *p;
 	*(x + 1) = *(p + 1);
@@ -1634,6 +1638,9 @@ cob_cmpswp_s24_binary (const unsigned char *p, const int n)
 COB_STATIC int
 cob_cmpswp_u32_binary (const unsigned char *p, const int n)
 {
+#ifndef ALLOW_MISALIGNED
+	unsigned char	*x;
+#endif
 	unsigned int	val;
 
 	if ( n < 0 ) {
@@ -1642,8 +1649,6 @@ cob_cmpswp_u32_binary (const unsigned char *p, const int n)
 #ifdef ALLOW_MISALIGNED
 	val = COB_BSWAP_32 (*(unsigned int MISALIGNED *)p);
 #else
-	unsigned char	*x;
-
 	x = (unsigned char *)&val;
 	*x = *p;
 	*(x + 1) = *(p + 1);
@@ -1791,6 +1796,9 @@ cob_cmpswp_s56_binary (const unsigned char *p, const int n)
 COB_STATIC int
 cob_cmpswp_u64_binary (const unsigned char *p, const int n)
 {
+#ifndef ALLOW_MISALIGNED
+	unsigned char		*x;
+#endif
 	unsigned long long	val;
 
 	if ( n < 0 ) {
@@ -1799,7 +1807,6 @@ cob_cmpswp_u64_binary (const unsigned char *p, const int n)
 #ifdef ALLOW_MISALIGNED
 	val = COB_BSWAP_64 (*(unsigned long long MISALIGNED *)p);
 #else
-	unsigned char	*x;
 	x = (unsigned char *)&val;
 	*x = *p;
 	*(x + 1) = *(p + 1);

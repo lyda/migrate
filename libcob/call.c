@@ -99,6 +99,7 @@ lt_dlerror ()
 #endif
 
 static int		resolve_size = 0;
+static int		name_convert = 0;
 static char		**resolve_path = NULL;
 static char		*resolve_error = NULL;
 static char		*resolve_error_buff = NULL;
@@ -314,16 +315,17 @@ cob_set_cancel (const char *name, void *entry, void *cancel)
 void *
 cob_resolve (const char *name)
 {
-	int			i;
 	unsigned char		*p;
 	const unsigned char	*s;
 	lt_ptr_t		func;
 	lt_dlhandle		handle;
+	int			i;
 	struct stat		st;
 #if	defined (_WIN32) || !defined (RTLD_DEFAULT)
 	struct struct_handle	*chkhandle;
 #endif
 	unsigned char		buff[COB_SMALL_BUFF];
+	unsigned char		buff2[COB_SMALL_BUFF];
 	char			filename[COB_MEDIUM_BUFF];
 
 /* Checked in generated code
@@ -381,11 +383,28 @@ cob_resolve (const char *name)
 #endif
 
 	/* search external modules */
+	if (likely(name_convert == 0)) {
+		s = (unsigned char *)name;
+	} else {
+		s = (unsigned char *)name;
+		p = buff2;
+		for (; *s; s++) {
+			if (name_convert == 1 && isupper (*s)) {
+				*p++ = tolower (*s);
+			} else if (name_convert == 2 && islower (*s)) {
+				*p++ = toupper (*s);
+			} else {
+				*p++ = *s;
+			}
+		}
+		*p = 0;
+		s = buff2;
+	}
 	for (i = 0; i < resolve_size; i++) {
 		if (resolve_path[i] == NULL) {
-			sprintf (filename, "%s.%s", name, COB_MODULE_EXT);
+			sprintf (filename, "%s.%s", s, COB_MODULE_EXT);
 		} else {
-			sprintf (filename, "%s/%s.%s", resolve_path[i], name, COB_MODULE_EXT);
+			sprintf (filename, "%s/%s.%s", resolve_path[i], s, COB_MODULE_EXT);
 		}
 		if (stat (filename, &st) == 0) {
 			if ((handle = lt_dlopen (filename)) != NULL) {
@@ -496,12 +515,12 @@ cob_init_call (void)
 {
 	char			*s;
 	char			*p;
-	int			i;
-	struct stat		st;
 	struct system_table	*psyst;
 #if	defined (_WIN32) || !defined (RTLD_DEFAULT)
 	lt_dlhandle		libhandle;
 #endif
+	int			i;
+	struct stat		st;
 	char			filename[COB_MEDIUM_BUFF];
 
 #ifndef	USE_LIBDL
@@ -514,6 +533,15 @@ cob_init_call (void)
 #ifndef	COB_ALT_HASH
 	call_table = (struct call_hash **)cob_malloc (sizeof (struct call_hash *) * HASH_SIZE);
 #endif
+
+	s = getenv ("COB_LOAD_CASE");
+	if (s != NULL) {
+		if (strcasecmp (s, "LOWER") == 0) {
+			name_convert = 1;
+		} else if (strcasecmp (s, "UPPER") == 0) {
+			name_convert = 2;
+		}
+	}
 
 	s = getenv ("COB_LIBRARY_PATH");
 	if (s == NULL) {

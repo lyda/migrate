@@ -1,3 +1,7 @@
+2008-04-16  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Add in "copy" directory for OC supplied COPY elements
+
 2008-01-03  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : Fix invalid usage of square brackets
