@@ -32,6 +32,7 @@
 #include "move.h"
 #include "coblocal.h"
 #include "termio.h"
+#include "screenio.h"
 
 static const int	bin_digits[] = { 1, 3, 5, 8, 10, 13, 15, 17, 20 };
 
@@ -50,6 +51,9 @@ display_numeric (cob_field *f, FILE *fp)
 	cob_field	temp;
 	unsigned char	data[128];
 
+	if (f->size == 0) {
+		return;
+	}
 	digits = COB_FIELD_DIGITS (f);
 	scale = COB_FIELD_SCALE (f);
 	size = digits + (COB_FIELD_HAVE_SIGN (f) ? 1 : 0);
@@ -84,6 +88,9 @@ pretty_display_numeric (cob_field *f, FILE *fp)
 	unsigned char	pic[64];
 	unsigned char	data[256];
 
+	if (f->size == 0) {
+		return;
+	}
 /* RXW
 	if (COB_FIELD_TYPE(f) == COB_TYPE_NUMERIC_BINARY) {
 		digits = bin_digits[f->size];
@@ -148,6 +155,11 @@ display_alnum (cob_field *f, FILE *fp)
 static void
 display (cob_field *f, FILE *fp)
 {
+	unsigned char	*p;
+	int		n;
+	cob_field	temp;
+	cob_field_attr	attr;
+
 	if (COB_FIELD_TYPE (f) == COB_TYPE_NUMERIC_DOUBLE) {
 		double f1doub;
 
@@ -158,11 +170,22 @@ display (cob_field *f, FILE *fp)
 
 		memcpy ((char *)&f1float, f->data, sizeof (float));
 		fprintf (fp, "%-.18lf", (double)f1float);
-	} else if (COB_FIELD_TYPE(f) == COB_TYPE_NUMERIC_BINARY
-		   && !cob_current_module->flag_pretty_display) {
-		cob_field_attr	attr = *f->attr;
-		cob_field	temp = *f;
-
+	} else if (COB_FIELD_IS_POINTER (f)) {
+		fprintf (fp, "0x");
+#ifdef WORDS_BIGENDIAN
+		p = f->data;
+		for (n = 0; n < sizeof(void *); n++, p++) {
+#else
+		p = f->data + sizeof(void *) - 1;
+		for (n = sizeof(void *) - 1; n >= 0; n--, p--) {
+#endif
+			fprintf (fp, "%x%x", *p >> 4, *p & 0xF);
+		}
+	} else if (COB_FIELD_REAL_BINARY(f) ||
+		   (COB_FIELD_TYPE(f) == COB_TYPE_NUMERIC_BINARY
+		    && !cob_current_module->flag_pretty_display)) {
+		attr = *f->attr;
+		temp = *f;
 		attr.digits = bin_digits[f->size];
 		temp.attr = &attr;
 		display_numeric (&temp, fp);
@@ -209,25 +232,39 @@ cob_new_display (const int outorerr, const int newline, const int varcnt, ...)
 void
 cob_accept (cob_field *f)
 {
+/* RXW
 	size_t		size;
+*/
 	cob_field_attr	attr;
 	cob_field	temp;
 	unsigned char	buff[COB_MEDIUM_BUFF];
 
-	if (isatty (fileno (stdin))) {
-		/* terminal input */
-		temp.data = buff;
-		temp.attr = &attr;
-		COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
-		/* read a line */
-		fgets ((char *)buff, COB_MEDIUM_BUFF, stdin);
+	if (screen_initialized) {
+		cob_field_accept (f, NULL, NULL, NULL, NULL, 0);
+		return;
+	}
+	temp.data = buff;
+	temp.attr = &attr;
+	COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
+	/* read a line */
+	if (fgets ((char *)buff, COB_MEDIUM_BUFF, stdin) == NULL) {
+		temp.size = 1;
+		buff[0] = ' ';
+		buff[1] = 0;
+	} else {
 		temp.size = strlen ((char *)buff) - 1;
-
-		/* move it to the field */
+	}
+	if (COB_FIELD_TYPE(f) == COB_TYPE_NUMERIC_DISPLAY) {
+		if (temp.size > f->size) {
+			temp.size = f->size;
+		}
+	}
+	cob_move (&temp, f);
+/* RXW
+	if (isatty (fileno (stdin))) {
+		temp.size = strlen ((char *)buff) - 1;
 		cob_move (&temp, f);
 	} else {
-		/* non-terminal input */
-		fgets ((char *)buff, COB_MEDIUM_BUFF, stdin);
 		size = strlen ((char *)buff) - 1;
 		if (size > f->size) {
 			size = f->size;
@@ -235,6 +272,7 @@ cob_accept (cob_field *f)
 		memcpy (f->data, buff, size);
 		memset (f->data + size, ' ', f->size - size);
 	}
+*/
 }
 
 #if 0

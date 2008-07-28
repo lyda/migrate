@@ -38,7 +38,8 @@ AT_DATA([prog.cob], [
        PROCEDURE        DIVISION.
            MOVE SPACE TO G1.
            INITIALIZE G2 (2).
-           DISPLAY G1 NO ADVANCING.
+           DISPLAY G1 NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -60,7 +61,8 @@ AT_DATA([prog.cob], [
            03 X         PIC Z9.
        PROCEDURE        DIVISION.
            INITIALIZE G1.
-           DISPLAY G1 NO ADVANCING.
+           DISPLAY G1 NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -84,7 +86,8 @@ AT_DATA([prog.cob], [
          02 Z           PIC 9.
        PROCEDURE        DIVISION.
            INITIALIZE G1.
-           DISPLAY G1 NO ADVANCING.
+           DISPLAY G1 NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -107,7 +110,8 @@ AT_DATA([prog.cob], [
            03 Z         PIC X.
        PROCEDURE        DIVISION.
            INITIALIZE G1.
-           DISPLAY G1 NO ADVANCING.
+           DISPLAY G1 NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -129,7 +133,8 @@ AT_DATA([prog.cob], [
          02 Z           PIC 9.
        PROCEDURE        DIVISION.
            INITIALIZE G1.
-           DISPLAY G1 NO ADVANCING.
+           DISPLAY G1 NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 

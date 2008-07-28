@@ -30,7 +30,8 @@ AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      prog.
        PROCEDURE        DIVISION.
-           DISPLAY X.
+           DISPLAY X
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -49,7 +50,8 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC X.
        PROCEDURE        DIVISION.
-           DISPLAY X IN G.
+           DISPLAY X IN G
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -70,7 +72,8 @@ AT_DATA([prog.cob], [
          02 X           PIC X.
        01 Y             PIC X.
        PROCEDURE        DIVISION.
-           DISPLAY Y IN G.
+           DISPLAY Y IN G
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -89,7 +92,8 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC X.
        PROCEDURE        DIVISION.
-           DISPLAY X IN X.
+           DISPLAY X IN X
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -267,7 +271,8 @@ AT_DATA([prog.cob], [
        01 G2.
          02 X           PIC X.
        PROCEDURE        DIVISION.
-           DISPLAY X.
+           DISPLAY X
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -290,7 +295,8 @@ AT_DATA([prog.cob], [
          02 X.
            03 X         PIC X.
        PROCEDURE        DIVISION.
-           DISPLAY X.
+           DISPLAY X
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -316,7 +322,8 @@ AT_DATA([prog.cob], [
          02 X.
            03 Y         PIC X.
        PROCEDURE        DIVISION.
-           DISPLAY Y OF X.
+           DISPLAY Y OF X
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -344,7 +351,8 @@ AT_DATA([prog.cob], [
          02 X.
            03 Z         PIC X VALUE "Z".
        PROCEDURE        DIVISION.
-           DISPLAY Z OF X NO ADVANCING.
+           DISPLAY Z OF X NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 

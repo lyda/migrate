@@ -74,6 +74,7 @@ static cob_field	*curr_field = NULL;
 static cob_field_attr	*curr_attr = NULL;
 static cob_field	calc_field[DEPTH_LEVEL];
 static cob_field_attr	calc_attr[DEPTH_LEVEL];
+static size_t		calc_size[DEPTH_LEVEL];
 	
 
 /* Constants for date/day calculations */
@@ -326,8 +327,9 @@ cob_init_intrinsic (void)
 	memset ((char *)&calc_field[0], 0, sizeof (calc_field));
 	memset ((char *)&calc_attr[0], 0, sizeof (calc_attr));
 	for (i = 0; i < DEPTH_LEVEL; i++) {
-		calc_field[i].data = cob_malloc (1024);
-		calc_field[i].size = 1024;
+		calc_field[i].data = cob_malloc (256);
+		calc_field[i].size = 256;
+		calc_size[i] = 256;
 	}
 	return;
 }
@@ -342,16 +344,15 @@ make_double_entry (void)
 
 	curr_field = &calc_field[curr_entry];
 	curr_attr = &calc_attr[curr_entry];
-	if (curr_field->size < sizeof (double)) {
-		if (curr_field->size == 0) {
-			s = cob_malloc (sizeof (double) + 3);
-		} else {
-			s = realloc (curr_field->data, sizeof (double) + 3);
+	if (calc_size[curr_entry] < sizeof (double)) {
+		calc_size[curr_entry] = sizeof (double) + 1;
+		if (curr_field->data) {
+			free (curr_field->data);
 		}
-		memset (s, 0, sizeof (double) + 3);
+		s = cob_malloc (sizeof (double) + 1);
 	} else {
 		s = curr_field->data;
-		memset (s, 0, curr_field->size);
+		memset (s, 0, sizeof (double));
 	}
 
 	curr_attr->type = COB_TYPE_NUMERIC_DOUBLE;
@@ -377,20 +378,15 @@ make_field_entry (cob_field *f)
 
 	curr_field = &calc_field[curr_entry];
 	curr_attr = &calc_attr[curr_entry];
-	if (f->size > curr_field->size) {
-		if (curr_field->size == 0) {
-			s = cob_malloc (f->size + 3);
-		} else {
-			s = realloc (curr_field->data, f->size + 3);
-			if (!s) {
-				cob_runtime_error ("Cannot acquire %d bytes of memory - Aborting", f->size + 3);
-				cob_stop_run (1);
-			}
+	if (f->size > calc_size[curr_entry]) {
+		calc_size[curr_entry] = f->size + 1;
+		if (curr_field->data) {
+			free (curr_field->data);
 		}
-		memset (s, 0, f->size + 3);
+		s = cob_malloc (f->size + 1);
 	} else {
 		s = curr_field->data;
-		memset (s, 0, curr_field->size);
+		memset (s, 0, f->size);
 	}
 	*curr_field = *f;
 	*curr_attr = *(f->attr);
@@ -421,9 +417,11 @@ intr_set_double (cob_decimal *d, double v)
 static double COB_NOINLINE
 intr_get_double (cob_decimal *d)
 {
-	int	n = d->scale;
-	double	v = mpz_get_d (d->value);
+	double	v;
+	int	n;
 
+	v = mpz_get_d (d->value);
+	n = d->scale;
 	for (; n > 0; n--) v /= 10;
 	for (; n < 0; n++) v *= 10;
 	return v;
@@ -432,8 +430,11 @@ intr_get_double (cob_decimal *d)
 static int
 comp_field (const void *m1, const void *m2)
 {
-	cob_field	*f1 = *(cob_field **) m1;
-	cob_field	*f2 = *(cob_field **) m2;
+	cob_field	*f1;
+	cob_field	*f2;
+
+	f1 = *(cob_field **) m1;
+	f2 = *(cob_field **) m2;
 	return cob_cmp (f1, f2);
 }
 

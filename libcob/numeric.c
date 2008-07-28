@@ -152,6 +152,122 @@ mpz_get_sll (const mpz_ptr src)
 
 #endif	/* COB_EXPERIMENTAL */
 
+static COB_INLINE void
+num_byte_memcpy (unsigned char *s1, const unsigned char *s2, size_t size)
+{
+	do {
+		*s1++ = *s2++;
+	} while (--size);
+}
+
+static long long
+cob_binary_get_int64 (const cob_field * const f)
+{
+	long long	n = 0;
+	size_t		fsiz = 8 - f->size;
+
+/* Experimental code - not activated */
+#if 0
+	unsigned char	*s;
+
+	if ((COB_FIELD_BINARY_SWAP (f) && !COB_FIELD_HAVE_SIGN (f)) ||
+	    (!COB_FIELD_BINARY_SWAP (f) && COB_FIELD_HAVE_SIGN (f))) {
+		s = (unsigned char *)&n + fsiz;
+	} else {
+		s = (unsigned char *)&n;
+	}
+	num_byte_memcpy (s, f->data, f->size);
+	if (COB_FIELD_BINARY_SWAP (f)) {
+		n = COB_BSWAP_64 (n);
+	}
+	if (COB_FIELD_HAVE_SIGN (f)) {
+		n >>= 8 * fsiz;	/* shift with sign */
+	}
+#endif
+#ifndef WORDS_BIGENDIAN
+	if (COB_FIELD_BINARY_SWAP (f)) {
+		if (COB_FIELD_HAVE_SIGN (f)) {
+			num_byte_memcpy ((unsigned char *)&n, f->data, f->size);
+			n = COB_BSWAP_64 (n);
+			n >>= 8 * fsiz;	/* shift with sign */
+		} else {
+			num_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
+			n = COB_BSWAP_64 (n);
+		}
+	} else {
+		if (COB_FIELD_HAVE_SIGN (f)) {
+			num_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
+			n >>= 8 * fsiz;	/* shift with sign */
+		} else {
+			num_byte_memcpy ((unsigned char *)&n, f->data, f->size);
+		}
+	}
+#else	/* WORDS_BIGENDIAN */
+	if (COB_FIELD_HAVE_SIGN (f)) {
+		num_byte_memcpy ((unsigned char *)&n, f->data, f->size);
+		n >>= 8 * fsiz;	/* shift with sign */
+	} else {
+		num_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
+	}
+#endif	/* WORDS_BIGENDIAN */
+	return n;
+}
+
+static unsigned long long
+cob_binary_get_uint64 (const cob_field * const f)
+{
+	unsigned long long	n = 0;
+	size_t			fsiz = 8 - f->size;
+
+#ifndef WORDS_BIGENDIAN
+	if (COB_FIELD_BINARY_SWAP (f)) {
+		num_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
+		n = COB_BSWAP_64 (n);
+	} else {
+		num_byte_memcpy ((unsigned char *)&n, f->data, f->size);
+	}
+#else	/* WORDS_BIGENDIAN */
+	num_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
+#endif	/* WORDS_BIGENDIAN */
+	return n;
+}
+
+static void
+cob_binary_set_uint64 (cob_field *f, unsigned long long n)
+{
+#ifndef WORDS_BIGENDIAN
+	unsigned char	*s;
+
+	if (COB_FIELD_BINARY_SWAP (f)) {
+		n = COB_BSWAP_64 (n);
+		s = ((unsigned char *)&n) + 8 - f->size;
+	} else {
+		s = (unsigned char *)&n;
+	}
+	num_byte_memcpy (f->data, s, f->size);
+#else	/* WORDS_BIGENDIAN */
+	num_byte_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
+#endif	/* WORDS_BIGENDIAN */
+}
+
+static void
+cob_binary_set_int64 (cob_field *f, long long n)
+{
+#ifndef WORDS_BIGENDIAN
+	unsigned char	*s;
+
+	if (COB_FIELD_BINARY_SWAP (f)) {
+		n = COB_BSWAP_64 (n);
+		s = ((unsigned char *)&n) + 8 - f->size;
+	} else {
+		s = (unsigned char *)&n;
+	}
+	num_byte_memcpy (f->data, s, f->size);
+#else	/* WORDS_BIGENDIAN */
+	num_byte_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
+#endif	/* WORDS_BIGENDIAN */
+}
+
 /*
  * Decimal number
  */
@@ -349,9 +465,9 @@ cob_decimal_set_binary (cob_decimal *d, cob_field *f)
 
 	if (f->size <= 4) {
 		if (COB_FIELD_HAVE_SIGN (f)) {
-			mpz_set_si (d->value, cob_binary_get_int (f));
+			mpz_set_si (d->value, (int)cob_binary_get_int64 (f));
 		} else {
-			mpz_set_ui (d->value, (unsigned int) cob_binary_get_int (f));
+			mpz_set_ui (d->value, (unsigned int) cob_binary_get_uint64 (f));
 		}
 	} else {
 		if (COB_FIELD_HAVE_SIGN (f)) {

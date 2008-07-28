@@ -33,7 +33,8 @@ AT_DATA([prog.cob], [
            MOVE ZERO TO RETURN-CODE.
            MOVE 1 TO RETURN-CODE.
            MOVE RETURN-CODE TO I.
-           DISPLAY I NO ADVANCING.
+           DISPLAY I NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -49,9 +50,11 @@ AT_DATA([mod1.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      mod1.
        PROCEDURE        DIVISION.
-           DISPLAY RETURN-CODE NO ADVANCING.
+           DISPLAY RETURN-CODE NO ADVANCING
+           END-DISPLAY.
            MOVE 1 TO RETURN-CODE.
-           DISPLAY RETURN-CODE NO ADVANCING.
+           DISPLAY RETURN-CODE NO ADVANCING
+           END-DISPLAY.
            EXIT PROGRAM.
 ])
 
@@ -66,10 +69,14 @@ AT_DATA([prog.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      prog.
        PROCEDURE        DIVISION.
-           CALL "mod1".
-           DISPLAY RETURN-CODE NO ADVANCING.
-           CALL "mod2".
-           DISPLAY RETURN-CODE NO ADVANCING.
+           CALL "mod1"
+           END-CALL.
+           DISPLAY RETURN-CODE NO ADVANCING
+           END-DISPLAY.
+           CALL "mod2"
+           END-CALL.
+           DISPLAY RETURN-CODE NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 

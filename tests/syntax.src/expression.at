@@ -26,16 +26,18 @@ AT_DATA([prog.cob], [
        PROCEDURE        DIVISION.
            IF 3 = 1 AND 2 OR 3
                DISPLAY "OK"
+               END-DISPLAY
            END-IF.
            IF 3 = 1 OR 2 AND 3
                DISPLAY "NO"
+               END-DISPLAY
            END-IF.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [0], ,
 [prog.cob:6: Warning: Suggest parentheses around AND within OR
-prog.cob:9: Warning: Suggest parentheses around AND within OR
+prog.cob:10: Warning: Suggest parentheses around AND within OR
 ])
 
 AT_CLEANUP
@@ -56,13 +58,14 @@ AT_DATA([prog.cob], [
        01 TEST-REC      PIC X(4).
        PROCEDURE        DIVISION.
            OPEN  INPUT TEST-FILE.
-           START TEST-FILE KEY EQUAL TEST-REC.
+           START TEST-FILE KEY EQUAL TEST-REC
+           END-START.
            CLOSE TEST-FILE.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
-[prog.cob:15: Error: START not allowed on SEQUENTIAL files
+[prog.cob:16: Error: START not allowed on SEQUENTIAL files
 ])
 
 AT_CLEANUP

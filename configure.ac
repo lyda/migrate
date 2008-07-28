@@ -74,7 +74,6 @@ AH_TEMPLATE([WITH_VARSEQ], [Define variable sequential file format])
 AH_TEMPLATE([HAVE_PSIGN_OPT], [Has -Wno-pointer-sign])
 AH_TEMPLATE([HAVE_ATTRIBUTE_ALIGNED], [Has __attribute__((aligned))])
 AH_TEMPLATE([HAVE_TIMEZONE], [Has timezone variable])
-AH_TEMPLATE([HAVE_MVGETNSTR], [Has mvgetnstr in curses library])
 AH_TEMPLATE([COB_EXEEXT], [Executable extension])
 AH_TEMPLATE([COB_EXTRA_FLAGS], [Extra Compiler Flags])
 AH_TEMPLATE([__USE_STRING_INLINES], [Compiler optimization])
@@ -284,7 +283,7 @@ fi
 # Checks for library functions.
 AC_FUNC_ALLOCA
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([memmove memset regcomp setlocale fcntl strerror \
+AC_CHECK_FUNCS([memmove memset setlocale fcntl strerror \
 		strcasecmp strchr strrchr strdup strstr strtol gettimeofday])
 
 # Check for timezone
@@ -336,10 +335,6 @@ else
     if test "x$ac_cv_lib_curses_initscr" = "xyes"; then
       USE_NCURSES="yes"
       LIBCOB_LIBS="$LIBCOB_LIBS -lcurses"
-      AC_CHECK_LIB([curses], [mvgetnstr])
-      if test "x$ac_cv_lib_curses_mvgetnstr" = "xyes"; then
-	 AC_DEFINE(HAVE_MVGETNSTR,1)
-      fi
     fi
   fi
 fi

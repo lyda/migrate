@@ -35,17 +35,28 @@ AT_DATA([prog.cob], [
          02 X-S9-T      REDEFINES X PIC S9(4) TRAILING.
          02 X-S9-TS     REDEFINES X PIC S9(4) TRAILING SEPARATE.
        PROCEDURE        DIVISION.
-           MOVE ZERO TO X. MOVE  1234 TO X-9.     DISPLAY X.
-           MOVE ZERO TO X. MOVE  1234 TO X-S9.    DISPLAY X.
-           MOVE ZERO TO X. MOVE -1234 TO X-S9.    DISPLAY X.
-           MOVE ZERO TO X. MOVE  1234 TO X-S9-L.  DISPLAY X.
-           MOVE ZERO TO X. MOVE -1234 TO X-S9-L.  DISPLAY X.
-           MOVE ZERO TO X. MOVE  1234 TO X-S9-LS. DISPLAY X.
-           MOVE ZERO TO X. MOVE -1234 TO X-S9-LS. DISPLAY X.
-           MOVE ZERO TO X. MOVE  1234 TO X-S9-T.  DISPLAY X.
-           MOVE ZERO TO X. MOVE -1234 TO X-S9-T.  DISPLAY X.
-           MOVE ZERO TO X. MOVE  1234 TO X-S9-TS. DISPLAY X.
-           MOVE ZERO TO X. MOVE -1234 TO X-S9-TS. DISPLAY X.
+           MOVE ZERO TO X. MOVE  1234 TO X-9.     DISPLAY X
+           END-DISPLAY.
+           MOVE ZERO TO X. MOVE  1234 TO X-S9.    DISPLAY X
+           END-DISPLAY.
+           MOVE ZERO TO X. MOVE -1234 TO X-S9.    DISPLAY X
+           END-DISPLAY.
+           MOVE ZERO TO X. MOVE  1234 TO X-S9-L.  DISPLAY X
+           END-DISPLAY.
+           MOVE ZERO TO X. MOVE -1234 TO X-S9-L.  DISPLAY X
+           END-DISPLAY.
+           MOVE ZERO TO X. MOVE  1234 TO X-S9-LS. DISPLAY X
+           END-DISPLAY.
+           MOVE ZERO TO X. MOVE -1234 TO X-S9-LS. DISPLAY X
+           END-DISPLAY.
+           MOVE ZERO TO X. MOVE  1234 TO X-S9-T.  DISPLAY X
+           END-DISPLAY.
+           MOVE ZERO TO X. MOVE -1234 TO X-S9-T.  DISPLAY X
+           END-DISPLAY.
+           MOVE ZERO TO X. MOVE  1234 TO X-S9-TS. DISPLAY X
+           END-DISPLAY.
+           MOVE ZERO TO X. MOVE -1234 TO X-S9-TS. DISPLAY X
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -84,7 +95,8 @@ AT_DATA([prog.cob], [
            MOVE 7 TO X-S9(8).
            MOVE 8 TO X-S9(9).
            MOVE 9 TO X-S9(10).
-           DISPLAY X NO ADVANCING.
+           DISPLAY X NO ADVANCING
+           END-DISPLAY.
            MOVE -10 TO X-S99. MOVE X(2:1) TO X(1:1).
            MOVE -1 TO X-S9(2).
            MOVE -2 TO X-S9(3).
@@ -95,7 +107,8 @@ AT_DATA([prog.cob], [
            MOVE -7 TO X-S9(8).
            MOVE -8 TO X-S9(9).
            MOVE -9 TO X-S9(10).
-           DISPLAY X NO ADVANCING.
+           DISPLAY X NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -127,7 +140,8 @@ AT_DATA([prog.cob], [
            MOVE 7 TO X-S9(8).
            MOVE 8 TO X-S9(9).
            MOVE 9 TO X-S9(10).
-           DISPLAY X NO ADVANCING.
+           DISPLAY X NO ADVANCING
+           END-DISPLAY.
            MOVE -10 TO X-S99. MOVE X(2:1) TO X(1:1).
            MOVE -1 TO X-S9(2).
            MOVE -2 TO X-S9(3).
@@ -138,7 +152,8 @@ AT_DATA([prog.cob], [
            MOVE -7 TO X-S9(8).
            MOVE -8 TO X-S9(9).
            MOVE -9 TO X-S9(10).
-           DISPLAY X NO ADVANCING.
+           DISPLAY X NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 

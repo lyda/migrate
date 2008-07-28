@@ -55,7 +55,8 @@ AT_DATA([prog.cob], [
           REPLACING ==TEST-VAR== BY ==FIRST-MATCH==
                     ==TEST-VAR== BY ==SECOND-MATCH==.
        PROCEDURE        DIVISION.
-           DISPLAY FIRST-MATCH NO ADVANCING.
+           DISPLAY FIRST-MATCH NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -83,7 +84,8 @@ AT_DATA([prog.cob], [
                  ;  ==TEST-VAR== , BY ==THIRD-MATCH==
                     ==TEST-VAR== ; BY ==FOURTH-MATCH==.
        PROCEDURE        DIVISION.
-           DISPLAY FIRST-MATCH NO ADVANCING.
+           DISPLAY FIRST-MATCH NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -110,8 +112,10 @@ AT_DATA([prog.cob], [
           REPLACING ==:TEST:== BY ==COLON==
 	            ==(TEST)== BY ==PAREN==.
        PROCEDURE        DIVISION.
-           DISPLAY COLON-VAR NO ADVANCING.
-           DISPLAY PAREN-VAR NO ADVANCING.
+           DISPLAY COLON-VAR NO ADVANCING
+           END-DISPLAY.
+           DISPLAY PAREN-VAR NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 
@@ -140,7 +144,8 @@ AT_DATA([prog.cob], [
        COPY "copy-1.inc"
            REPLACING ==TEST-VAR== BY ==COPY-VAR==.
        PROCEDURE        DIVISION.
-           DISPLAY COPY-VAR NO ADVANCING.
+           DISPLAY COPY-VAR NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 ])
 

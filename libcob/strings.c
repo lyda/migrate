@@ -48,10 +48,11 @@ static unsigned char		*inspect_data;
 static unsigned char		*inspect_start;
 static unsigned char		*inspect_end;
 static int			*inspect_mark = NULL;
-static cob_field		inspect_var_copy;
+static size_t			lastsize = 0;
+static size_t			inspect_size;
 static int			inspect_replacing;
 static int			inspect_sign;
-static size_t			inspect_size;
+static cob_field		inspect_var_copy;
 
 static cob_field		*string_dst;
 static cob_field		*string_ptr;
@@ -82,6 +83,47 @@ cob_min_int (const int x, const int y)
 	return y;
 }
 
+void
+cob_init_strings (void)
+{
+	inspect_mark = cob_malloc (COB_MEDIUM_BUFF);
+	lastsize = COB_MEDIUM_BUFF;
+}
+
+static void
+alloc_figurative (const cob_field *f1, const cob_field *f2)
+{
+	static unsigned char	*figptr = NULL;
+	static size_t		figsize = 0;
+
+	unsigned char		*s;
+	size_t			size1;
+	size_t			size2;
+	size_t			n;
+
+	size2 = f2->size;
+	if (size2 > figsize) {
+		if (figptr) {
+			free (figptr);
+		}
+		figptr = cob_malloc (size2);
+		figsize = size2;
+	}
+	size1 = 0;
+	s = figptr;
+	for (n = 0; n < size2; n++, s++) {
+		*s = f1->data[size1];
+		size1++;
+		if (size1 >= f1->size) {
+			size1 = 0;
+		}
+	}
+	alpha_fld.size = size2;
+	alpha_fld.data = figptr;
+}
+
+/*
+{
 static void COB_NOINLINE
 alloc_figurative (const size_t fldsize, const int memval)
 {
@@ -99,6 +141,7 @@ alloc_figurative (const size_t fldsize, const int memval)
 	alpha_fld.size = fldsize;
 	alpha_fld.data = figptr;
 }
+*/
 
 static void
 inspect_common (cob_field *f1, cob_field *f2, const int type)
@@ -116,21 +159,9 @@ inspect_common (cob_field *f1, cob_field *f2, const int type)
 		f2 = &cob_low;
 	}
 
-	if (unlikely(inspect_replacing && f1->size != f2->size)) {
-		if (f1 == &cob_low) {
-			alloc_figurative (f2->size, 0);
-			f1 = &alpha_fld;
-		} else if (f1 == &cob_space) {
-			alloc_figurative (f2->size, ' ');
-			f1 = &alpha_fld;
-		} else if (f1 == &cob_zero) {
-			alloc_figurative (f2->size, '0');
-			f1 = &alpha_fld;
-		} else if (f1 == &cob_quote) {
-			alloc_figurative (f2->size, '"');
-			f1 = &alpha_fld;
-		} else if (f1 == &cob_high) {
-			alloc_figurative (f2->size, 255);
+	if (inspect_replacing && f1->size != f2->size) {
+		if (COB_FIELD_TYPE (f1) == COB_TYPE_ALPHANUMERIC_ALL) {
+			alloc_figurative (f1, f2);
 			f1 = &alpha_fld;
 		} else {
 			cob_set_exception (COB_EC_RANGE_INSPECT_SIZE);
@@ -201,7 +232,6 @@ cob_inspect_init (cob_field *var, const int replacing)
 {
 	size_t		i;
 	size_t		digcount;
-	static size_t	lastsize = 0;
 
 	inspect_var_copy = *var;
 	inspect_var = &inspect_var_copy;
@@ -212,20 +242,10 @@ cob_inspect_init (cob_field *var, const int replacing)
 	inspect_start = NULL;
 	inspect_end = NULL;
 	digcount = inspect_size * sizeof (int);
-	if (!inspect_mark) {
-		if (digcount <= COB_LARGE_BUFF) {
-			inspect_mark = cob_malloc (COB_LARGE_BUFF);
-			lastsize = COB_LARGE_BUFF;
-		} else {
-			inspect_mark = cob_malloc (digcount);
-			lastsize = digcount;
-		}
-	} else {
-		if (digcount > lastsize) {
-			free (inspect_mark);
-			inspect_mark = cob_malloc (digcount);
-			lastsize = digcount;
-		}
+	if (digcount > lastsize) {
+		free (inspect_mark);
+		inspect_mark = cob_malloc (digcount);
+		lastsize = digcount;
 	}
 	for (i = 0; i < inspect_size; i++) {
 		inspect_mark[i] = -1;

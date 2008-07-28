@@ -33,6 +33,9 @@
 #include "lib/gettext.h"
 */
 
+static size_t		lastsize = 0;
+static unsigned char	*lastdata = NULL;
+
 static const int	cob_exp10[10] = {
 	1,
 	10,
@@ -92,55 +95,109 @@ own_byte_memcpy (unsigned char *s1, const unsigned char *s2, size_t size)
 	do {
 		*s1++ = *s2++;
 	} while (--size);
-/*
-	while (size--) {
-		*s1++ = *s2++;
-	}
-	switch (size) {
-	case 8:
-		*s1++ = *s2++;
-	case 7:
-		*s1++ = *s2++;
-	case 6:
-		*s1++ = *s2++;
-	case 5:
-		*s1++ = *s2++;
-	case 4:
-		*s1++ = *s2++;
-	case 3:
-		*s1++ = *s2++;
-	case 2:
-		*s1++ = *s2++;
-	case 1:
-		*s1++ = *s2++;
-		return;
-	default:
-		return;
-	}
-*/
 }
 
 static void
 store_common_region (cob_field *f, const unsigned char *data,
 		     const size_t size, const int scale)
 {
-	int	lf1 = -scale;
-	int	lf2 = -COB_FIELD_SCALE (f);
-	int	hf1 = (int) size + lf1;
-	int	hf2 = (int) COB_FIELD_SIZE (f) + lf2;
-	int	lcf;
-	int	gcf;
+	const unsigned char	*p;
+	unsigned char		*q;
+	size_t			csize;
+	size_t			cinc;
+	int			lf1 = -scale;
+	int			lf2 = -COB_FIELD_SCALE (f);
+	int			hf1 = (int) size + lf1;
+	int			hf2 = (int) COB_FIELD_SIZE (f) + lf2;
+	int			lcf;
+	int			gcf;
 
 	lcf = cob_max_int (lf1, lf2);
 	gcf = cob_min_int (hf1, hf2);
+	memset (COB_FIELD_DATA (f), '0', COB_FIELD_SIZE (f));
 	if (gcf > lcf) {
-		memset (COB_FIELD_DATA (f), '0', (size_t)(hf2 - gcf));
-		memcpy (COB_FIELD_DATA (f) + hf2 - gcf, data + hf1 - gcf,
-				(size_t)(gcf - lcf));
-		memset (COB_FIELD_DATA (f) + hf2 - lcf, '0', (size_t)(lcf - lf2));
-	} else {
-		memset (f->data, '0', f->size);
+		csize = (size_t)(gcf - lcf);
+		p = data + hf1 - gcf;
+		q = COB_FIELD_DATA (f) + hf2 - gcf;
+		for (cinc = 0; cinc < csize; cinc++, p++, q++) {
+			if (unlikely(*p == ' ')) {
+				*q = (unsigned char)'0';
+			} else {
+				*q = *p;
+			}
+		}
 	}
+}
+
+static long long
+cob_binary_mget_int64 (const cob_field * const f)
+{
+	long long	n = 0;
+	size_t		fsiz = 8 - f->size;
+
+/* Experimental code - not activated */
+#if 0
+	unsigned char	*s;
+
+	if ((COB_FIELD_BINARY_SWAP (f) && !COB_FIELD_HAVE_SIGN (f)) ||
+	    (!COB_FIELD_BINARY_SWAP (f) && COB_FIELD_HAVE_SIGN (f))) {
+		s = (unsigned char *)&n + fsiz;
+	} else {
+		s = (unsigned char *)&n;
+	}
+	own_byte_memcpy (s, f->data, f->size);
+	if (COB_FIELD_BINARY_SWAP (f)) {
+		n = COB_BSWAP_64 (n);
+	}
+	if (COB_FIELD_HAVE_SIGN (f)) {
+		n >>= 8 * fsiz;	/* shift with sign */
+	}
+#endif
+#ifndef WORDS_BIGENDIAN
+	if (COB_FIELD_BINARY_SWAP (f)) {
+		if (COB_FIELD_HAVE_SIGN (f)) {
+			own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
+			n = COB_BSWAP_64 (n);
+			n >>= 8 * fsiz;	/* shift with sign */
+		} else {
+			own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
+			n = COB_BSWAP_64 (n);
+		}
+	} else {
+		if (COB_FIELD_HAVE_SIGN (f)) {
+			own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
+			n >>= 8 * fsiz;	/* shift with sign */
+		} else {
+			own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
+		}
+	}
+#else	/* WORDS_BIGENDIAN */
+	if (COB_FIELD_HAVE_SIGN (f)) {
+		own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
+		n >>= 8 * fsiz;	/* shift with sign */
+	} else {
+		own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
+	}
+#endif	/* WORDS_BIGENDIAN */
+	return n;
+}
+
+static void
+cob_binary_mset_int64 (cob_field *f, long long n)
+{
+#ifndef WORDS_BIGENDIAN
+	unsigned char	*s;
+
+	if (COB_FIELD_BINARY_SWAP (f)) {
+		n = COB_BSWAP_64 (n);
+		s = ((unsigned char *)&n) + 8 - f->size;
+	} else {
+		s = (unsigned char *)&n;
+	}
+	own_byte_memcpy (f->data, s, f->size);
+#else	/* WORDS_BIGENDIAN */
+	own_byte_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
+#endif	/* WORDS_BIGENDIAN */
 }
 
 /*
@@ -170,8 +227,10 @@ cob_move_alphanum_to_display (cob_field *f1, cob_field *f2)
 
 	/* check for sign */
 	sign = 0;
-	if (*s1 == '+' || *s1 == '-') {
-		sign = (*s1++ == '+') ? 1 : -1;
+	if (s1 != e1) {
+		if (*s1 == '+' || *s1 == '-') {
+			sign = (*s1++ == '+') ? 1 : -1;
+		}
 	}
 
 	/* count the number of digits before decimal point */
@@ -311,7 +370,11 @@ cob_move_display_to_packed (cob_field *f1, cob_field *f2)
 	memset (f2->data, 0, f2->size);
 	offset = 1 - (digits2 % 2);
 	for (i = offset; i < digits2 + offset; i++, p++) {
-		n = (data1 <= p && p < data1 + digits1) ? cob_d2i (*p) : 0;
+		if (*p == ' ') {
+			n = 0;
+		} else {
+			n = (data1 <= p && p < data1 + digits1) ? cob_d2i (*p) : 0;
+		}
 		if (i % 2 == 0) {
 			data2[i / 2] = n << 4;
 		} else {
@@ -471,7 +534,7 @@ cob_move_display_to_binary (cob_field *f1, cob_field *f2)
 	}
 
 	/* store */
-	cob_binary_set_int64 (f2, val);
+	cob_binary_mset_int64 (f2, val);
 
 	cob_put_sign (f1, sign);
 }
@@ -487,7 +550,7 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
 	sign = 1;
 	/* get value */
 	if (COB_FIELD_HAVE_SIGN (f1)) {
-		val2 = cob_binary_get_int64 (f1);
+		val2 = cob_binary_mget_int64 (f1);
 		if (val2 < 0) {
 			sign = -1;
 			val = -val2;
@@ -495,7 +558,7 @@ cob_move_binary_to_display (cob_field *f1, cob_field *f2)
 			val = val2;
 		}
 	} else {
-		val = cob_binary_get_int64 (f1);
+		val = cob_binary_mget_int64 (f1);
 	}
 
 	/* convert to string */
@@ -890,8 +953,6 @@ cob_move_all (cob_field *src, cob_field *dst)
 	size_t			digcount;
 	cob_field		temp;
 	cob_field_attr		attr;
-	static size_t		lastsize = 0;
-	static unsigned char	*data = NULL;
 
 	COB_ATTR_INIT (COB_TYPE_ALPHANUMERIC, 0, 0, 0, NULL);
 	if (COB_FIELD_IS_NUMERIC(dst)) {
@@ -908,29 +969,19 @@ cob_move_all (cob_field *src, cob_field *dst)
 	} else {
 		digcount = dst->size;
 	}
-	if (!data) {
-		if (digcount <= COB_SMALL_BUFF) {
-			data = cob_malloc (COB_SMALL_BUFF);
-			lastsize = COB_SMALL_BUFF;
-		} else {
-			data = cob_malloc (digcount);
-			lastsize = digcount;
-		}
-	} else {
-		if (digcount > lastsize) {
-			free (data);
-			data = cob_malloc (digcount);
-			lastsize = digcount;
-		}
+	if (digcount > lastsize) {
+		free (lastdata);
+		lastdata = cob_malloc (digcount);
+		lastsize = digcount;
 	}
 	temp.size = digcount;
-	temp.data = data;
+	temp.data = lastdata;
 	temp.attr = &attr;
 	if (likely(src->size == 1)) {
-		memset (data, src->data[0], (size_t)digcount);
+		memset (lastdata, src->data[0], digcount);
 	} else {
 		for (i = 0; i < digcount; i++) {
-			data[i] = src->data[i % src->size];
+			lastdata[i] = src->data[i % src->size];
 		}
 	}
 
@@ -943,6 +994,12 @@ cob_move (cob_field *src, cob_field *dst)
 	if (COB_FIELD_TYPE (src) == COB_TYPE_ALPHANUMERIC_ALL) {
 		cob_move_all (src, dst);
 		return;
+	}
+	if (dst->size == 0) {
+		return;
+	}
+	if (src->size == 0) {
+		src = &cob_space;
 	}
 
 	/* non-elementary move */
@@ -1093,6 +1150,30 @@ cob_packed_get_int (cob_field *f1)
 	return val;
 }
 
+static long long
+cob_packed_get_long_long (cob_field *f1)
+{
+	size_t		i;
+	size_t		offset;
+	long long	val = 0;
+	int		sign = cob_get_sign (f1);
+	unsigned char	*data = f1->data;
+
+	offset = 1 - (COB_FIELD_DIGITS(f1) % 2);
+	for (i = offset; i < COB_FIELD_DIGITS(f1) + offset; i++) {
+		val *= 10;
+		if (i % 2 == 0) {
+			val += data[i / 2] >> 4;
+		} else {
+			val += data[i / 2] & 0x0f;
+		}
+	}
+	if (sign < 0) {
+		val = -val;
+	}
+	return val;
+}
+
 static int
 cob_display_get_int (cob_field *f)
 {
@@ -1129,124 +1210,40 @@ cob_display_get_int (cob_field *f)
 	return val;
 }
 
-unsigned long long
-cob_binary_get_uint64 (const cob_field * const f)
+static long long
+cob_display_get_long_long (cob_field *f)
 {
-	unsigned long long	n = 0;
-	size_t			fsiz = 8 - f->size;
+	size_t		i;
+	long long	val = 0;
+	int		sign = cob_get_sign (f);
+	size_t		size = COB_FIELD_SIZE (f);
+	unsigned char	*data = COB_FIELD_DATA (f);
 
-#ifndef WORDS_BIGENDIAN
-	if (COB_FIELD_BINARY_SWAP (f)) {
-		own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
-		n = COB_BSWAP_64 (n);
-	} else {
-		own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
-	}
-#else	/* WORDS_BIGENDIAN */
-	own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
-#endif	/* WORDS_BIGENDIAN */
-	return n;
-}
-
-long long
-cob_binary_get_int64 (const cob_field * const f)
-{
-	long long	n = 0;
-	size_t		fsiz = 8 - f->size;
-
-/* Experimental code - not activated */
-#if 0
-	unsigned char	*s;
-
-	if ((COB_FIELD_BINARY_SWAP (f) && !COB_FIELD_HAVE_SIGN (f)) ||
-	    (!COB_FIELD_BINARY_SWAP (f) && COB_FIELD_HAVE_SIGN (f))) {
-		s = (unsigned char *)&n + fsiz;
-	} else {
-		s = (unsigned char *)&n;
-	}
-	own_byte_memcpy (s, f->data, f->size);
-	if (COB_FIELD_BINARY_SWAP (f)) {
-		n = COB_BSWAP_64 (n);
-	}
-	if (COB_FIELD_HAVE_SIGN (f)) {
-		n >>= 8 * fsiz;	/* shift with sign */
-	}
-#endif
-#ifndef WORDS_BIGENDIAN
-	if (COB_FIELD_BINARY_SWAP (f)) {
-		if (COB_FIELD_HAVE_SIGN (f)) {
-			own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
-			n = COB_BSWAP_64 (n);
-			n >>= 8 * fsiz;	/* shift with sign */
-		} else {
-			own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
-			n = COB_BSWAP_64 (n);
-		}
-	} else {
-		if (COB_FIELD_HAVE_SIGN (f)) {
-			own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
-			n >>= 8 * fsiz;	/* shift with sign */
-		} else {
-			own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
+	/* skip preceding zeros */
+	for (i = 0; i < size; i++) {
+		if (cob_d2i (data[i]) != 0) {
+			break;
 		}
 	}
-#else	/* WORDS_BIGENDIAN */
-	if (COB_FIELD_HAVE_SIGN (f)) {
-		own_byte_memcpy ((unsigned char *)&n, f->data, f->size);
-		n >>= 8 * fsiz;	/* shift with sign */
+
+	/* get value */
+	if (COB_FIELD_SCALE(f) < 0) {
+		for (; i < size; ++i) {
+			val = val * 10 + cob_d2i (data[i]);
+		}
+		val *= cob_exp10LL[(int)-COB_FIELD_SCALE(f)];
 	} else {
-		own_byte_memcpy (((unsigned char *)&n) + fsiz, f->data, f->size);
+		size -= COB_FIELD_SCALE(f);
+		for (; i < size; ++i) {
+			val = val * 10 + cob_d2i (data[i]);
+		}
 	}
-#endif	/* WORDS_BIGENDIAN */
-	return n;
-}
-
-int
-cob_binary_get_int (const cob_field * const f)
-{
-	return (int) cob_binary_get_int64 (f);
-}
-
-void
-cob_binary_set_int64 (cob_field *f, long long n)
-{
-#ifndef WORDS_BIGENDIAN
-	unsigned char	*s;
-
-	if (COB_FIELD_BINARY_SWAP (f)) {
-		n = COB_BSWAP_64 (n);
-		s = ((unsigned char *)&n) + 8 - f->size;
-	} else {
-		s = (unsigned char *)&n;
+	if (sign < 0) {
+		val = -val;
 	}
-	own_byte_memcpy (f->data, s, f->size);
-#else	/* WORDS_BIGENDIAN */
-	own_byte_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
-#endif	/* WORDS_BIGENDIAN */
-}
 
-void
-cob_binary_set_uint64 (cob_field *f, unsigned long long n)
-{
-#ifndef WORDS_BIGENDIAN
-	unsigned char	*s;
-
-	if (COB_FIELD_BINARY_SWAP (f)) {
-		n = COB_BSWAP_64 (n);
-		s = ((unsigned char *)&n) + 8 - f->size;
-	} else {
-		s = (unsigned char *)&n;
-	}
-	own_byte_memcpy (f->data, s, f->size);
-#else	/* WORDS_BIGENDIAN */
-	own_byte_memcpy (f->data, ((unsigned char *)&n) + 8 - f->size, f->size);
-#endif	/* WORDS_BIGENDIAN */
-}
-
-void
-cob_binary_set_int (cob_field *f, int n)
-{
-	cob_binary_set_int64 (f, (long long)n);
+	cob_put_sign (f, sign);
+	return val;
 }
 
 void
@@ -1273,7 +1270,7 @@ cob_get_int (cob_field *f)
 	case COB_TYPE_NUMERIC_DISPLAY:
 		return cob_display_get_int (f);
 	case COB_TYPE_NUMERIC_BINARY:
-		return cob_binary_get_int (f);
+		return (int)cob_binary_mget_int64 (f);
 	case COB_TYPE_NUMERIC_PACKED:
 		return cob_packed_get_int (f);
 	default:
@@ -1285,4 +1282,36 @@ cob_get_int (cob_field *f)
 		cob_move (f, &temp);
 		return n;
 	}
+}
+
+long long
+cob_get_long_long (cob_field *f)
+{
+	long long	n;
+	cob_field	temp;
+	cob_field_attr	attr;
+
+	switch (COB_FIELD_TYPE (f)) {
+	case COB_TYPE_NUMERIC_DISPLAY:
+		return cob_display_get_long_long (f);
+	case COB_TYPE_NUMERIC_BINARY:
+		return cob_binary_mget_int64 (f);
+	case COB_TYPE_NUMERIC_PACKED:
+		return cob_packed_get_long_long (f);
+	default:
+		COB_ATTR_INIT (COB_TYPE_NUMERIC_BINARY, 18, 0,
+				COB_FLAG_HAVE_SIGN, NULL);
+		temp.size = 8;
+		temp.data = (unsigned char *)&n;
+		temp.attr = &attr;
+		cob_move (f, &temp);
+		return n;
+	}
+}
+
+void
+cob_init_move (void)
+{
+	lastdata = cob_malloc (COB_SMALL_BUFF);
+	lastsize = COB_SMALL_BUFF;
 }

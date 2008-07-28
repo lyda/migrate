@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301 USA
  */
 
-%expect 108
+%expect 111
 
 %defines
 %verbose
@@ -45,17 +45,42 @@
 #define push_expr(type, node) \
   current_expr = cb_build_list (cb_int (type), node, current_expr)
 
-#define BEGIN_STATEMENT(name)					\
+#define BEGIN_STATEMENT(name,term)					\
   current_statement = cb_build_statement ((char *)name);		\
   CB_TREE (current_statement)->source_file = (unsigned char *)cb_source_file;	\
   CB_TREE (current_statement)->source_line = cb_source_line;	\
   emit_statement (CB_TREE (current_statement));			\
+  if (term) { term_array[term]++; }			\
   main_statement = current_statement
 
 #define BEGIN_IMPLICIT_STATEMENT()					\
   current_statement = cb_build_statement (NULL);			\
   main_statement->body = cb_list_add (main_statement->body,		\
 				      CB_TREE (current_statement))
+
+#define TERM_NONE		0
+#define TERM_ACCEPT		1
+#define TERM_ADD		2
+#define TERM_CALL		3
+#define TERM_COMPUTE		4
+#define TERM_DELETE		5
+#define TERM_DISPLAY		6
+#define TERM_DIVIDE		7
+#define TERM_EVALUATE		8
+#define TERM_IF			9
+#define TERM_MULTIPLY		10
+#define TERM_PERFORM		11
+#define TERM_READ		12
+#define TERM_RECEIVE		13
+#define TERM_RETURN		14
+#define TERM_REWRITE		15
+#define TERM_SEARCH		16
+#define TERM_START		17
+#define TERM_STRING		18
+#define TERM_SUBTRACT		19
+#define TERM_UNSTRING		20
+#define TERM_WRITE		21
+#define TERM_MAX		22
 
 static struct cb_statement	*main_statement;
 
@@ -70,6 +95,8 @@ static cb_tree			call_mode;
 static cb_tree			perform_stack = NULL;
 static cb_tree			qualifier = NULL;
 
+static cb_tree			fgc;
+static cb_tree			bgc;
 static int			next_label_id = 0;
 static int			current_linage = 0;
 static int			eval_level = 0;
@@ -78,7 +105,7 @@ static int			eval_inc2 = 0;
 static int			prog_end = 0;
 static int			depth = 0;
 static int			deplev = 0;
-static long			dispattrs = 0;
+static int			dispattrs = 0;
 static int			organized_seen = 0;
 static int			inspect_keyword = 0;
 static int			samearea = 1;
@@ -86,10 +113,12 @@ static int			in_declaratives = 0;
 static struct cb_file		*linage_file;
 static cb_tree			next_label_list = NULL;
 static char			*stack_progid[32];
+static int			term_array[TERM_MAX];
 static int			eval_check[64][64];
 
 static void emit_entry (const char *name, const int encode, cb_tree using_list);
-static void terminator_warning (void);
+static void terminator_warning (const size_t termid);
+static void terminator_clear (const size_t termid);
 static void terminator_error (void);
 static int literal_value (cb_tree x);
 %}
@@ -130,6 +159,7 @@ static int literal_value (cb_tree x);
 %token BEFORE
 %token BELL
 %token BINARY
+%token BINARY_C_LONG		"BINARY-C-LONG"
 %token BINARY_CHAR		"BINARY-CHAR"
 %token BINARY_DOUBLE		"BINARY-DOUBLE"
 %token BINARY_LONG		"BINARY-LONG"
@@ -165,6 +195,7 @@ static int literal_value (cb_tree x);
 %token COMP_5			"COMP-5"
 %token COMP_X			"COMP-X"
 %token CONFIGURATION
+%token CONSTANT
 %token CONTAINS
 %token CONTENT
 %token CONTINUE
@@ -495,6 +526,7 @@ start:
 	inspect_keyword = 0;
 	samearea = 1;
 	memset ((char *)eval_check, 0, sizeof(eval_check));
+	memset ((char *)term_array, 0, sizeof(term_array));
 	entry_number = 0;
 	linage_file = NULL;
 	next_label_list = NULL;
@@ -508,6 +540,9 @@ start:
 	if (!current_program->validated) {
 		current_program->validated = 1;
 		cb_validate_program_body (current_program);
+	}
+	if (deplev > 1) {
+		cb_error (_("Multiple PROGRAM-ID's without matching END PROGRAM"));
 	}
 	if (errorcount > 0) {
 		YYABORT;
@@ -596,6 +631,7 @@ identification_division:
 		eval_inc2 = 0;
 		samearea = 1;
 		memset ((char *)eval_check, 0, sizeof(eval_check));
+		memset ((char *)term_array, 0, sizeof(term_array));
 		entry_number = 0;
 		linage_file = NULL;
 		next_label_list = NULL;
@@ -671,6 +707,7 @@ source_computer_paragraph:
 source_computer_entry:
 | computer_name '.'
 | computer_name with_debugging_mode '.'
+| with_debugging_mode '.'
 ;
 
 with_debugging_mode:
@@ -698,6 +735,9 @@ object_computer_entry:
 | computer_name object_computer_memory '.'
 | computer_name object_computer_sequence '.'
 | computer_name object_computer_memory object_computer_sequence '.'
+| object_computer_memory '.'
+| object_computer_sequence '.'
+| object_computer_memory object_computer_sequence '.'
 ;
 
 object_computer_memory:
@@ -789,21 +829,28 @@ on_or_off:
 /* Alphabet name clause */
 
 alphabet_name_clause:
+  alphabet_name_def
+| alphabet_name_clause alphabet_name_def
+;
+
+alphabet_name_def:
   ALPHABET undefined_word _is alphabet_definition
+  {
+	current_program->alphabet_name_list =
+		cb_list_add (current_program->alphabet_name_list, $4);
+	$$ = $4;
+  }
 ;
 
 alphabet_definition:
-  NATIVE	{ cb_build_alphabet_name ($-1, CB_ALPHABET_NATIVE); }
-| STANDARD_1	{ cb_build_alphabet_name ($-1, CB_ALPHABET_STANDARD_1); }
-| STANDARD_2	{ cb_build_alphabet_name ($-1, CB_ALPHABET_STANDARD_2); }
-| EBCDIC	{ cb_build_alphabet_name ($-1, CB_ALPHABET_EBCDIC); }
+  NATIVE	{ $$ = cb_build_alphabet_name ($-1, CB_ALPHABET_NATIVE); }
+| STANDARD_1	{ $$ = cb_build_alphabet_name ($-1, CB_ALPHABET_STANDARD_1); }
+| STANDARD_2	{ $$ = cb_build_alphabet_name ($-1, CB_ALPHABET_STANDARD_2); }
+| EBCDIC	{ $$ = cb_build_alphabet_name ($-1, CB_ALPHABET_EBCDIC); }
 | alphabet_literal_list
   {
-	cb_tree x = cb_build_alphabet_name ($-1, CB_ALPHABET_CUSTOM);
-
-	CB_ALPHABET_NAME (x)->custom_list = $1;
-	current_program->alphabet_name_list =
-		cb_list_add (current_program->alphabet_name_list, x);
+	$$ = cb_build_alphabet_name ($-1, CB_ALPHABET_CUSTOM);
+	CB_ALPHABET_NAME ($$)->custom_list = $1;
   }
 ;
 
@@ -814,10 +861,10 @@ alphabet_literal_list:
 ;
 
 alphabet_literal:
-  LITERAL			{ $$ = $1; }
-| LITERAL THRU LITERAL		{ $$ = cb_build_pair ($1, $3); }
-| LITERAL ALSO			{ $$ = cb_list ($1); }
-  alphabet_also_sequence	{ $$ = $3; }
+  alphabet_lits				{ $$ = $1; }
+| alphabet_lits THRU alphabet_lits	{ $$ = cb_build_pair ($1, $3); }
+| alphabet_lits ALSO			{ $$ = cb_list ($1); }
+  alphabet_also_sequence		{ $$ = $3; }
 ;
 
 alphabet_also_sequence:
@@ -826,13 +873,22 @@ alphabet_also_sequence:
   alphabet_also_literal
 ;
 
+alphabet_lits:
+  LITERAL			{ $$ = $1; }
+| SPACE				{ $$ = cb_space; }
+| ZERO				{ $$ = cb_zero; }
+| QUOTE				{ $$ = cb_quote; }
+| HIGH_VALUE			{ $$ = cb_norm_high; }
+| LOW_VALUE			{ $$ = cb_norm_low; }
+;
+
 alphabet_also_literal:
   LITERAL			{ cb_list_add ($0, $1); }
-| SPACE				{ /* ignore */ }
-| ZERO				{ /* ignore */ }
-| QUOTE				{ /* ignore */ }
-| HIGH_VALUE			{ cb_high = CB_VALUE ($0); }
-| LOW_VALUE			{ cb_low = CB_VALUE ($0); }
+| SPACE				{ cb_list_add ($0, cb_space); }
+| ZERO				{ cb_list_add ($0, cb_zero); }
+| QUOTE				{ cb_list_add ($0, cb_quote); }
+| HIGH_VALUE			{ cb_list_add ($0, cb_norm_high); }
+| LOW_VALUE			{ cb_list_add ($0, cb_norm_low); }
 ;
 
 
@@ -863,6 +919,11 @@ integer_list:
 /* Class name clause */
 
 class_name_clause:
+  class_name_def
+| class_name_clause class_name_def
+;
+
+class_name_def:
   CLASS undefined_word _is class_item_list
   {
 	current_program->class_name_list =
@@ -1119,7 +1180,7 @@ _ext_clause:
 ;
 
 assignment_name:
-  alnum_literal
+  LITERAL
 | DISPLAY
   {
 	const char	*s;
@@ -1147,19 +1208,21 @@ access_mode:
 /* ALTERNATIVE RECORD KEY clause */
 
 alternative_record_key_clause:
-  ALTERNATE RECORD _key _is reference opt_splitk flag_duplicates
+  ALTERNATE RECORD _key _is opt_splitk flag_duplicates
   {
-	struct cb_alt_key *p = cobc_malloc (sizeof (struct cb_alt_key));
+	struct cb_alt_key *p;
+	struct cb_alt_key *l;
 
+	p = cobc_malloc (sizeof (struct cb_alt_key));
 	p->key = $5;
-	p->duplicates = CB_INTEGER ($7)->val;
+	p->duplicates = CB_INTEGER ($6)->val;
 	p->next = NULL;
 
 	/* add to the end of list */
 	if (current_file->alt_key_list == NULL) {
 		current_file->alt_key_list = p;
 	} else {
-		struct cb_alt_key *l = current_file->alt_key_list;
+		l = current_file->alt_key_list;
 		for (; l->next; l = l->next);
 		l->next = p;
 	}
@@ -1276,12 +1339,16 @@ record_delimiter_clause:
 /* RECORD KEY clause */
 
 record_key_clause:
-  RECORD _key _is reference opt_splitk	{ current_file->key = $4; }
+  RECORD _key _is opt_splitk
+  {
+	current_file->key = $4;
+  }
 ;
 
 opt_splitk:
-| '=' reference_list			{ PENDING ("SPLIT KEYS"); }
-| SOURCE _is reference_list		{ PENDING ("SPLIT KEYS"); }
+  reference				{ $$ = $1; }
+| reference '=' reference_list		{ PENDING ("SPLIT KEYS"); }
+| reference SOURCE _is reference_list	{ PENDING ("SPLIT KEYS"); }
 ;
 
 /* RELATIVE KEY clause */
@@ -1551,25 +1618,21 @@ record_clause:
   {
 	int	error_ind = 0;
 
-	if (current_file->organization == COB_ORG_LINE_SEQUENTIAL) {
-		cb_warning (_("RECORD clause ignored for LINE SEQUENTIAL"));
-	} else {
-		current_file->record_min = $6 ? cb_get_int ($6) : 0;
-		current_file->record_max = $7 ? cb_get_int ($7) : 0;
-		if ($6 && current_file->record_min < 0)  {
-			current_file->record_min = 0;
-			error_ind = 1;
-		}
-		if ($7 && current_file->record_max < 1)  {
-			current_file->record_max = 1;
-			error_ind = 1;
-		}
-		if (($6 || $7) && current_file->record_max <= current_file->record_min)  {
-			error_ind = 1;
-		}
-		if (error_ind) {
-			cb_error (_("RECORD clause invalid"));
-		}
+	current_file->record_min = $6 ? cb_get_int ($6) : 0;
+	current_file->record_max = $7 ? cb_get_int ($7) : 0;
+	if ($6 && current_file->record_min < 0)  {
+		current_file->record_min = 0;
+		error_ind = 1;
+	}
+	if ($7 && current_file->record_max < 1)  {
+		current_file->record_max = 1;
+		error_ind = 1;
+	}
+	if (($6 || $7) && current_file->record_max <= current_file->record_min)  {
+		error_ind = 1;
+	}
+	if (error_ind) {
+		cb_error (_("RECORD clause invalid"));
 	}
   }
 ;
@@ -1623,7 +1686,7 @@ value_of_clause:
 ;
 
 valueof_name:
-  alnum_literal
+  LITERAL
 | qualified_word
 ;
 
@@ -1703,8 +1766,9 @@ code_set_clause:
   CODE_SET _is WORD
   {
 	if ($3 != cb_error_node) {
-		cb_tree x = cb_ref ($3);
+		cb_tree x;
 
+		x = cb_ref ($3);
 		if (!CB_ALPHABET_NAME_P (x)) {
 			cb_error_x ($3, _("Alphabet-name is expected '%s'"), cb_name ($3));
 		} else if (CB_ALPHABET_NAME (x)->custom_list) {
@@ -1758,10 +1822,29 @@ record_description_list_2:
 ;
 
 data_description:
-  level_number entry_name
+  level_number const_name
   {
-	cb_tree x = cb_build_field_tree ($1, $2, current_field, current_storage, current_file);
+	cb_tree x;
 
+	x = cb_build_field_tree ($1, $2, current_field, current_storage, current_file);
+	if (x == cb_error_node) {
+		YYERROR;
+	} else {
+		current_field = CB_FIELD (x);
+	}
+  }
+  CONSTANT const_global _as lit_or_length
+  {
+	current_field->flag_item_78 = 1;
+	current_field->values = cb_list ($7);
+	cb_validate_78_item (current_field);
+	$$ = CB_TREE (current_field);
+  }
+| level_number entry_name
+  {
+	cb_tree x;
+
+	x = cb_build_field_tree ($1, $2, current_field, current_storage, current_file);
 	if (x == cb_error_node) {
 		YYERROR;
 	} else {
@@ -1788,6 +1871,19 @@ entry_name:
   /* empty */			{ $$ = cb_build_filler (); qualifier = NULL; }
 | FILLER			{ $$ = cb_build_filler (); qualifier = NULL; }
 | WORD				{ $$ = $1; qualifier = $1; }
+;
+
+const_name:
+  WORD				{ $$ = $1; qualifier = $1; }
+;
+
+const_global:
+| _is GLOBAL			{ PENDING ("GLOBAL"); }
+;
+
+lit_or_length:
+  literal			{ $$ = $1; }
+| LENGTH _of identifier_1	{ $$ = cb_build_const_length ($3); }
 ;
 
 data_description_clause_sequence:
@@ -1858,8 +1954,9 @@ as_extname:
   /* empty */			{ current_field->ename = NULL; }
 | AS LITERAL
  {
-	struct cb_field *x = CB_FIELD(cb_build_field (cb_build_reference ((char *)(CB_LITERAL ($2)->data))));
+	struct cb_field *x;
 
+	x = CB_FIELD(cb_build_field (cb_build_reference ((char *)(CB_LITERAL ($2)->data))));
 	current_field->ename = x->name;
  }
 ;
@@ -1897,8 +1994,16 @@ usage:
 | DISPLAY			{ current_field->usage = CB_USAGE_DISPLAY; }
 | INDEX				{ current_field->usage = CB_USAGE_INDEX; }
 | PACKED_DECIMAL		{ current_field->usage = CB_USAGE_PACKED; }
-| POINTER			{ current_field->usage = CB_USAGE_POINTER; }
-| PROGRAM_POINTER		{ current_field->usage = CB_USAGE_PROGRAM_POINTER; }
+| POINTER
+  {
+	current_field->usage = CB_USAGE_POINTER;
+	current_field->flag_is_pointer = 1;
+  }
+| PROGRAM_POINTER
+  {
+	current_field->usage = CB_USAGE_PROGRAM_POINTER;
+	current_field->flag_is_pointer = 1;
+  }
 | SIGNED_SHORT			{ current_field->usage = CB_USAGE_SIGNED_SHORT; }
 | SIGNED_INT			{ current_field->usage = CB_USAGE_SIGNED_INT; }
 | SIGNED_LONG			{ current_field->usage = CB_USAGE_SIGNED_LONG; }
@@ -1917,6 +2022,30 @@ usage:
 | BINARY_DOUBLE SIGNED		{ current_field->usage = CB_USAGE_SIGNED_LONG; }
 | BINARY_DOUBLE UNSIGNED	{ current_field->usage = CB_USAGE_UNSIGNED_LONG; }
 | BINARY_DOUBLE			{ current_field->usage = CB_USAGE_SIGNED_LONG; }
+| BINARY_C_LONG SIGNED
+  {
+	if (sizeof(long) == 4) {
+		current_field->usage = CB_USAGE_SIGNED_INT;
+	} else {
+		current_field->usage = CB_USAGE_SIGNED_LONG;
+	}
+  }
+| BINARY_C_LONG UNSIGNED
+  {
+	if (sizeof(long) == 4) {
+		current_field->usage = CB_USAGE_UNSIGNED_INT;
+	} else {
+		current_field->usage = CB_USAGE_UNSIGNED_LONG;
+	}
+  }
+| BINARY_C_LONG
+  {
+	if (sizeof(long) == 4) {
+		current_field->usage = CB_USAGE_SIGNED_INT;
+	} else {
+		current_field->usage = CB_USAGE_SIGNED_LONG;
+	}
+  }
 ;
 
 
@@ -1968,9 +2097,14 @@ occurs_keys:
   occurs_key_list
   {
 	if ($1) {
-		int i, nkeys = cb_list_length ($1);
-		struct cb_key *keys = cobc_malloc (sizeof (struct cb_key) * nkeys);
-		cb_tree l = $1;
+		cb_tree		l;
+		struct cb_key	*keys;
+		int		i;
+		int		nkeys;
+
+		l = $1;
+		nkeys = cb_list_length ($1);
+		keys = cobc_malloc (sizeof (struct cb_key) * nkeys);
 
 		for (i = 0; i < nkeys; i++) {
 			keys[i].dir = CB_PURPOSE_INT (l);
@@ -2195,15 +2329,14 @@ screen_description_list:
 screen_description:
   level_number entry_name
   {
-	cb_tree x = cb_build_field_tree ($1, $2, current_field, current_storage, current_file);
+	cb_tree x;
 
+	x = cb_build_field_tree ($1, $2, current_field, current_storage, current_file);
 	if (x == cb_error_node) {
 		YYERROR;
 	}
 
 	current_field = CB_FIELD (x);
-	current_field->screen_flag |= COB_SCREEN_FG_NONE;
-	current_field->screen_flag |= COB_SCREEN_BG_NONE;
 	if (current_field->parent) {
 		current_field->screen_flag |= current_field->parent->screen_flag;
 	}
@@ -2212,11 +2345,9 @@ screen_description:
   {
 	if (!current_field->screen_line) {
 		current_field->screen_line = cb_zero;
-		current_field->screen_flag |= COB_SCREEN_LINE_CONST;
 	}
 	if (!current_field->screen_column) {
 		current_field->screen_column = cb_zero;
-		current_field->screen_flag |= COB_SCREEN_COLUMN_CONST;
 	}
 	$$ = CB_TREE (current_field);
   }
@@ -2242,87 +2373,22 @@ screen_option:
 | SECURE	{ current_field->screen_flag |= COB_SCREEN_SECURE; }
 | REQUIRED	{ current_field->screen_flag |= COB_SCREEN_REQUIRED; }
 | FULL		{ current_field->screen_flag |= COB_SCREEN_FULL; }
-| PROMPT CHARACTER _is literal
-  {
-	/* Nothing yet */
-  }
+| PROMPT	{ current_field->screen_flag |= COB_SCREEN_PROMPT; }
 | LINE _number _is screen_line_plus_minus num_id_or_lit
   {
 	current_field->screen_line = $5;
-	if (CB_LITERAL_P ($5)) {
-		current_field->screen_flag |= COB_SCREEN_LINE_CONST;
-	}
   }
 | COLUMN _number _is screen_col_plus_minus num_id_or_lit
   {
 	current_field->screen_column = $5;
-	if (CB_LITERAL_P ($5)) {
-		current_field->screen_flag |= COB_SCREEN_LINE_CONST;
-	}
   }
-| FOREGROUND_COLOR _is integer
+| FOREGROUND_COLOR _is num_id_or_lit
   {
-	current_field->screen_flag &= ~COB_SCREEN_FG_MASK;
-	switch (cb_get_int ($3)) {
-	case 0:
-		current_field->screen_flag |= COB_SCREEN_FG_BLACK;
-		break;
-	case 1:
-		current_field->screen_flag |= COB_SCREEN_FG_BLUE;
-		break;
-	case 2:
-		current_field->screen_flag |= COB_SCREEN_FG_GREEN;
-		break;
-	case 3:
-		current_field->screen_flag |= COB_SCREEN_FG_CYAN;
-		break;
-	case 4:
-		current_field->screen_flag |= COB_SCREEN_FG_RED;
-		break;
-	case 5:
-		current_field->screen_flag |= COB_SCREEN_FG_MAGENTA;
-		break;
-	case 6:
-		current_field->screen_flag |= COB_SCREEN_FG_YELLOW;
-		break;
-	case 7:
-		current_field->screen_flag |= COB_SCREEN_FG_WHITE;
-		break;
-	default:
-		cb_error (_("Invalid color '%d'"), cb_get_int ($3));
-	}
+	current_field->screen_foreg = $3;
   }
-| BACKGROUND_COLOR _is integer
+| BACKGROUND_COLOR _is num_id_or_lit
   {
-	current_field->screen_flag &= ~COB_SCREEN_BG_MASK;
-	switch (cb_get_int ($3)) {
-	case 0:
-		current_field->screen_flag |= COB_SCREEN_BG_BLACK;
-		break;
-	case 1:
-		current_field->screen_flag |= COB_SCREEN_BG_BLUE;
-		break;
-	case 2:
-		current_field->screen_flag |= COB_SCREEN_BG_GREEN;
-		break;
-	case 3:
-		current_field->screen_flag |= COB_SCREEN_BG_CYAN;
-		break;
-	case 4:
-		current_field->screen_flag |= COB_SCREEN_BG_RED;
-		break;
-	case 5:
-		current_field->screen_flag |= COB_SCREEN_BG_MAGENTA;
-		break;
-	case 6:
-		current_field->screen_flag |= COB_SCREEN_BG_YELLOW;
-		break;
-	case 7:
-		current_field->screen_flag |= COB_SCREEN_BG_WHITE;
-		break;
-	default:
-		cb_error (_("Invalid color '%d'"), cb_get_int ($3));
-	}
+	current_field->screen_backg = $3;
   }
 | usage_clause
 | blank_clause
@@ -2330,10 +2396,15 @@ screen_option:
 | sign_clause
 | value_clause
 | picture_clause
+/*
+| screen_occurs_clause
+*/
 | USING identifier
   {
 	current_field->screen_from = $2;
 	current_field->screen_to = $2;
+	current_field->screen_flag |= COB_SCREEN_PROMPT;
+	current_field->screen_flag |= COB_SCREEN_INPUT;
   }
 | FROM id_or_lit
   {
@@ -2342,23 +2413,22 @@ screen_option:
 | TO identifier
   {
 	current_field->screen_to = $2;
+	current_field->screen_flag |= COB_SCREEN_PROMPT;
+	current_field->screen_flag |= COB_SCREEN_INPUT;
   }
 ;
 
 screen_line_plus_minus:
   /* empty */
   {
-	current_field->screen_flag &= ~COB_SCREEN_LINE_MASK;
-	current_field->screen_flag |= COB_SCREEN_LINE_ABS;
+	/* Nothing */
   }
 | PLUS
   {
-	current_field->screen_flag &= ~COB_SCREEN_LINE_MASK;
 	current_field->screen_flag |= COB_SCREEN_LINE_PLUS;
   }
 | MINUS
   {
-	current_field->screen_flag &= ~COB_SCREEN_LINE_MASK;
 	current_field->screen_flag |= COB_SCREEN_LINE_MINUS;
   }
 ;
@@ -2366,21 +2436,30 @@ screen_line_plus_minus:
 screen_col_plus_minus:
   /* empty */
   {
-	current_field->screen_flag &= ~COB_SCREEN_COLUMN_MASK;
-	current_field->screen_flag |= COB_SCREEN_COLUMN_ABS;
+	/* Nothing */
   }
 | PLUS
   {
-	current_field->screen_flag &= ~COB_SCREEN_COLUMN_MASK;
 	current_field->screen_flag |= COB_SCREEN_COLUMN_PLUS;
   }
 | MINUS
   {
-	current_field->screen_flag &= ~COB_SCREEN_COLUMN_MASK;
 	current_field->screen_flag |= COB_SCREEN_COLUMN_MINUS;
   }
 ;
 
+
+/*
+screen_occurs_clause:
+  OCCURS integer _times
+  {
+	current_field->occurs_min = 1;
+	current_field->occurs_max = cb_get_int ($2);
+	current_field->indexes++;
+	current_field->flag_occurs = 1;
+  }
+;
+*/
 
 /*****************************************************************************
  * PROCEDURE DIVISION
@@ -2577,7 +2656,6 @@ statement_list:
   }
   {
 	$$ = CB_TREE (current_statement);
-	current_statement->need_terminator = 1;
 	current_statement = NULL;
   }
   statements
@@ -2660,7 +2738,7 @@ statement:
 		cb_tree label;
 		char	name[16];
 
-		BEGIN_STATEMENT ("NEXT SENTENCE");
+		BEGIN_STATEMENT ("NEXT SENTENCE", 0);
 		sprintf (name, "L$%d", next_label_id);
 		label = cb_build_reference (name);
 		next_label_list = cb_list_add (next_label_list, label);
@@ -2675,13 +2753,22 @@ statement:
  */
 
 accept_statement:
-  ACCEPT			{ BEGIN_STATEMENT ("ACCEPT"); dispattrs = 0; }
+  ACCEPT
+  {
+	BEGIN_STATEMENT ("ACCEPT", TERM_ACCEPT);
+	dispattrs = 0;
+	fgc = NULL;
+	bgc = NULL;
+  }
   accept_body
   end_accept
 ;
 
 accept_body:
-  identifier opt_at_line_column opt_accp_attr		{ cb_emit_accept ($1, $2); }
+  identifier opt_at_line_column opt_accp_attr on_accp_exception
+  {
+	cb_emit_accept ($1, $2, fgc, bgc, dispattrs);
+  }
 | identifier FROM ESCAPE KEY
   {
 	PENDING ("ACCEPT .. FROM ESCAPE KEY");
@@ -2696,8 +2783,7 @@ accept_body:
 | identifier FROM ENVIRONMENT_VALUE on_accp_exception	{ cb_emit_accept_environment ($1); }
 | identifier FROM ENVIRONMENT simple_value on_accp_exception
   { 
-	cb_emit_display (cb_list ($4), cb_true, NULL, NULL, 0L);
-	cb_emit_accept_environment ($1);
+	cb_emit_get_environment ($4, $1);
   }
 | identifier FROM ARGUMENT_NUMBER			{ cb_emit_accept_arg_number ($1); }
 | identifier FROM ARGUMENT_VALUE on_accp_exception	{ cb_emit_accept_arg_value ($1); }
@@ -2732,24 +2818,32 @@ accp_attrs:
 ;
 
 accp_attr:
-  AUTO
-| BELL
-| BLINK
-| FULL
-| HIGHLIGHT
-| LOWLIGHT
-| REQUIRED
-| REVERSE_VIDEO
-| SECURE
-| UNDERLINE
-| UPDATE
-| FOREGROUND_COLOR _is integer
-| BACKGROUND_COLOR _is integer
-| PROMPT _character _is literal
+  BELL		{ dispattrs |= COB_SCREEN_BELL; }
+| BLINK		{ dispattrs |= COB_SCREEN_BLINK; }
+| HIGHLIGHT	{ dispattrs |= COB_SCREEN_HIGHLIGHT; }
+| LOWLIGHT	{ dispattrs |= COB_SCREEN_LOWLIGHT; }
+| REVERSE_VIDEO	{ dispattrs |= COB_SCREEN_REVERSE; }
+| UNDERLINE	{ dispattrs |= COB_SCREEN_UNDERLINE; }
+| OVERLINE	{ dispattrs |= COB_SCREEN_OVERLINE; }
+| FOREGROUND_COLOR _is num_id_or_lit
+  {
+	fgc = $3;
+  }
+| BACKGROUND_COLOR _is num_id_or_lit
+  {
+	bgc = $3;
+  }
+| AUTO		{ dispattrs |= COB_SCREEN_AUTO; }
+| FULL		{ dispattrs |= COB_SCREEN_FULL; }
+| REQUIRED	{ dispattrs |= COB_SCREEN_REQUIRED; }
+| SECURE	{ dispattrs |= COB_SCREEN_SECURE; }
+| UPDATE	{ dispattrs |= COB_SCREEN_UPDATE; }
+| PROMPT	{ dispattrs |= COB_SCREEN_PROMPT; }
 ;
 
 end_accept:
-| END_ACCEPT
+  /* empty */			{ terminator_warning (TERM_ACCEPT); }
+| END_ACCEPT			{ terminator_clear (TERM_ACCEPT); }
 ;
 
 
@@ -2758,7 +2852,7 @@ end_accept:
  */
 
 add_statement:
-  ADD				{ BEGIN_STATEMENT ("ADD"); }
+  ADD				{ BEGIN_STATEMENT ("ADD", TERM_ADD); }
   add_body
   end_add
 ;
@@ -2783,8 +2877,8 @@ add_to:
 ;
 
 end_add:
-  /* empty */			{ terminator_warning (); }
-| END_ADD
+  /* empty */			{ terminator_warning (TERM_ADD); }
+| END_ADD			{ terminator_clear (TERM_ADD); }
 ;
 
 
@@ -2793,18 +2887,18 @@ end_add:
  */
 
 allocate_statement:
-  ALLOCATE			{ BEGIN_STATEMENT ("ALLOCATE"); }
+  ALLOCATE			{ BEGIN_STATEMENT ("ALLOCATE", 0); }
   allocate_body
 ;
 
 allocate_body:
-  expr CHARACTERS flag_initialized RETURNING target_x
-  {
-	cb_emit_allocate (NULL, $5, $1, $3);
-  }
-| identifier flag_initialized allocate_returning
+  qualified_word flag_initialized allocate_returning
   {
 	cb_emit_allocate ($1, $3, NULL, $2);
+  }
+| expr CHARACTERS flag_initialized RETURNING target_x
+  {
+	cb_emit_allocate (NULL, $5, $1, $3);
   }
 ;
 
@@ -2838,8 +2932,8 @@ _proceed_to: | PROCEED TO ;
  */
 
 call_statement:
-  CALL	 			{ BEGIN_STATEMENT ("CALL"); }
-  id_or_lit call_using call_returning
+  CALL	 			{ BEGIN_STATEMENT ("CALL", TERM_CALL); }
+  id_or_lit_or_func call_using call_returning
   call_on_exception call_not_on_exception
   end_call
   {
@@ -2959,13 +3053,12 @@ call_on_exception:
 
 call_not_on_exception:
   /* empty */			{ $$ = NULL; }
-| NOT_EXCEPTION
-  statement_list		{ $$ = $2; }
+| NOT_EXCEPTION statement_list	{ $$ = $2; }
 ;
 
 end_call:
-  /* empty */			{ terminator_warning (); }
-| END_CALL
+  /* empty */			{ terminator_warning (TERM_CALL); }
+| END_CALL			{ terminator_clear (TERM_CALL); }
 ;
 
 
@@ -2974,7 +3067,7 @@ end_call:
  */
 
 cancel_statement:
-  CANCEL			{ BEGIN_STATEMENT ("CANCEL"); }
+  CANCEL			{ BEGIN_STATEMENT ("CANCEL", 0); }
   cancel_list
 ;
 
@@ -2991,7 +3084,7 @@ cancel_list:
  */
 
 close_statement:
-  CLOSE				{ BEGIN_STATEMENT ("CLOSE"); }
+  CLOSE				{ BEGIN_STATEMENT ("CLOSE", 0); }
   close_list
 ;
 
@@ -3020,7 +3113,7 @@ reel_or_unit: REEL | UNIT ;
  */
 
 compute_statement:
-  COMPUTE			{ BEGIN_STATEMENT ("COMPUTE"); }
+  COMPUTE			{ BEGIN_STATEMENT ("COMPUTE", TERM_COMPUTE); }
   compute_body
   end_compute
 ;
@@ -3033,8 +3126,8 @@ compute_body:
 ;
 
 end_compute:
-  /* empty */			{ terminator_warning (); }
-| END_COMPUTE
+  /* empty */			{ terminator_warning (TERM_COMPUTE); }
+| END_COMPUTE			{ terminator_clear (TERM_COMPUTE); }
 ;
 
 comp_equal: '=' | EQUAL;
@@ -3046,7 +3139,7 @@ comp_equal: '=' | EQUAL;
 commit_statement:
   COMMIT
   {
-	BEGIN_STATEMENT ("COMMIT");
+	BEGIN_STATEMENT ("COMMIT", 0);
 	cb_emit_commit ();
   }
 ;
@@ -3059,7 +3152,7 @@ commit_statement:
 continue_statement:
   CONTINUE
   {
-	BEGIN_STATEMENT ("CONTINUE");
+	BEGIN_STATEMENT ("CONTINUE", 0);
 	cb_emit_continue ();
   }
 ;
@@ -3070,7 +3163,7 @@ continue_statement:
  */
 
 delete_statement:
-  DELETE			{ BEGIN_STATEMENT ("DELETE"); }
+  DELETE			{ BEGIN_STATEMENT ("DELETE", TERM_DELETE); }
   file_name _record opt_invalid_key
   end_delete
   {
@@ -3079,8 +3172,8 @@ delete_statement:
 ;
 
 end_delete:
-  /* empty */			{ terminator_warning (); }
-| END_DELETE
+  /* empty */			{ terminator_warning (TERM_DELETE); }
+| END_DELETE			{ terminator_clear (TERM_DELETE); }
 ;
 
 
@@ -3089,11 +3182,17 @@ end_delete:
  */
 
 display_statement:
-  DISPLAY			{ BEGIN_STATEMENT ("DISPLAY"); dispattrs = 0; }
+  DISPLAY
+  {
+	BEGIN_STATEMENT ("DISPLAY", TERM_DISPLAY);
+	dispattrs = 0;
+	fgc = NULL;
+	bgc = NULL;
+  }
   x_list opt_at_line_column display_upon with_clause on_disp_exception
   end_display
   {
-	cb_emit_display ($3, $5, $6, $4, dispattrs);
+	cb_emit_display ($3, $5, $6, $4, fgc, bgc, dispattrs);
   }
 ;
 
@@ -3131,76 +3230,21 @@ disp_attr:
 | REVERSE_VIDEO	{ dispattrs |= COB_SCREEN_REVERSE; }
 | UNDERLINE	{ dispattrs |= COB_SCREEN_UNDERLINE; }
 | OVERLINE	{ dispattrs |= COB_SCREEN_OVERLINE; }
-| FOREGROUND_COLOR _is integer
+| FOREGROUND_COLOR _is num_id_or_lit
   {
-	dispattrs &= ~COB_SCREEN_FG_MASK;
-	switch (cb_get_int ($3)) {
-	case 0:
-		dispattrs |= COB_SCREEN_FG_BLACK;
-		break;
-	case 1:
-		dispattrs |= COB_SCREEN_FG_BLUE;
-		break;
-	case 2:
-		dispattrs |= COB_SCREEN_FG_GREEN;
-		break;
-	case 3:
-		dispattrs |= COB_SCREEN_FG_CYAN;
-		break;
-	case 4:
-		dispattrs |= COB_SCREEN_FG_RED;
-		break;
-	case 5:
-		dispattrs |= COB_SCREEN_FG_MAGENTA;
-		break;
-	case 6:
-		dispattrs |= COB_SCREEN_FG_YELLOW;
-		break;
-	case 7:
-		dispattrs |= COB_SCREEN_FG_WHITE;
-		break;
-	default:
-		cb_error (_("Invalid color '%d'"), cb_get_int ($3));
-	}
+	fgc = $3;
   }
-| BACKGROUND_COLOR _is integer
+| BACKGROUND_COLOR _is num_id_or_lit
   {
-	dispattrs &= ~COB_SCREEN_BG_MASK;
-	switch (cb_get_int ($3)) {
-	case 0:
-		dispattrs |= COB_SCREEN_BG_BLACK;
-		break;
-	case 1:
-		dispattrs |= COB_SCREEN_BG_BLUE;
-		break;
-	case 2:
-		dispattrs |= COB_SCREEN_BG_GREEN;
-		break;
-	case 3:
-		dispattrs |= COB_SCREEN_BG_CYAN;
-		break;
-	case 4:
-		dispattrs |= COB_SCREEN_BG_RED;
-		break;
-	case 5:
-		dispattrs |= COB_SCREEN_BG_MAGENTA;
-		break;
-	case 6:
-		dispattrs |= COB_SCREEN_BG_YELLOW;
-		break;
-	case 7:
-		dispattrs |= COB_SCREEN_BG_WHITE;
-		break;
-	default:
-		cb_error (_("Invalid color '%d'"), cb_get_int ($3));
-	}
+	bgc = $3;
   }
 | BLANK_LINE	{ dispattrs |= COB_SCREEN_BLANK_LINE; }
 | BLANK_SCREEN	{ dispattrs |= COB_SCREEN_BLANK_SCREEN; }
 ;
 
 end_display:
-| END_DISPLAY
+  /* empty */			{ terminator_warning (TERM_DISPLAY); }
+| END_DISPLAY			{ terminator_clear (TERM_DISPLAY); }
 ;
 
 
@@ -3209,7 +3253,7 @@ end_display:
  */
 
 divide_statement:
-  DIVIDE			{ BEGIN_STATEMENT ("DIVIDE"); }
+  DIVIDE			{ BEGIN_STATEMENT ("DIVIDE", TERM_DIVIDE); }
   divide_body
   end_divide
 ;
@@ -3238,8 +3282,8 @@ divide_body:
 ;
 
 end_divide:
-  /* empty */			{ terminator_warning (); }
-| END_DIVIDE
+  /* empty */			{ terminator_warning (TERM_DIVIDE); }
+| END_DIVIDE			{ terminator_clear (TERM_DIVIDE); }
 ;
 
 
@@ -3248,7 +3292,7 @@ end_divide:
  */
 
 entry_statement:
-  ENTRY				{ BEGIN_STATEMENT ("ENTRY"); }
+  ENTRY				{ BEGIN_STATEMENT ("ENTRY", 0); }
   literal call_using
   {
 	if (cb_verify (cb_entry_statement, "ENTRY")) {
@@ -3265,7 +3309,7 @@ entry_statement:
 evaluate_statement:
   EVALUATE
   {
-	BEGIN_STATEMENT ("EVALUATE");
+	BEGIN_STATEMENT ("EVALUATE", TERM_EVALUATE);
 	eval_level++;
 	for (eval_inc = 0; eval_inc < 64; eval_inc++) {
 		eval_check[eval_level][eval_inc] = 0;
@@ -3337,10 +3381,12 @@ evaluate_object_list:
 evaluate_object:
   partial_expr opt_evaluate_thru_expr
   {
-	cb_tree not = cb_int0;
+	cb_tree not;
 	cb_tree e1;
-	cb_tree e2 = $2;
+	cb_tree e2;
 
+	not = cb_int0;
+	e2 = $2;
 	/* in case the first token is NOT */
 	if (CB_PURPOSE_INT ($1) == '!') {
 		if (eval_check[eval_level][eval_inc2] < 2) {
@@ -3379,8 +3425,8 @@ opt_evaluate_thru_expr:
 ;
 
 end_evaluate:
-  /* empty */			{ terminator_warning (); }
-| END_EVALUATE
+  /* empty */			{ terminator_warning (TERM_EVALUATE); }
+| END_EVALUATE			{ terminator_clear (TERM_EVALUATE); }
 ;
 
 
@@ -3389,7 +3435,7 @@ end_evaluate:
  */
 
 exit_statement:
-  EXIT				{ BEGIN_STATEMENT ("EXIT"); }
+  EXIT				{ BEGIN_STATEMENT ("EXIT", 0); }
   exit_body
 ;
 
@@ -3398,8 +3444,8 @@ exit_body:
 | PROGRAM			{ cb_emit_exit (0); }
 | PERFORM
   {
-	struct cb_perform *p;
-	char name[64];
+	struct cb_perform	*p;
+	char			name[64];
 
 	if (!perform_stack) {
 		cb_error (_("EXIT PERFORM is only valid with inline PERFORM"));
@@ -3415,8 +3461,8 @@ exit_body:
   }
 | PERFORM CYCLE
   {
-	struct cb_perform *p;
-	char name[64];
+	struct cb_perform	*p;
+	char			name[64];
 
 	if (!perform_stack) {
 		cb_error (_("EXIT PERFORM is only valid with inline PERFORM"));
@@ -3474,7 +3520,7 @@ exit_body:
  */
 
 free_statement:
-  FREE			{ BEGIN_STATEMENT ("FREE"); }
+  FREE			{ BEGIN_STATEMENT ("FREE", 0); }
   target_x_list
   {
 	cb_emit_free ($3)
@@ -3487,7 +3533,7 @@ free_statement:
  */
 
 goto_statement:
-  GO _to			{ BEGIN_STATEMENT ("GO TO"); }
+  GO _to			{ BEGIN_STATEMENT ("GO TO", 0); }
   procedure_name_list goto_depending
   {
 	cb_emit_goto ($4, $5);
@@ -3505,7 +3551,7 @@ goto_depending:
  */
 
 goback_statement:
-  GOBACK			{ BEGIN_STATEMENT ("GOBACK"); }
+  GOBACK			{ BEGIN_STATEMENT ("GOBACK", 0); }
   {
 	cb_emit_exit (1);
   }
@@ -3517,7 +3563,7 @@ goback_statement:
  */
 
 if_statement:
-  IF				{ BEGIN_STATEMENT ("IF"); }
+  IF				{ BEGIN_STATEMENT ("IF", TERM_IF); }
   condition _then statement_list if_else_sentence
   end_if
   {
@@ -3532,8 +3578,8 @@ if_else_sentence:
 ;
 
 end_if:
-  /* empty */			{ terminator_warning (); }
-| END_IF
+  /* empty */			{ terminator_warning (TERM_IF); }
+| END_IF			{ terminator_clear (TERM_IF); }
 ;
 
 
@@ -3542,7 +3588,7 @@ end_if:
  */
 
 initialize_statement:
-  INITIALIZE			{ BEGIN_STATEMENT ("INITIALIZE"); }
+  INITIALIZE			{ BEGIN_STATEMENT ("INITIALIZE", 0); }
   target_x_list initialize_filler initialize_value initialize_replacing initialize_default
   {
 	cb_emit_initialize ($3, $4, $5, $6, $7);
@@ -3599,7 +3645,7 @@ initialize_default:
 inspect_statement:
   INSPECT
   {
-	BEGIN_STATEMENT ("INSPECT");
+	BEGIN_STATEMENT ("INSPECT", 0);
 	sending_id = 0;
 	inspect_keyword = 0;
   }
@@ -3672,7 +3718,7 @@ rep_keyword:
 ;
 
 replacing_region:
-  simple_value BY simple_value inspect_region
+  simple_value BY simple_all_value inspect_region
   {
 	switch (inspect_keyword) {
 		case 1:
@@ -3698,7 +3744,7 @@ replacing_region:
 /* INSPECT CONVERTING */
 
 inspect_converting:
-  CONVERTING simple_value TO simple_value inspect_region
+  CONVERTING simple_value TO simple_all_value inspect_region
   {
 	$$ = cb_build_converting ($2, $4, $5);
   }
@@ -3720,7 +3766,7 @@ _initial: | TOK_INITIAL ;
  */
 
 merge_statement:
-  MERGE				{ BEGIN_STATEMENT ("MERGE"); }
+  MERGE				{ BEGIN_STATEMENT ("MERGE", 0); }
   sort_body
 ;
 
@@ -3730,7 +3776,7 @@ merge_statement:
  */
 
 move_statement:
-  MOVE				{ BEGIN_STATEMENT ("MOVE"); }
+  MOVE				{ BEGIN_STATEMENT ("MOVE", 0); }
   move_body
 ;
 
@@ -3751,7 +3797,7 @@ move_body:
  */
 
 multiply_statement:
-  MULTIPLY			{ BEGIN_STATEMENT ("MULTIPLY"); }
+  MULTIPLY			{ BEGIN_STATEMENT ("MULTIPLY", TERM_MULTIPLY); }
   multiply_body
   end_multiply
 ;
@@ -3768,8 +3814,8 @@ multiply_body:
 ;
 
 end_multiply:
-  /* empty */			{ terminator_warning (); }
-| END_MULTIPLY
+  /* empty */			{ terminator_warning (TERM_MULTIPLY); }
+| END_MULTIPLY			{ terminator_clear (TERM_MULTIPLY); }
 ;
 
 
@@ -3778,7 +3824,7 @@ end_multiply:
  */
 
 open_statement:
-  OPEN				{ BEGIN_STATEMENT ("OPEN"); }
+  OPEN				{ BEGIN_STATEMENT ("OPEN", 0); }
   open_list
 ;
 
@@ -3819,7 +3865,7 @@ open_option:
  */
 
 perform_statement:
-  PERFORM			{ BEGIN_STATEMENT ("PERFORM"); }
+  PERFORM			{ BEGIN_STATEMENT ("PERFORM", TERM_PERFORM); }
   perform_body
 ;
 
@@ -3845,7 +3891,7 @@ perform_body:
 
 end_perform:
   /* empty */			{ terminator_error (); }
-| END_PERFORM
+| END_PERFORM			{ terminator_clear (TERM_PERFORM); }
 ;
 
 perform_procedure:
@@ -3873,7 +3919,9 @@ perform_option:
   }
 | perform_test UNTIL condition
   {
-	cb_tree varying = cb_list (cb_build_perform_varying (NULL, NULL, NULL, $3));
+	cb_tree varying;
+
+	varying = cb_list (cb_build_perform_varying (NULL, NULL, NULL, $3));
 	$$ = cb_build_perform_until ($1, varying);
   }
 | perform_test VARYING perform_varying_list
@@ -3906,7 +3954,7 @@ perform_varying:
  */
 
 read_statement:
-  READ				{ BEGIN_STATEMENT ("READ"); }
+  READ				{ BEGIN_STATEMENT ("READ", TERM_READ); }
   file_name flag_next _record read_into with_lock read_key read_handler
   end_read
   {
@@ -3960,8 +4008,8 @@ read_handler:
 ;
 
 end_read:
-  /* empty */			{ terminator_warning (); }
-| END_READ
+  /* empty */			{ terminator_warning (TERM_READ); }
+| END_READ			{ terminator_clear (TERM_READ); }
 ;
 
 
@@ -3970,7 +4018,7 @@ end_read:
  */
 
 release_statement:
-  RELEASE			{ BEGIN_STATEMENT ("RELEASE"); }
+  RELEASE			{ BEGIN_STATEMENT ("RELEASE", 0); }
   record_name write_from
   {
 	cb_emit_release ($3, $4);
@@ -3983,7 +4031,7 @@ release_statement:
  */
 
 return_statement:
-  RETURN			{ BEGIN_STATEMENT ("RETURN"); }
+  RETURN			{ BEGIN_STATEMENT ("RETURN", TERM_RETURN); }
   file_name _record read_into at_end
   end_return
   {
@@ -3992,8 +4040,8 @@ return_statement:
 ;
 
 end_return:
-  /* empty */			{ terminator_warning (); }
-| END_RETURN
+  /* empty */			{ terminator_warning (TERM_RETURN); }
+| END_RETURN			{ terminator_clear (TERM_RETURN); }
 ;
 
 
@@ -4002,7 +4050,7 @@ end_return:
  */
 
 rewrite_statement:
-  REWRITE			{ BEGIN_STATEMENT ("REWRITE"); }
+  REWRITE			{ BEGIN_STATEMENT ("REWRITE", TERM_REWRITE); }
   record_name write_from write_lock opt_invalid_key
   end_rewrite
   {
@@ -4025,8 +4073,8 @@ write_lock:
 ;
 
 end_rewrite:
-  /* empty */			{ terminator_warning (); }
-| END_REWRITE
+  /* empty */			{ terminator_warning (TERM_REWRITE); }
+| END_REWRITE			{ terminator_clear (TERM_REWRITE); }
 ;
 
 
@@ -4037,7 +4085,7 @@ end_rewrite:
 rollback_statement:
   ROLLBACK
   {
-	BEGIN_STATEMENT ("ROLLBACK");
+	BEGIN_STATEMENT ("ROLLBACK", 0);
 	cb_emit_rollback ();
   }
 ;
@@ -4048,7 +4096,7 @@ rollback_statement:
  */
 
 search_statement:
-  SEARCH			{ BEGIN_STATEMENT ("SEARCH"); }
+  SEARCH			{ BEGIN_STATEMENT ("SEARCH", TERM_SEARCH); }
   search_body
   end_search
 ;
@@ -4084,8 +4132,8 @@ search_when:
 ;
 
 end_search:
-  /* empty */			{ terminator_warning (); }
-| END_SEARCH
+  /* empty */			{ terminator_warning (TERM_SEARCH); }
+| END_SEARCH			{ terminator_clear (TERM_SEARCH); }
 ;
 
 
@@ -4094,7 +4142,7 @@ end_search:
  */
 
 set_statement:
-  SET				{ BEGIN_STATEMENT ("SET"); }
+  SET				{ BEGIN_STATEMENT ("SET", 0); }
   set_body
 ;
 
@@ -4180,7 +4228,7 @@ set_to_true_false:
  */
 
 sort_statement:
-  SORT				{ BEGIN_STATEMENT ("SORT"); }
+  SORT				{ BEGIN_STATEMENT ("SORT", 0); }
   sort_body
 ;
 
@@ -4289,7 +4337,7 @@ sort_output:
  */
 
 start_statement:
-  START				{ BEGIN_STATEMENT ("START"); }
+  START				{ BEGIN_STATEMENT ("START", TERM_START); }
   file_name			{ $$ = cb_int (COB_EQ); }
   start_key opt_invalid_key
   end_start
@@ -4303,7 +4351,7 @@ start_statement:
 			cb_emit_start ($3, $4, $5);
 		}
 	} else {
-		cb_error_x ($3, _("'%s' not file name"), CB_NAME ($3));
+		cb_error_x ($3, _("'%s' is not a file name"), CB_NAME ($3));
 		$$ = cb_error_node;
 	}
   }
@@ -4323,8 +4371,8 @@ start_op:
 ;
 
 end_start:
-  /* empty */			{ terminator_warning (); }
-| END_START
+  /* empty */			{ terminator_warning (TERM_START); }
+| END_START			{ terminator_clear (TERM_START); }
 ;
 
 
@@ -4333,7 +4381,7 @@ end_start:
  */
 
 stop_statement:
-  STOP RUN		{ BEGIN_STATEMENT ("STOP"); }
+  STOP RUN		{ BEGIN_STATEMENT ("STOP", 0); }
   stop_returning
   {
 	cb_emit_stop_run ($4);
@@ -4356,7 +4404,7 @@ stop_returning:
  */
 
 string_statement:
-  STRING			{ BEGIN_STATEMENT ("STRING"); }
+  STRING			{ BEGIN_STATEMENT ("STRING", TERM_STRING); }
   string_item_list INTO identifier opt_with_pointer on_overflow
   end_string
   {
@@ -4381,8 +4429,8 @@ opt_with_pointer:
 ;
 
 end_string:
-  /* empty */			{ terminator_warning (); }
-| END_STRING
+  /* empty */			{ terminator_warning (TERM_STRING); }
+| END_STRING			{ terminator_clear (TERM_STRING); }
 ;
 
 
@@ -4391,7 +4439,7 @@ end_string:
  */
 
 subtract_statement:
-  SUBTRACT			{ BEGIN_STATEMENT ("SUBTRACT"); }
+  SUBTRACT			{ BEGIN_STATEMENT ("SUBTRACT", TERM_SUBTRACT); }
   subtract_body
   end_subtract
 ;
@@ -4412,8 +4460,8 @@ subtract_body:
 ;
 
 end_subtract:
-  /* empty */			{ terminator_warning (); }
-| END_SUBTRACT
+  /* empty */			{ terminator_warning (TERM_SUBTRACT); }
+| END_SUBTRACT			{ terminator_clear (TERM_SUBTRACT); }
 ;
 
 
@@ -4422,8 +4470,13 @@ end_subtract:
  */
 
 unlock_statement:
-  UNLOCK			{ BEGIN_STATEMENT ("UNLOCK"); }
-  file_name opt_record		{ PENDING ("UNLOCK"); }
+  UNLOCK			{ BEGIN_STATEMENT ("UNLOCK", 0); }
+  file_name opt_record
+  {
+	if ($3 != cb_error_node) {
+		cb_emit_unlock ($3);
+	}
+  }
 ;
 
 opt_record:
@@ -4438,7 +4491,7 @@ opt_record:
  */
 
 unstring_statement:
-  UNSTRING			{ BEGIN_STATEMENT ("UNSTRING"); }
+  UNSTRING			{ BEGIN_STATEMENT ("UNSTRING", TERM_UNSTRING); }
   identifier unstring_delimited unstring_into
   opt_with_pointer unstring_tallying on_overflow
   end_unstring
@@ -4495,8 +4548,8 @@ unstring_tallying:
 ;
 
 end_unstring:
-  /* empty */			{ terminator_warning (); }
-| END_UNSTRING
+  /* empty */			{ terminator_warning (TERM_UNSTRING); }
+| END_UNSTRING			{ terminator_clear (TERM_UNSTRING); }
 ;
 
 
@@ -4563,7 +4616,7 @@ use_debugging_target:
  */
 
 write_statement:
-  WRITE				{ BEGIN_STATEMENT ("WRITE"); }
+  WRITE				{ BEGIN_STATEMENT ("WRITE", TERM_WRITE); }
   record_name write_from write_lock write_option write_handler
   end_write
   {
@@ -4575,7 +4628,7 @@ write_statement:
 
 write_from:
   /* empty */			{ $$ = NULL; }
-| FROM identifier		{ $$ = $2; }
+| FROM id_or_lit		{ $$ = $2; }
 ;
 
 write_option:
@@ -4608,8 +4661,8 @@ write_handler:
 ;
 
 end_write:
-  /* empty */			{ terminator_warning (); }
-| END_WRITE
+  /* empty */			{ terminator_warning (TERM_WRITE); }
+| END_WRITE			{ terminator_clear (TERM_WRITE); }
 ;
 
 
@@ -4914,7 +4967,7 @@ linage_counter:
 	if (CB_FILE_P (cb_ref ($3))) {
 		$$ = CB_FILE (cb_ref ($3))->linage_ctr;
 	} else {
-		cb_error_x ($3, _("'%s' not file name"), CB_NAME ($3));
+		cb_error_x ($3, _("'%s' is not a file name"), CB_NAME ($3));
 		$$ = cb_error_node;
 	}
   }
@@ -4944,8 +4997,9 @@ record_name:
 table_name:
   qualified_word
   {
-	cb_tree x = cb_ref ($1);
+	cb_tree x;
 
+	x = cb_ref ($1);
 	if (!CB_FIELD_P (x)) {
 		$$ = cb_error_node;
 	} else if (!CB_FIELD (x)->index_list) {
@@ -4971,7 +5025,7 @@ file_name:
 	if (CB_FILE_P (cb_ref ($1))) {
 		$$ = $1;
 	} else {
-		cb_error_x ($1, _("'%s' not file name"), CB_NAME ($1));
+		cb_error_x ($1, _("'%s' is not a file name"), CB_NAME ($1));
 		$$ = cb_error_node;
 	}
   }
@@ -5087,6 +5141,7 @@ x:
   identifier
 | LENGTH _of identifier_1			{ $$ = cb_build_length ($3); }
 | LENGTH _of literal				{ $$ = cb_build_length ($3); }
+| LENGTH _of function				{ $$ = cb_build_length ($3); }
 | ADDRESS _of prog_or_entry alnum_or_id		{ $$ = cb_build_ppointer ($4); }
 | ADDRESS _of identifier_1			{ $$ = cb_build_address ($3); }
 | literal
@@ -5101,12 +5156,17 @@ prog_or_entry:
 
 alnum_or_id:
   identifier_1		{ $$ = $1; }
-| alnum_literal		{ $$ = $1; }
+| LITERAL		{ $$ = $1; }
 ;
 
 simple_value:
   identifier
 | basic_literal
+;
+
+simple_all_value:
+  identifier
+| literal
 ;
 
 /*
@@ -5119,6 +5179,12 @@ numeric_value:
 id_or_lit:
   identifier
 | LITERAL
+;
+
+id_or_lit_or_func:
+  identifier
+| LITERAL
+| function
 ;
 
 num_id_or_lit:
@@ -5187,18 +5253,14 @@ literal:
 ;
 
 basic_literal:
-  alnum_literal			{ $$ = $1; }
+  LITERAL			{ $$ = $1; }
 | SPACE				{ $$ = cb_space; }
 | ZERO				{ $$ = cb_zero; }
 | QUOTE				{ $$ = cb_quote; }
 | HIGH_VALUE			{ $$ = cb_high; }
 | LOW_VALUE			{ $$ = cb_low; }
 | TOK_NULL			{ $$ = cb_null; }
-;
-
-alnum_literal:
-  LITERAL			{ $$ = $1; }
-| alnum_literal '&' LITERAL	{ $$ = cb_concat_literals ($1, $3); }
+| basic_literal '&' basic_literal	{ $$ = cb_concat_literals ($1, $3); }
 ;
 
 /*
@@ -5384,6 +5446,7 @@ records: RECORD _is | RECORDS _are ;
 _advancing:	| ADVANCING ;
 _are:		| ARE ;
 _area:		| AREA ;
+_as:		| AS ;
 _at:		| AT ;
 _by:		| BY ;
 _character:	| CHARACTER ;
@@ -5429,9 +5492,12 @@ _with:		| WITH ;
 static void
 emit_entry (const char *name, const int encode, cb_tree using_list)
 {
-	cb_tree	l, label;
-	int	parmnum;
-	char	buff[256];
+	cb_tree		l;
+	cb_tree		label;
+	cb_tree		x;
+	struct cb_field	*f;
+	int		parmnum;
+	char		buff[256];
 
 	sprintf (buff, "E$%s", name);
 	label = cb_build_label (cb_build_reference (buff), NULL);
@@ -5448,9 +5514,9 @@ emit_entry (const char *name, const int encode, cb_tree using_list)
 
 	parmnum = 1;
 	for (l = using_list; l; l = CB_CHAIN (l)) {
-		cb_tree x = CB_VALUE (l);
+		x = CB_VALUE (l);
 		if (x != cb_error_node && cb_ref (x) != cb_error_node) {
-			struct cb_field *f = CB_FIELD (cb_ref (x));
+			f = CB_FIELD (cb_ref (x));
 			if (f->level != 01 && f->level != 77) {
 				cb_error_x (x, _("'%s' not level 01 or 77"), cb_name (x));
 			}
@@ -5475,7 +5541,7 @@ emit_entry (const char *name, const int encode, cb_tree using_list)
 		}
 	}
 	for (l = current_program->entry_list; l; l = CB_CHAIN (l)) {
-		if (strcmp ((char *)name, (char *)(CB_LABEL(CB_PURPOSE(l))->name)) == 0) {
+		if (strcmp ((const char *)name, (const char *)(CB_LABEL(CB_PURPOSE(l))->name)) == 0) {
 			cb_error_x (CB_TREE (current_statement), _("ENTRY '%s' duplicated"), name);
 		}
 	}
@@ -5487,12 +5553,15 @@ emit_entry (const char *name, const int encode, cb_tree using_list)
 }
 
 static void
-terminator_warning (void)
+terminator_warning (const size_t termid)
 {
-	if (cb_warn_terminator && current_statement->need_terminator) {
+	if (cb_warn_terminator && term_array[termid]) {
 		cb_warning_x (CB_TREE (current_statement),
 			_("%s statement not terminated by END-%s"),
 			current_statement->name, current_statement->name);
+	}
+	if (term_array[termid]) {
+		term_array[termid]--;
 	}
 }
 
@@ -5502,6 +5571,14 @@ terminator_error (void)
 	cb_error_x (CB_TREE (current_statement),
 			_("%s statement not terminated by END-%s"),
 			current_statement->name, current_statement->name);
+}
+
+static void
+terminator_clear (const size_t termid)
+{
+	if (term_array[termid]) {
+		term_array[termid]--;
+	}
 }
 
 static int

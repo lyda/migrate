@@ -43,10 +43,10 @@
 
 #define ABORT()		cobc_abort(__FILE__,__LINE__)
 
-#define CB_FORMAT_AUTO	0
+#define CB_FORMAT_FIXED	0
 #define CB_FORMAT_FREE	1
-#define CB_FORMAT_FIXED	2
-extern int	cb_source_format;
+
+extern size_t	cb_source_format;
 
 extern int	cb_display_sign;
 
@@ -65,7 +65,7 @@ extern struct cb_exception {
 #include "flag.def"
 
 #undef CB_WARNDEF
-#define CB_WARNDEF(sig,var,name,wall,doc) extern int var;
+#define CB_WARNDEF(var,name,wall,doc) extern int var;
 #include "warning.def"
 
 struct cb_text_list {
@@ -211,7 +211,7 @@ extern FILE	*yyout;
 extern int	yylex (void);
 extern int	yyparse (void);
 
-extern int	sending_id;
+extern size_t	sending_id;
 
 /* error.c */
 #ifdef __GNUC__

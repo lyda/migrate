@@ -28,16 +28,15 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 PTR           USAGE POINTER VALUE NULL.
        PROCEDURE        DIVISION.
-           DISPLAY PTR.
+           DISPLAY PTR
+           END-DISPLAY.
            SET PTR UP BY 1
-           DISPLAY PTR.
+           DISPLAY PTR
+           END-DISPLAY.
            STOP RUN.
 ])
 
 AT_CHECK([${COMPILE} -o prog prog.cob])
-AT_CHECK([./prog], [0],
-[0000000000
-0000000001
-])
+AT_CHECK([./prog], [0], [ignore])
 
 AT_CLEANUP

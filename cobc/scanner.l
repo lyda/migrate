@@ -52,7 +52,7 @@ static int			last_token_is_dot = 0;
 static int			integer_is_label = 0;
 static int			inside_bracket = 0;
 
-static int read_literal (char mark);
+static int read_literal (int mark);
 static int scan_x (char *text);
 static int scan_h (char *text);
 static int scan_numeric (char *text);
@@ -306,6 +306,7 @@ H\"[^\"\n]*\" {
 	int			token;
 	struct cb_word		*word;
 	struct cb_level_78	*p78;
+	cb_tree			x;
 
 	/* reserved word */
 	token = lookup_reserved_word (yytext);
@@ -327,8 +328,7 @@ H\"[^\"\n]*\" {
 	/* special name handling */
 	word = CB_REFERENCE (yylval)->word;
 	if (word->count > 0) {
-		cb_tree x = CB_VALUE (word->items);
-
+		x = CB_VALUE (word->items);
 		if (CB_SYSTEM_NAME_P (x)) {
 			return MNEMONIC_NAME;
 		}
@@ -403,7 +403,7 @@ H\"[^\"\n]*\" {
 %%
 
 static int
-read_literal (char mark)
+read_literal (int mark)
 {
 	static char	*buff = NULL;
 	static size_t	size = COB_MINI_BUFF;
@@ -548,7 +548,7 @@ scan_numeric (char *text)
 	s = (unsigned char *)strchr (text, current_program->decimal_point);
 	if (s) {
 		scale = strlen ((char *)s) - 1;
-		memmove (s, s + 1, scale + 1);
+		memmove (s, s + 1, (size_t)(scale + 1));
 	}
 /*
 	if (strchr (text, (current_program->decimal_point == ',') ? '.' : ',')) {
@@ -576,12 +576,12 @@ can_replace (const char *src1, const char *src2, const size_t size,
 	if (strncasecmp (src1, src2, size)) {
 		return 0;
 	}
-	p = (unsigned char *)src1 + size;
+	p = (const unsigned char *)src1 + size;
 	if (isalnum (*p) || *p == '-' || *p == '_') {
 		return 0;
 	}
 	if (iteration) {
-		p = (unsigned char *)src1 - 1;
+		p = (const unsigned char *)src1 - 1;
 		if (isalnum (*p) || *p == '-' || *p == '_') {
 			return 0;
 		}
@@ -618,6 +618,14 @@ scan_picture (char *text)
 		memset (buff2, 0, sizeof (buff2));
 		strcpy (buff, text);
 		for (p78 = lev78ptr; p78; p78 = p78->next) {
+			if (p78->fld78->values == cb_error_node) {
+				strcpy (buff2, buff);
+				continue;
+			}
+			if (CB_VALUE(p78->fld78->values) == cb_error_node) {
+				strcpy (buff2, buff);
+				continue;
+			}
 			p = (unsigned char *)CB_LITERAL(CB_VALUE(p78->fld78->values))->data;
 			size = strlen (p78->fld78->name);
 			sizep = strlen ((char *)p);

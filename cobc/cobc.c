@@ -74,11 +74,12 @@ enum cb_compile_level {
  * Global variables
  */
 
-int cb_source_format = CB_FORMAT_FIXED;
+size_t	cb_source_format = CB_FORMAT_FIXED;
+
 #ifdef	COB_EBCDIC_MACHINE
-int cb_display_sign = COB_DISPLAY_SIGN_EBCDIC;	/* 1 */
+int	cb_display_sign = COB_DISPLAY_SIGN_EBCDIC;	/* 1 */
 #else
-int cb_display_sign = COB_DISPLAY_SIGN_ASCII;	/* 0 */
+int	cb_display_sign = COB_DISPLAY_SIGN_ASCII;	/* 0 */
 #endif
 
 struct cb_exception cb_exception_table[] = {
@@ -94,7 +95,7 @@ struct cb_exception cb_exception_table[] = {
 #include "flag.def"
 
 #undef CB_WARNDEF
-#define CB_WARNDEF(sig,var,name,wall,doc) int var = 0;
+#define CB_WARNDEF(var,name,wall,doc) int var = 0;
 #include "warning.def"
 
 #ifdef  _MSC_VER
@@ -139,10 +140,14 @@ struct cb_label		*current_paragraph = NULL;
  * Local variables
  */
 
+static enum cb_compile_level	cb_compile_level = 0;
+static enum cb_compile_level	local_level = 0;
+
+static size_t		iparams = 0;
 static int		saveargc;
+static int		iargs;
 static char		**saveargv;
 static char		*cobcpy = NULL;
-static enum cb_compile_level cb_compile_level = 0;
 
 static jmp_buf		cob_jmpbuf;
 
@@ -203,7 +208,7 @@ static struct option long_options[] = {
 #include "flag.def"
 	{"Wall", no_argument, NULL, 'W'},
 #undef CB_WARNDEF
-#define CB_WARNDEF(sig,var,name,wall,doc)		\
+#define CB_WARNDEF(var,name,wall,doc)		\
 	{"W"name, no_argument, &var, 1},	\
 	{"Wno-"name, no_argument, &var, 0},
 #include "warning.def"
@@ -272,9 +277,10 @@ cobc_realloc (void *prevptr, const size_t size)
 struct cb_text_list *
 cb_text_list_add (struct cb_text_list *list, const char *text)
 {
-	struct cb_text_list *p = cobc_malloc (sizeof (struct cb_text_list));
+	struct cb_text_list *p;
 	struct cb_text_list *l;
 
+	p = cobc_malloc (sizeof (struct cb_text_list));
 	p->text = strdup (text);
 	p->next = NULL;
 	if (!list) {
@@ -400,13 +406,14 @@ print_usage (void)
 		"  -ext <extension>      Add default file extension\n"
 		"\n" "  -Wall                 Enable all warnings"));
 #undef CB_WARNDEF
-#define CB_WARNDEF(sig,var,name,wall,doc)		\
+#define CB_WARNDEF(var,name,wall,doc)		\
 	printf ("  -W%-19s %s\n", name, gettext (doc));
 #include "warning.def"
 	puts ("");
 #undef CB_FLAG
 #define CB_FLAG(var,name,doc)			\
-	printf ("  -f%-19s %s\n", name, gettext (doc));
+	if (strcmp (name, "static-call"))	\
+		printf ("  -f%-19s %s\n", name, gettext (doc));
 #include "flag.def"
 	puts ("");
 }
@@ -614,14 +621,14 @@ process_command_line (int argc, char *argv[])
 
 		case 'w':
 #undef CB_WARNDEF
-#define CB_WARNDEF(sig,var,name,wall,doc)		\
+#define CB_WARNDEF(var,name,wall,doc)		\
           var = 0;
 #include "warning.def"
 			break;
 
 		case 'W':
 #undef CB_WARNDEF
-#define CB_WARNDEF(sig,var,name,wall,doc)		\
+#define CB_WARNDEF(var,name,wall,doc)		\
           if (wall) var = 1;
 #include "warning.def"
 			break;
@@ -873,7 +880,8 @@ process (const char *cmd)
 {
 	char	*p;
 	char	*buffptr;
-	int	clen;
+	size_t	clen;
+	int	ret;
 	char	buff[COB_MEDIUM_BUFF];
 
 	if (strchr (cmd, '$') == NULL) {
@@ -882,7 +890,7 @@ process (const char *cmd)
 		}
 		return system (cmd);
 	}
-	clen = (int) strlen (cmd) + 32;
+	clen = strlen (cmd) + 32;
 	if (clen > COB_MEDIUM_BUFF) {
 		buffptr = cobc_malloc (clen);
 	} else {
@@ -902,11 +910,11 @@ process (const char *cmd)
 	if (verbose_output) {
 		fprintf (stderr, "%s\n", buffptr);
 	}
-	clen = system (buffptr);
+	ret = system (buffptr);
 	if (buffptr != buff) {
 		free (buffptr);
 	}
-	return clen;
+	return ret;
 }
 
 static int
@@ -1056,18 +1064,16 @@ process_translate (struct filename *fn)
 	}
 
 	/* parse */
-	if (verbose_output) {
-		fprintf (stderr, "translating %s into %s\n", fn->preprocess, fn->translate);
-	}
 	ret = yyparse ();
-
 	fclose (yyin);
 	if (ret) {
 		return ret;
 	}
-
 	if (cb_flag_syntax_only || current_program->entry_list == NULL) {
 		return 0;
+	}
+	if (verbose_output) {
+		fprintf (stderr, "translating %s into %s\n", fn->preprocess, fn->translate);
 	}
 
 	/* open the output file */
@@ -1247,18 +1253,18 @@ process_module (struct filename *fn)
 static int
 process_library (struct filename *l)
 {
-	int		ret;
-	int		bufflen;
 	char		*buffptr;
 	char		*objsptr;
 	struct filename	*f;
+	size_t		bufflen;
+	int		ret;
 	char		buff[COB_MEDIUM_BUFF];
 	char		name[COB_MEDIUM_BUFF];
 	char		objs[COB_MEDIUM_BUFF] = "\0";
 
 	bufflen = 0;
 	for (f = l; f; f = f->next) {
-		bufflen += (int) strlen (f->object) + 2;
+		bufflen += strlen (f->object) + 2;
 	}
 	if (bufflen >= COB_MEDIUM_BUFF) {
 		objsptr = cobc_malloc (bufflen);
@@ -1286,10 +1292,10 @@ process_library (struct filename *l)
 #endif
 	}
 
-	bufflen = (int) (strlen (cob_cc) + strlen (cob_ldflags)
+	bufflen = strlen (cob_cc) + strlen (cob_ldflags)
 			+ strlen (COB_EXPORT_DYN) + strlen (COB_SHARED_OPT)
 			+ strlen (name) + strlen (objsptr) + strlen (cob_libs)
-			+ strlen (COB_PIC_FLAGS) + 16);
+			+ strlen (COB_PIC_FLAGS) + 16;
 	if (bufflen >= COB_MEDIUM_BUFF) {
 		buffptr = cobc_malloc (bufflen);
 	} else {
@@ -1327,18 +1333,18 @@ process_library (struct filename *l)
 static int
 process_link (struct filename *l)
 {
-	int		ret;
-	int		bufflen;
 	char		*buffptr;
 	char		*objsptr;
 	struct filename	*f;
+	size_t		bufflen;
+	int		ret;
 	char		buff[COB_MEDIUM_BUFF];
 	char		name[COB_MEDIUM_BUFF];
 	char		objs[COB_MEDIUM_BUFF] = "\0";
 
 	bufflen = 0;
 	for (f = l; f; f = f->next) {
-		bufflen += (int) strlen (f->object) + 2;
+		bufflen += strlen (f->object) + 2;
 	}
 	if (bufflen >= COB_MEDIUM_BUFF) {
 		objsptr = cobc_malloc (bufflen);
@@ -1356,9 +1362,9 @@ process_link (struct filename *l)
 		file_basename (l->source, name);
 	}
 
-	bufflen = (int) (strlen (cob_cc) + strlen (cob_ldflags) + strlen (COB_EXPORT_DYN)
+	bufflen = strlen (cob_cc) + strlen (cob_ldflags) + strlen (COB_EXPORT_DYN)
 			+ strlen (name) + strlen (objsptr) + strlen (cob_libs)
-			+ 16);
+			+ 16;
 	if (bufflen >= COB_MEDIUM_BUFF) {
 		buffptr = cobc_malloc (bufflen);
 	} else {
@@ -1401,9 +1407,6 @@ process_link (struct filename *l)
 int
 main (int argc, char *argv[])
 {
-	int			i;
-	int			iparams = 0;
-	enum cb_compile_level	local_level = 0;
 	int			status = 1;
 	struct filename		*fn;
 	char			*p;
@@ -1472,10 +1475,10 @@ main (int argc, char *argv[])
 	}
 
 	/* Process command line arguments */
-	i = process_command_line (argc, argv);
+	iargs = process_command_line (argc, argv);
 
 	/* Check the filename */
-	if (i == argc) {
+	if (iargs == argc) {
 		fprintf (stderr, "%s: No input files\n", program_name);
 		exit (1);
 	}
@@ -1528,7 +1531,7 @@ main (int argc, char *argv[])
 	}
 
 	if (output_name && cb_compile_level < CB_LEVEL_LIBRARY &&
-	    (argc - i) > 1) {
+	    (argc - iargs) > 1) {
 		fprintf (stderr, "%s: -o option invalid in this combination\n", program_name);
 		exit (1);
 	}
@@ -1547,8 +1550,8 @@ main (int argc, char *argv[])
 		cb_pretty_display = 0;
 	}
 
-	while (i < argc) {
-		fn = process_filename (argv[i++]);
+	while (iargs < argc) {
+		fn = process_filename (argv[iargs++]);
 		/* Preprocess */
 		if (cb_compile_level >= CB_LEVEL_PREPROCESS && fn->need_preprocess) {
 			if (preprocess (fn) != 0) {

@@ -98,12 +98,12 @@ lt_dlerror ()
 #define PATHSEPS ":"
 #endif
 
-static int		resolve_size = 0;
-static int		name_convert = 0;
 static char		**resolve_path = NULL;
 static char		*resolve_error = NULL;
 static char		*resolve_error_buff = NULL;
 static lt_dlhandle	mainhandle = NULL;
+static size_t		name_convert = 0;
+static size_t		resolve_size = 0;
 
 #if	defined (_WIN32) || !defined (RTLD_DEFAULT)
 struct struct_handle {
@@ -161,8 +161,8 @@ cob_strdup (const void *stptr)
 static void
 cob_set_library_path (const char *path)
 {
-	int		i;
 	char		*p;
+	size_t		i;
 
 	/* clear the previous path */
 	if (resolve_path) {
@@ -238,11 +238,12 @@ hash (const unsigned char *s)
 static void
 insert (const char *name, lt_ptr_t func, void *cancel)
 {
+	struct call_hash	*p;
 #ifndef	COB_ALT_HASH
-	int			val = hash ((unsigned char *)name);
+	size_t			val;
 #endif
-	struct call_hash	*p = cob_malloc (sizeof (struct call_hash));
 
+	p = cob_malloc (sizeof (struct call_hash));
 	p->name = cob_strdup (name);
 	p->func = func;
 	p->cancel = cancel;
@@ -250,6 +251,7 @@ insert (const char *name, lt_ptr_t func, void *cancel)
 	p->next = call_table;
 	call_table = p;
 #else
+	val = hash ((const unsigned char *)name);
 	p->next = call_table[val];
 	call_table[val] = p;
 #endif
@@ -263,7 +265,7 @@ lookup (const char *name)
 #ifdef	COB_ALT_HASH
 	for (p = call_table; p; p = p->next) {
 #else
-	for (p = call_table[hash ((unsigned char *)name)]; p; p = p->next) {
+	for (p = call_table[hash ((const unsigned char *)name)]; p; p = p->next) {
 #endif
 		if (strcmp (name, p->name) == 0) {
 			return p->func;
@@ -302,7 +304,7 @@ cob_set_cancel (const char *name, void *entry, void *cancel)
 #ifdef	COB_ALT_HASH
 	for (p = call_table; p; p = p->next) {
 #else
-	for (p = call_table[hash ((unsigned char *)name)]; p; p = p->next) {
+	for (p = call_table[hash ((const unsigned char *)name)]; p; p = p->next) {
 #endif
 		if (strcmp (name, p->name) == 0) {
 			p->cancel = cancel;
@@ -319,7 +321,7 @@ cob_resolve (const char *name)
 	const unsigned char	*s;
 	lt_ptr_t		func;
 	lt_dlhandle		handle;
-	int			i;
+	size_t			i;
 	struct stat		st;
 #if	defined (_WIN32) || !defined (RTLD_DEFAULT)
 	struct struct_handle	*chkhandle;
@@ -344,7 +346,7 @@ cob_resolve (const char *name)
 
 	/* encode program name */
 	p = buff;
-	s = (unsigned char *)name;
+	s = (const unsigned char *)name;
 	if (unlikely(isdigit (*s))) {
 		p += sprintf ((char *)p, "_%02X", *s++);
 	}
@@ -384,9 +386,9 @@ cob_resolve (const char *name)
 
 	/* search external modules */
 	if (likely(name_convert == 0)) {
-		s = (unsigned char *)name;
+		s = (const unsigned char *)name;
 	} else {
-		s = (unsigned char *)name;
+		s = (const unsigned char *)name;
 		p = buff2;
 		for (; *s; s++) {
 			if (name_convert == 1 && isupper (*s)) {
@@ -498,7 +500,7 @@ cob_c_cancel (const char *name)
 #ifdef	COB_ALT_HASH
 	for (p = call_table; p; p = p->next) {
 #else
-	for (p = call_table[hash ((unsigned char *)name)]; p; p = p->next) {
+	for (p = call_table[hash ((const unsigned char *)name)]; p; p = p->next) {
 #endif
 		if (strcmp (name, p->name) == 0) {
 			if (p->cancel) {
@@ -513,15 +515,15 @@ cob_c_cancel (const char *name)
 void
 cob_init_call (void)
 {
-	char			*s;
-	char			*p;
-	struct system_table	*psyst;
+	char				*s;
+	char				*p;
+	const struct system_table	*psyst;
 #if	defined (_WIN32) || !defined (RTLD_DEFAULT)
-	lt_dlhandle		libhandle;
+	lt_dlhandle			libhandle;
 #endif
-	int			i;
-	struct stat		st;
-	char			filename[COB_MEDIUM_BUFF];
+	size_t				i;
+	struct stat			st;
+	char				filename[COB_MEDIUM_BUFF];
 
 #ifndef	USE_LIBDL
 	lt_dlinit ();

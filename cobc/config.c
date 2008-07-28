@@ -182,17 +182,7 @@ cb_load_conf (const char *fname, int check_nodef)
 		switch (config_table[i].type) {
 		case ANY:
 		{
-			if (strcmp (name, "source-format") == 0) {
-				if (strcmp (val, "auto") == 0) {
-					goto unsupported_value;
-				} else if (strcmp (val, "free") == 0) {
-					cb_source_format = CB_FORMAT_FREE;
-				} else if (strcmp (val, "fixed") == 0) {
-					cb_source_format = CB_FORMAT_FIXED;
-				} else {
-					goto invalid_value;
-				}
-			} else if (strcmp (name, "assign-clause") == 0) {
+			if (strcmp (name, "assign-clause") == 0) {
 				if (strcmp (val, "cobol2002") == 0) {
 					goto unsupported_value;
 				} else if (strcmp (val, "mf") == 0) {

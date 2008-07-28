@@ -42,11 +42,11 @@
 #include "cobc.h"
 #include "ppparse.h"
 
-static int	within_comment = 0;
 static size_t	newline_count = 0;
-static int	inside_bracket = 0;
+static size_t	within_comment = 0;
+static size_t	inside_bracket = 0;
+static size_t	consecutive_quotation = 0;
 static int	quotation_mark = 0;
-static int	consecutive_quotation = 0;
 static int	last_line_1 = -1;
 static int	last_line_2 = -1;
 
@@ -76,34 +76,28 @@ WORD		[_0-9A-Z-]+
 NUMRIC_LITERAL	[+-]?[0-9,.]*[0-9]
 ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 
-%x PROCESS_STATE DIRECTIVE_STATE COPY_STATE PSEUDO_STATE
+%x PROCESS_STATE COPY_STATE PSEUDO_STATE
 
 %%
 
 %{
 %}
 
-<*>^"*".* |
-<*>^"/".* |
 <*>"*>".*		{ ppecho (" "); }
+
+<*>^"*".* |
+<*>^"/".* {
+	ppecho (" ");
+	if (cb_source_format != CB_FORMAT_FIXED) {
+		ppecho (yytext);
+	}
+}
 
 "PROCESS"		{ BEGIN PROCESS_STATE; }
 
 <PROCESS_STATE>{
   \n			{ BEGIN INITIAL; unput ('\n'); }
   .*			{ cb_warning (_("PROCESS statement is ignored")); }
-}
-
-">>"			{ BEGIN DIRECTIVE_STATE; return DIRECTIVE; }
-
-<DIRECTIVE_STATE>{
-  \n			{ BEGIN INITIAL; unput ('\n'); }
-  "SOURCE"		{ return SOURCE; }
-  "FORMAT"		{ return FORMAT; }
-  "IS"			{ return IS; }
-  "FIXED"		{ return FIXED; }
-  "FREE"		{ return FREE; }
-  .			{ }
 }
 
 "COPY"			{ BEGIN COPY_STATE; return COPY; }
@@ -145,6 +139,7 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 "DATE-MODIFIED" |
 "DATE-COMPILED" |
 "INSTALLATION" |
+"REMARKS" |
 "SECURITY" {
 	/* these words are treated as comments */
 	if (cb_verify (cb_author_paragraph, yytext)) {
@@ -174,7 +169,9 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 }
 
 [,;]?\n			{ ppecho ("\n"); cb_source_line++; }
+
 [;]?[ ]+		{ ppecho (" "); }
+
 [,]?[ ]+ {
 	if (inside_bracket) {
 		ppecho (", ");
@@ -183,8 +180,17 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 	}
 }
 
-"("			{ inside_bracket++; ppecho ("("); }
-")"			{ inside_bracket--; ppecho (")"); }
+"(" {
+	inside_bracket++;
+	ppecho ("(");
+}
+
+")" {
+	if (inside_bracket) {
+		inside_bracket--;
+	}
+	ppecho (")");
+}
 
 {WORD} |
 {NUMRIC_LITERAL} |
@@ -192,7 +198,9 @@ ALNUM_LITERAL	\"[^\"\n]*\"|\'[^\'\n]*\'
 .			{ ppecho (yytext); }
 
 <<EOF>> {
-	struct copy_info *p = copy_stack;
+	struct copy_info *p;
+
+	p = copy_stack;
 
 	yy_delete_buffer (YY_CURRENT_BUFFER);
 
@@ -336,6 +344,113 @@ ppcopy (char *name, const char *lib, struct cb_replace_list *replace_list)
 	return ppopen (s, replace_list);
 }
 
+/* Check directives */
+/* This is horrible but we have to parse directives directly after the read */
+/* as flex buffers up input and it is then too late to use the flex parser */
+
+static void
+check_directive (char *buff, int *line_size)
+{
+	char	*s;
+	char	*dirptr;
+	size_t	cnt;
+	int	n;
+	char	sbuff[5][256];
+
+	if (cb_source_format == CB_FORMAT_FIXED) {
+		if (*line_size < 8) {
+			return;
+		}
+		if (buff[6] != ' ') {
+			return;
+		}
+		s = &buff[7];
+	} else {
+		s = buff;
+	}
+	for ( ; *s == ' '; s++) {
+		;
+	}
+	dirptr = s;
+	if (*s != '>') {
+		return;
+	}
+	s++;
+	if (*s != '>') {
+		return;
+	}
+	s++;
+	memset (sbuff[0], 0, sizeof (sbuff));
+	n = sscanf (s, "%255s %255s %255s %255s %255s",
+			sbuff[0], sbuff[1], sbuff[2], sbuff[3], sbuff[4]);
+	if (sbuff[0][0] == 'D') {
+		if (cb_flag_debugging_line) {
+			memset (dirptr, ' ', 3);
+		} else {
+			/* RXW
+			memcpy (dirptr, "*> ", 3);
+			*/
+			strcpy (buff, "      *> DEBUG\n");
+			*line_size = strlen (buff);
+		}
+		return;
+	}
+	for (cnt = 0; cnt < newline_count; cnt++) {
+		buff[cnt] = '\n';
+	}
+	buff[cnt] = 0;
+	newline_count = 0;
+	strcat (buff, "      *> DIRECTIVE\n");
+	*line_size = strlen (buff);
+	if (n < 2 || strcasecmp (sbuff[0], "SOURCE")) {
+		cb_warning (_("Invalid directive - ignored"));
+		return;
+	}
+	switch (n) {
+	case 2:
+		if (!strcasecmp (sbuff[1], "FIXED")) {
+			cb_source_format = CB_FORMAT_FIXED;
+			return;
+		}
+		if (!strcasecmp (sbuff[1], "FREE")) {
+			cb_source_format = CB_FORMAT_FREE;
+			return;
+		}
+		break;
+	case 3:
+		if (strcasecmp (sbuff[1], "FORMAT") &&
+		    strcasecmp (sbuff[1], "IS")) {
+			break;
+		}
+		if (!strcasecmp (sbuff[2], "FIXED")) {
+			cb_source_format = CB_FORMAT_FIXED;
+			return;
+		}
+		if (!strcasecmp (sbuff[2], "FREE")) {
+			cb_source_format = CB_FORMAT_FREE;
+			return;
+		}
+		break;
+	default:
+		if (strcasecmp (sbuff[1], "FORMAT")) {
+			break;
+		}
+		if (strcasecmp (sbuff[2], "IS")) {
+			break;
+		}
+		if (!strcasecmp (sbuff[3], "FIXED")) {
+			cb_source_format = CB_FORMAT_FIXED;
+			return;
+		}
+		if (!strcasecmp (sbuff[3], "FREE")) {
+			cb_source_format = CB_FORMAT_FREE;
+			return;
+		}
+		break;
+	}
+	cb_warning (_("Invalid directive - ignored"));
+}
+
 /*
  * Read line
  */
@@ -345,59 +460,61 @@ ppinput (char *buff, int max_size)
 {
 
 	char	*bp;
-	int	i, n;
-	int	continuation = 0;
-	char	line[COB_MEDIUM_BUFF];
+	size_t	gotcr;
+	size_t	continuation = 0;
+	int	ipchar;
+	int	i;
+	int	n;
+	int	coln;
 
 start:
 	/* read a line */
-	memset (line, 0, sizeof (line));
-	if (fgets (line, COB_MEDIUM_BUFF, ppin) == NULL) {
-		if (newline_count == 0) {
-			return 0;
-		}
-		memset (buff, '\n', newline_count);
-		buff[newline_count] = 0;
-		newline_count = 0;
-		return strlen (buff);
-	}
-
-	/* normalize and copy the line into the buffer */
 	n = 0;
-	for (i = 0; line[i]; i++) {
-		switch (line[i]) {
-		case '\t':
-			/* tab expansion */
+	gotcr = 0;
+	ipchar = 0;
+	for ( ; n < 256 && ipchar != '\n'; ) {
+		ipchar = getc (ppin);
+		if (ipchar == EOF) {
+			if (newline_count == 0) {
+				return 0;
+			}
+			memset (buff, '\n', newline_count);
+			buff[newline_count] = 0;
+			newline_count = 0;
+			return strlen (buff);
+		}
+		if (n == 0 && cb_source_format != CB_FORMAT_FIXED) {
+			if (ipchar != ' ' && ipchar != '\n') {
+				buff[n++] = ' ';
+			}
+		}
+		if (gotcr) {
+			if (ipchar != '\n') {
+				buff[n++] = '\r';
+			}
+			gotcr = 0;
+		}
+		if (ipchar == '\r') {
+			gotcr = 1;
+		} else if (ipchar == '\t') {
 			buff[n++] = ' ';
 			while (n % cb_tab_width != 0) {
 				buff[n++] = ' ';
 			}
-			break;
-
-		case '\r':
-			/* end-of-line if followed by new-line */
-			if (line[i + 1] == '\n') {
-				i++;
-			} else {
-				break;
-			}
-			/* fall through */
-		case '\n':
-			buff[n++] = '\n';
-			break;
-
-		default:
-			buff[n++] = line[i];
-			break;
+		} else {
+			buff[n++] = ipchar;
 		}
 	}
-	if (i < COB_MEDIUM_BUFF - 1 && buff[n - 1] != '\n') {
-		cb_warning (_("File not terminated by a newline"));
+
+	if (buff[n - 1] != '\n') {
+		cb_warning (_("Line not terminated by a newline"));
 		buff[n++] = '\n';
 	}
-	buff[n] = '\0';
+	buff[n] = 0;
 
-	/* nothing to do anymore with free format */
+	check_directive (buff, &n);
+
+	/* nothing more to do with free format */
 	if (cb_source_format != CB_FORMAT_FIXED) {
 		return n;
 	}
@@ -409,28 +526,21 @@ start:
 	}
 
 	/* check the indicator (column 7) */
+	bp = buff + 7;
 	switch (buff[6]) {
 	case ' ':
-		bp = buff + 7;
 		break;
 	case '-':
 		continuation = 1;
-		bp = buff + 7;
 		break;
 	case 'd':
 	case 'D':
 		/* debugging line */
 		if (cb_flag_debugging_line) {
-			bp = buff + 7;
 			break;
 		}
 		newline_count++;
 		goto start;
-#if 0
-		bp = buff + 3;
-		memcpy (bp, ">>D ", 4);
-		break;
-#endif
 	case '*':
 	case '/':
 		/* comment line */
@@ -438,12 +548,8 @@ start:
 		goto start;
 	default:
 		/* invalid indicator */
-		if (last_line_1 < cb_source_line - 1) {
-			cb_warning (_("Invalid indicator '%c' at column 7"), buff[6]);
-		}
-		last_line_1 = cb_source_line;
-		bp = buff + 6;
-		break;
+		cb_error (_("Invalid indicator '%c' at column 7"), buff[6]);
+		return YY_NULL;
 	}
 
 	/* skip comments that follow after AUTHORS, etc. */
@@ -460,7 +566,6 @@ start:
 
 		/* show warning if it is not whitespaces */
 		if (cb_warn_column_overflow && last_line_2 < cb_source_line - 1) {
-			int coln;
 			for (coln = cb_text_column; coln < n; coln++) {
 				if (buff[coln] != ' ' && buff[coln] != '\n') {
 					cb_warning (_("Source text after column %d"),
@@ -553,7 +658,6 @@ start:
 		memset (buff, '\n', newline_count);
 		newline_count = 1;
 	}
-
 	return strlen (buff);
 }
 

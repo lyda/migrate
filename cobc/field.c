@@ -211,9 +211,13 @@ struct cb_field *
 cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
 {
 	struct cb_field		*f;
-	struct cb_reference	*r = CB_REFERENCE (redefines);
-	const char		*name = CB_NAME (redefines);
-	cb_tree			x = CB_TREE (field);
+	struct cb_reference	*r;
+	const char		*name;
+	cb_tree			x;
+
+	r = CB_REFERENCE (redefines);
+	name = CB_NAME (redefines);
+	x = CB_TREE (field);
 
 	/* check qualification */
 	if (r->chain) {
@@ -270,8 +274,8 @@ cb_resolve_redefines (struct cb_field *field, cb_tree redefines)
 static int
 validate_field_1 (struct cb_field *f)
 {
-	cb_tree		x = CB_TREE (f);
-	char		*name = cb_name (x);
+	cb_tree		x;
+	char		*name;
 	struct cb_field *p;
 	char		*pp;
 	unsigned char	*pstr;
@@ -279,6 +283,8 @@ validate_field_1 (struct cb_field *f)
 	int		need_picture;
 	char		pic[16];
 
+	x = CB_TREE (f);
+	name = cb_name (x);
 	if (f->flag_any_length) {
 		if (f->storage != CB_STORAGE_LINKAGE) {
 			cb_error_x (x, _("'%s' ANY LENGTH only allowed in LINKAGE"), name);
@@ -465,10 +471,11 @@ validate_field_1 (struct cb_field *f)
 				if (f->values) {
 					sprintf (pic, "X(%d)", (int)CB_LITERAL(CB_VALUE(f->values))->size);
 				} else {
-					sprintf (pic, "X(0)");
+					sprintf (pic, "X(1)");
 				}
 				f->pic = CB_PICTURE (cb_build_picture (pic));
-			} else if (f->flag_item_78 && f->values) {
+			} else if (f->flag_item_78 && f->values &&
+				   CB_VALUE(f->values) != cb_error_node) {
 				f->count++;
 				if (CB_NUMERIC_LITERAL_P(CB_VALUE(f->values))) {
 					memset (pic, 0, sizeof (pic));
@@ -499,7 +506,11 @@ validate_field_1 (struct cb_field *f)
 					f->usage = CB_USAGE_DISPLAY;
 				}
 			} else {
-				cb_error_x (x, _("PICTURE clause required for '%s'"), name);
+				if (f->flag_item_78) {
+					cb_error_x (x, _("Value required for constant item '%s'"), name);
+				} else {
+					cb_error_x (x, _("PICTURE clause required for '%s'"), name);
+				}
 				return -1;
 			}
 		}
@@ -933,13 +944,15 @@ cb_validate_field (struct cb_field *f)
 	}
 
 	validate_field_value (f);
+	f->flag_is_verified = 1;
 }
 
 void
 cb_validate_88_item (struct cb_field *f)
 {
-	cb_tree x = CB_TREE (f);
+	cb_tree x;
 
+	x = CB_TREE (f);
 	if (!f->values) {
 		level_require_error (x, "VALUE");
 	}
@@ -952,8 +965,14 @@ cb_validate_88_item (struct cb_field *f)
 void
 cb_validate_78_item (struct cb_field *f)
 {
-	cb_tree x = CB_TREE (f);
+	cb_tree x;
 
+	x = CB_TREE (f);
+	if (f->level != 78) {
+		if (f->level != 1) {
+			cb_error_x (CB_TREE (f), _("CONSTANT must be at 01 level"));
+		}
+	}
 	if (!f->values) {
 		level_require_error (x, "VALUE");
 	}

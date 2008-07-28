@@ -57,6 +57,8 @@
 
 #define	COB_SELECT_FILE_STATUS	0x01
 #define	COB_SELECT_EXTERNAL	0x02
+#define	COB_SELECT_LINAGE	0x04
+#define	COB_SELECT_SPLITKEY	0x08
 
 /* Lock mode */
 
@@ -146,12 +148,12 @@
 
 /* File connector */
 
-typedef struct {
+struct cob_file_key {
 	cob_field	*field;	/* key field */
 	int		flag;	/* WITH DUPLICATES (for RELATIVE/INDEXED) */
 				/* ASCENDING/DESCENDING (for SORT) */
 	size_t		offset;	/* Offset of field */
-} cob_file_key;
+};
 
 struct linage_struct {
 	cob_field		*linage;		/* LINAGE */
@@ -171,9 +173,9 @@ typedef struct {
 	cob_field		*assign;		/* ASSIGN TO */
 	cob_field		*record;		/* record area */
 	cob_field		*record_size;		/* record size depending on */
-	cob_file_key		*keys;			/* RELATIVE/RECORD/SORT keys */
+	struct cob_file_key	*keys;			/* RELATIVE/RECORD/SORT keys */
 	void			*file;			/* file specific data pointer */
-	struct linage_struct	*linptr;		/* LINAGE pointer */
+	void			*linorkeyptr;		/* LINAGE pointer or SPLIT KEY */
 	const unsigned char	*sort_collating;	/* SORT collating */
 	void			*extfh_ptr;		/* For EXTFH usage */
 	size_t			record_min;		/* record min size */
@@ -199,7 +201,7 @@ typedef struct {
 
 /* File I-O functions */
 
-typedef struct {
+struct cob_fileio_funcs {
 	int	(*open) (cob_file *f, char *filename, int mode, int opt);
 	int	(*close) (cob_file *f, int opt);
 	int	(*start) (cob_file *f, int cond, cob_field *key);
@@ -208,11 +210,11 @@ typedef struct {
 	int	(*write) (cob_file *f, int opt);
 	int	(*rewrite) (cob_file *f, int opt);
 	int	(*fdelete) (cob_file *f);
-} cob_fileio_funcs;
+};
 
 DLL_EXPIMP extern cob_file	*cob_error_file;
 
-DLL_EXPIMP extern int		cob_check_eop;
+DLL_EXPIMP extern size_t	cob_check_eop;
 
 extern void cob_default_error_handle (void);
 
@@ -225,6 +227,7 @@ extern void cob_rewrite (cob_file *f, cob_field *rec, int opt, cob_field *fnstat
 extern void cob_delete (cob_file *f, cob_field *fnstatus);
 extern void cob_start (cob_file *f, int cond, cob_field *key, cob_field *fnstatus);
 
+extern void cob_unlock_file (cob_file *f, cob_field *fnstatus);
 extern void cob_commit (void);
 extern void cob_rollback (void);
 

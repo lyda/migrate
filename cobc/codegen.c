@@ -60,6 +60,7 @@ static int gen_full_ebcdic = 0;
 static int gen_native = 0;
 static int gen_custom = 0;
 static int field_iteration = 0;
+static int screenptr = 0;
 
 static int i_counters[NUM_I_COUNTERS];
 
@@ -300,11 +301,13 @@ output_storage (const char *fmt, ...)
 static void
 output_base (struct cb_field *f)
 {
-	struct cb_field	*f01 = cb_field_founder (f);
+	struct cb_field	*f01;
 	struct cb_field *p;
 	struct cb_field *v;
 	char		*nmp;
 	char		name[CB_MAX_CNAME];
+
+	f01 = cb_field_founder (f);
 
 	if (f->flag_item_78) {
 		return;
@@ -360,7 +363,7 @@ output_base (struct cb_field *f)
 					}
 					output_integer (v->occurs_depending);
 				} else {
-					output (" + %d", p->size);
+					output (" + %d", p->size * p->occurs_max);
 				}
 			}
 		}
@@ -431,7 +434,6 @@ output_data (cb_tree x)
 		/* Fall through */
 	default:
 		fprintf (stderr, "Unexpected tree tag %d\n", CB_TREE_TAG (x));
-		fflush (stderr);
 		ABORT ();
 	}
 }
@@ -529,12 +531,12 @@ lookup_attr (int type, int digits, int scale, int flags, unsigned char *pic, int
 static void
 output_attr (cb_tree x)
 {
-	int			id;
-	int			type;
-	int			flags;
 	struct cb_literal	*l;
 	struct cb_reference	*r;
 	struct cb_field		*f;
+	int			id;
+	int			type;
+	int			flags;
 
 	switch (CB_TREE_TAG (x)) {
 	case CB_TAG_LITERAL:
@@ -593,6 +595,9 @@ output_attr (cb_tree x)
 				if (f->flag_real_binary) {
 					flags |= COB_FLAG_REAL_BINARY;
 				}
+				if (f->flag_is_pointer) {
+					flags |= COB_FLAG_IS_POINTER;
+				}
 
 				id = lookup_attr (type, f->pic->digits, f->pic->scale,
 						  flags, (ucharptr) f->pic->str, f->pic->lenstr);
@@ -631,10 +636,11 @@ static int
 lookup_literal (cb_tree x)
 {
 
-	struct cb_literal	*literal = CB_LITERAL (x);
+	struct cb_literal	*literal;
 	struct literal_list	*l;
 	FILE			*savetarget;
 
+	literal = CB_LITERAL (x);
 	/* search literal cache */
 	for (l = literal_cache; l; l = l->next) {
 		if (CB_TREE_CLASS (literal) == CB_TREE_CLASS (l->literal)
@@ -766,7 +772,7 @@ output_integer (cb_tree x)
 			return;
 
 		case CB_USAGE_DISPLAY:
-			if (f->pic->scale >= 0
+			if (f->pic && f->pic->scale >= 0
 			    && f->size - f->pic->scale > 0
 			    && f->size - f->pic->scale <= 9
 			    && f->pic->have_sign == 0) {
@@ -791,6 +797,8 @@ output_integer (cb_tree x)
 				output ("(*(");
 				if (!f->pic->have_sign) {
 					output ("unsigned ");
+				} else {
+					output ("signed ");
 				}
 				output ("char *) (");
 				output_data (x);
@@ -1141,7 +1149,7 @@ output_param (cb_tree x, int id)
 					}
 				}
 			} else {
-				if (f->storage == CB_STORAGE_SCREEN && id != -1) {
+				if (screenptr && f->storage == CB_STORAGE_SCREEN) {
 					output ("&s_%d", f->id);
 				} else {
 					output ("&%s%d", CB_PREFIX_FIELD, f->id);
@@ -1246,14 +1254,12 @@ output_param (cb_tree x, int id)
 static void
 output_funcall (cb_tree x)
 {
-	struct cb_funcall	*p = CB_FUNCALL (x);
+	struct cb_funcall	*p;
 	cb_tree			l;
 	int			i;
 
+	p = CB_FUNCALL (x);
 	if (p->name[0] == '$') {
-/*
-	struct cb_field *f = cb_field (p->argv[0]);
-*/
 		switch (p->name[1]) {
 		case 'E':
 			/* Set of one character */
@@ -1295,6 +1301,7 @@ output_funcall (cb_tree x)
 		}
 		return;
 	}
+	screenptr = p->screenptr;
 	output ("%s (", p->name);
 	for (i = 0; i < p->argc; i++) {
 		if (p->varcnt && i + 1 == p->argc) {
@@ -1314,6 +1321,7 @@ output_funcall (cb_tree x)
 		}
 	}
 	output (")");
+	screenptr = 0;
 }
 
 static void
@@ -1609,7 +1617,7 @@ output_initialize_uniform (cb_tree x, int c, int size)
 static void
 output_initialize_one (struct cb_initialize *p, cb_tree x)
 {
-	struct cb_field		*f = cb_field (x);
+	struct cb_field		*f;
 	cb_tree			value;
 	cb_tree			lrp;
 	struct cb_literal	*l;
@@ -1619,6 +1627,8 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 
 	static char		*buff = NULL;
 	static int		lastsize = 0;
+
+	f = cb_field (x);
 
 	/* CHAINING */
 	if (f->flag_chained) {
@@ -1667,13 +1677,13 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 					buff = cobc_malloc (COB_SMALL_BUFF);
 					lastsize = COB_SMALL_BUFF;
 				} else {
-					buff = cobc_malloc (f->size);
+					buff = cobc_malloc ((size_t)f->size);
 					lastsize = f->size;
 				}
 			} else {
 				if (f->size > lastsize) {
 					free (buff);
-					buff = cobc_malloc (f->size);
+					buff = cobc_malloc ((size_t)f->size);
 					lastsize = f->size;
 				}
 			}
@@ -1770,7 +1780,7 @@ output_initialize_one (struct cb_initialize *p, cb_tree x)
 static void
 output_initialize_compound (struct cb_initialize *p, cb_tree x)
 {
-	struct cb_field	*ff = cb_field (x);
+	struct cb_field	*ff;
 	struct cb_field	*f;
 	struct cb_field	*last_field;
 	cb_tree		c;
@@ -1779,6 +1789,7 @@ output_initialize_compound (struct cb_initialize *p, cb_tree x)
 	int		i;
 	size_t		size;
 
+	ff = cb_field (x);
 	for (f = ff->children; f; f = f->sister) {
 		type = initialize_type (p, f, 0);
 		c = cb_build_field_reference (f, x);
@@ -1847,9 +1858,10 @@ output_initialize_compound (struct cb_initialize *p, cb_tree x)
 static void
 output_initialize (struct cb_initialize *p)
 {
-	struct cb_field *f = cb_field (p->var);
+	struct cb_field *f;
 	int		c;
 
+	f = cb_field (p->var);
 	switch (initialize_type (p, f, 1)) {
 	case INITIALIZE_NONE:
 		break;
@@ -1891,9 +1903,10 @@ static void
 output_search_whens (cb_tree table, cb_tree var, cb_tree stmt, cb_tree whens)
 {
 	cb_tree		l;
-	struct cb_field *p = cb_field (table);
+	struct cb_field *p;
 	cb_tree		idx = NULL;
 
+	p = cb_field (table);
 	/* determine the index to use */
 	if (var) {
 		for (l = p->index_list; l; l = CB_CHAIN (l)) {
@@ -1943,9 +1956,11 @@ output_search_whens (cb_tree table, cb_tree var, cb_tree stmt, cb_tree whens)
 static void
 output_search_all (cb_tree table, cb_tree stmt, cb_tree cond, cb_tree when)
 {
-	struct cb_field *p = cb_field (table);
-	cb_tree		idx = CB_VALUE (p->index_list);
+	struct cb_field *p;
+	cb_tree		idx;
 
+	p = cb_field (table);
+	idx = CB_VALUE (p->index_list);
 	/* header */
 	output_indent ("{");
 	output_line ("int ret;");
@@ -2035,22 +2050,10 @@ output_call (struct cb_call *p)
 	/* User defined entry points */
 	if (CB_LITERAL_P (p->name)) {
 		lp = CB_LITERAL (p->name);
-/* Prepare MF funnies
-#ifndef	__MVS__
-		if (lp->size == 1 &&
-		    (*(lp->data) == 0x91 || *(lp->data) == 0xA7
-		     || *(lp->data) == 0xAF || *(lp->data) == 0xB0
-		     || *(lp->data) == 0xE5 || *(lp->data) == 0xF4
-		     || *(lp->data) == 0xF5)) {
-			dynamic_link = 0;
-			system_call = 1;
-		}
-#endif
-*/
 		if (p->is_system) {
 			psyst = (struct system_table *)&system_tab[0];
 			for (; psyst->syst_name; psyst++) {
-				if (!strcmp((char *)lp->data, (char *)psyst->syst_name)) {
+				if (!strcmp((const char *)lp->data, (const char *)psyst->syst_name)) {
 					system_call = (char *)psyst->syst_call;
 					dynamic_link = 0;
 					break;
@@ -2075,6 +2078,9 @@ output_call (struct cb_call *p)
 	if (dynamic_link) {
 		if (retptr) {
 			output_line ("void * (*func)();");
+#ifdef	COB_NON_ALIGNED
+			output_line ("void *temptr;");
+#endif
 		} else {
 			output_line ("int (*func)();");
 		}
@@ -2093,21 +2099,28 @@ output_call (struct cb_call *p)
 		case CB_CALL_BY_REFERENCE:
 			if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x)) {
 				output_prefix ();
-				output ("unsigned char content_%d[4];\n", (int)n);
+#ifdef HAVE_ATTRIBUTE_ALIGNED
+				output ("unsigned char content_%d[8] __attribute__((aligned));\n", (int)n);
+#else
+				output ("unsigned char content_%d[8];\n", (int)n);
+#endif
 			}
 			break;
 		case CB_CALL_BY_CONTENT:
-		case CB_CALL_BY_VALUE:
 			if (CB_TREE_TAG (x) != CB_TAG_INTRINSIC) {
 				output_prefix ();
 				output ("unsigned char content_%d[", (int)n);
 				if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x) ||
 				    x == cb_null) {
-					output ("4");
+					output ("8");
 				} else {
 					output_size (x);
 				}
+#ifdef HAVE_ATTRIBUTE_ALIGNED
+				output ("] __attribute__((aligned));\n");
+#else
 				output ("];\n");
+#endif
 			}
 			break;
 		}
@@ -2117,18 +2130,36 @@ output_call (struct cb_call *p)
 		x = CB_VALUE (l);
 		switch (CB_PURPOSE_INT (l)) {
 		case CB_CALL_BY_REFERENCE:
-			if (CB_NUMERIC_LITERAL_P (x) || CB_BINARY_OP_P (x)) {
+			if (CB_NUMERIC_LITERAL_P (x)) {
+				output_prefix ();
+				if (cb_fits_int (x)) {
+					output ("*(int *)content_%d = ", (int)n);
+					output ("%d", cb_get_int (x));
+				} else {
+					output ("*(long long *)content_%d = ", (int)n);
+					output ("%lldLL", cb_get_long_long (x));
+				}
+				output (";\n");
+			} else if (CB_BINARY_OP_P (x)) {
 				output_prefix ();
 				output ("*(int *)content_%d = ", (int)n);
 				output_integer (x);
 				output (";\n");
 			}
 			break;
-		case CB_CALL_BY_VALUE:
 		case CB_CALL_BY_CONTENT:
 			if (CB_TREE_TAG (x) != CB_TAG_INTRINSIC) {
 				output_prefix ();
-				if (CB_NUMERIC_LITERAL_P (x) || x == cb_null
+				if (CB_NUMERIC_LITERAL_P (x)) {
+					if (cb_fits_int (x)) {
+						output ("*(int *)content_%d = ", (int)n);
+						output ("%d", cb_get_int (x));
+					} else {
+						output ("*(long long *)content_%d = ", (int)n);
+						output ("%lldLL", cb_get_long_long (x));
+					}
+					output (";\n");
+				} else if (x == cb_null
 				    || (CB_TREE_CATEGORY (x) == CB_CATEGORY_NUMERIC
 					&& cb_field (x)->usage == CB_USAGE_LENGTH)) {
 					output ("*(int *)content_%d = ", (int)n);
@@ -2194,7 +2225,11 @@ output_call (struct cb_call *p)
 			output (";\n");
 			output_prefix ();
 			if (retptr) {
+#ifdef	COB_NON_ALIGNED
+				output ("temptr");
+#else
 				output_integer (p->returning);
+#endif
 			} else {
 				output_integer (current_prog->cb_return_code);
 			}
@@ -2202,14 +2237,22 @@ output_call (struct cb_call *p)
 		} else {
 			/* static link */
 			if (retptr) {
+#ifdef	COB_NON_ALIGNED
+				output ("temptr");
+#else
 				output_integer (p->returning);
+#endif
 			} else {
 				output_integer (current_prog->cb_return_code);
 			}
+			output (" = ");
+			if (retptr) {
+				output ("(void *)");
+			}
 			if (system_call) {
-				output (" = %s", system_call);
+				output ("%s", system_call);
 			} else {
-				output (" = %s",
+				output ("%s",
 					cb_encode_program_id ((char *)(CB_LITERAL (p->name)->data)));
 			}
 		}
@@ -2245,7 +2288,11 @@ output_call (struct cb_call *p)
 		}
 		output_prefix ();
 		if (retptr) {
+#ifdef	COB_NON_ALIGNED
+			output ("temptr");
+#else
 			output_integer (p->returning);
+#endif
 		} else {
 			output_integer (current_prog->cb_return_code);
 		}
@@ -2267,9 +2314,41 @@ output_call (struct cb_call *p)
 			}
 			break;
 		case CB_CALL_BY_CONTENT:
-		case CB_CALL_BY_VALUE:
 			if (CB_TREE_TAG (x) != CB_TAG_INTRINSIC) {
 				output ("content_%d", (int)n);
+			} else {
+				output_data (x);
+			}
+			break;
+		case CB_CALL_BY_VALUE:
+			if (CB_TREE_TAG (x) != CB_TAG_INTRINSIC) {
+				switch (CB_TREE_TAG (x)) {
+				case CB_TAG_LITERAL:
+					if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
+						output ("%d", cb_get_int (x));
+					} else {
+						output ("%d", CB_LITERAL (x)->data[0]);
+					}
+					break;
+				default:
+					switch (cb_field (x)->usage) {
+					case CB_USAGE_BINARY:
+					case CB_USAGE_COMP_5:
+					case CB_USAGE_COMP_X:
+					case CB_USAGE_INDEX:
+					case CB_USAGE_LENGTH:
+					case CB_USAGE_POINTER:
+					case CB_USAGE_PROGRAM_POINTER:
+						output_integer (x);
+						break;
+					default:
+						output ("*(");
+						output_data (x);
+						output (")");
+						break;
+					}
+					break;
+				}
 			} else {
 				output_data (x);
 			}
@@ -2282,7 +2361,7 @@ output_call (struct cb_call *p)
 	if (!system_call) {
 		if (cb_sticky_linkage || cb_flag_null_param) {
 			for (n = 0; n < 4; n++) {
-				if (parmnum != 0) {
+				if (n != 0 || parmnum != 0) {
 					output (", ");
 				}
 				output ("NULL");
@@ -2290,8 +2369,18 @@ output_call (struct cb_call *p)
 		}
 	}
 	output (");\n");
-	if (p->returning && !retptr) {
-		output_stmt (cb_build_move (current_prog->cb_return_code, p->returning));
+	if (p->returning) {
+		if (!retptr) {
+			output_stmt (cb_build_move (current_prog->cb_return_code,
+						    p->returning));
+#ifdef	COB_NON_ALIGNED
+		} else {
+			output_prefix ();
+			output ("memcpy (");
+			output_data (p->returning);
+			output (", &temptr, %d);\n", sizeof (void *));
+#endif
+		}
 	}
 	if (p->stmt2) {
 		output_stmt (p->stmt2);
@@ -2395,6 +2484,7 @@ output_perform_call (struct cb_label *lb, struct cb_label *le)
 static void
 output_perform_exit (struct cb_label *l)
 {
+	output_newline ();
 	output_line ("if (frame_stack[frame_index].perform_through == %d)", l->id);
 #ifndef	__GNUC__
 	output_line ("  goto PSWITCH;");
@@ -2642,7 +2732,7 @@ output_stmt (cb_tree x)
 		lp = CB_LABEL (x);
 		output_newline ();
 		if (lp->is_section) {
-			if (strcmp ((char *)(lp->name) , "MAIN SECTION")) {
+			if (strcmp ((const char *)(lp->name) , "MAIN SECTION")) {
 				output_line ("/* %s SECTION: */", lp->name);
 			} else {
 				output_line ("/* %s: */", lp->name);
@@ -2662,7 +2752,7 @@ output_stmt (cb_tree x)
 		}
 		if (cb_flag_trace) {
 			if (lp->is_section) {
-				if (strcmp ((char *)(lp->name) , "MAIN SECTION")) {
+				if (strcmp ((const char *)(lp->name) , "MAIN SECTION")) {
 					output_line ("fputs (\"PROGRAM-ID: %s: %s SECTION\\n\", stderr);", excp_current_program_id, lp->orig_name);
 				} else {
 					output_line ("fputs (\"PROGRAM-ID: %s: %s\\n\", stderr);", excp_current_program_id, lp->orig_name);
@@ -2839,7 +2929,7 @@ output_file_allocation (struct cb_file *f)
 
 	/* output RELATIVE/RECORD KEY's */
 	if (f->organization == COB_ORG_RELATIVE || f->organization == COB_ORG_INDEXED) {
-		output ("  static cob_file_key *%s%s = NULL;\n", CB_PREFIX_KEYS, f->cname);
+		output ("  static struct cob_file_key *%s%s = NULL;\n", CB_PREFIX_KEYS, f->cname);
 	}
 	output ("  static cob_file *%s%s = NULL;\n", CB_PREFIX_FILE, f->cname);
 	output ("  static char %s%s_status[4];\n", CB_PREFIX_FILE, f->cname);
@@ -2857,14 +2947,14 @@ output_file_initialization (struct cb_file *f)
 		output_line ("if (cob_initial_external)");
 		output_indent ("{");
 		if (f->linage) {
-			output_line ("%s%s->linptr = cob_malloc (sizeof(struct linage_struct));", CB_PREFIX_FILE, f->cname);
+			output_line ("%s%s->linorkeyptr = cob_malloc (sizeof(struct linage_struct));", CB_PREFIX_FILE, f->cname);
 		}
 	} else {
 		output_line ("if (!%s%s)", CB_PREFIX_FILE, f->cname);
 		output_indent ("{");
 		output_line ("%s%s = cob_malloc (sizeof(cob_file));", CB_PREFIX_FILE, f->cname);
 		if (f->linage) {
-			output_line ("%s%s->linptr = cob_malloc (sizeof(struct linage_struct));", CB_PREFIX_FILE, f->cname);
+			output_line ("%s%s->linorkeyptr = cob_malloc (sizeof(struct linage_struct));", CB_PREFIX_FILE, f->cname);
 		}
 		output_indent ("}");
 	}
@@ -2876,7 +2966,7 @@ output_file_initialization (struct cb_file *f)
 		}
 		output_line ("if (!%s%s)", CB_PREFIX_KEYS, f->cname);
 		output_indent ("{");
-		output_line ("%s%s = cob_malloc (sizeof (cob_file_key) * %d);",
+		output_line ("%s%s = cob_malloc (sizeof (struct cob_file_key) * %d);",
 			     CB_PREFIX_KEYS, f->cname, nkeys);
 		output_indent ("}");
 		nkeys = 1;
@@ -2952,42 +3042,44 @@ output_file_initialization (struct cb_file *f)
 	output_line ("%s%s->file = NULL;", CB_PREFIX_FILE, f->cname);
 
 	if (f->linage) {
+		output_line ("lingptr = (struct linage_struct *)(%s%s->linorkeyptr);",
+				CB_PREFIX_FILE, f->cname);
 		output_prefix ();
-		output ("%s%s->linptr->linage = ", CB_PREFIX_FILE, f->cname);
+		output ("lingptr->linage = ");
 		output_param (f->linage, -1);
 		output (";\n");
 		output_prefix ();
-		output ("%s%s->linptr->linage_ctr = ", CB_PREFIX_FILE, f->cname);
+		output ("lingptr->linage_ctr = ");
 		output_param (f->linage_ctr, -1);
 		output (";\n");
 		if (f->latfoot) {
 			output_prefix ();
-			output ("%s%s->linptr->latfoot = ", CB_PREFIX_FILE, f->cname);
+			output ("lingptr->latfoot = ");
 			output_param (f->latfoot, -1);
 			output (";\n");
 		} else {
-			output_line ("%s%s->linptr->latfoot = NULL;", CB_PREFIX_FILE, f->cname);
+			output_line ("lingptr->latfoot = NULL;");
 		}
 		if (f->lattop) {
 			output_prefix ();
-			output ("%s%s->linptr->lattop = ", CB_PREFIX_FILE, f->cname);
+			output ("lingptr->lattop = ");
 			output_param (f->lattop, -1);
 			output (";\n");
 		} else {
-			output_line ("%s%s->linptr->lattop = NULL;", CB_PREFIX_FILE, f->cname);
+			output_line ("lingptr->lattop = NULL;");
 		}
 		if (f->latbot) {
 			output_prefix ();
-			output ("%s%s->linptr->latbot = ", CB_PREFIX_FILE, f->cname);
+			output ("lingptr->latbot = ");
 			output_param (f->latbot, -1);
 			output (";\n");
 		} else {
-			output_line ("%s%s->linptr->latbot = NULL;", CB_PREFIX_FILE, f->cname);
+			output_line ("lingptr->latbot = NULL;");
 		}
-		output_line ("%s%s->linptr->lin_lines = 0;", CB_PREFIX_FILE, f->cname);
-		output_line ("%s%s->linptr->lin_foot = 0;", CB_PREFIX_FILE, f->cname);
-		output_line ("%s%s->linptr->lin_top = 0;", CB_PREFIX_FILE, f->cname);
-		output_line ("%s%s->linptr->lin_bot = 0;", CB_PREFIX_FILE, f->cname);
+		output_line ("lingptr->lin_lines = 0;");
+		output_line ("lingptr->lin_foot = 0;");
+		output_line ("lingptr->lin_top = 0;");
+		output_line ("lingptr->lin_bot = 0;");
 	}
 
 	output_line ("%s%s->organization = %d;", CB_PREFIX_FILE, f->cname, f->organization);
@@ -3004,6 +3096,7 @@ output_file_initialization (struct cb_file *f)
 	output_line ("%s%s->flag_read_done = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_select_features = %d;", CB_PREFIX_FILE, f->cname,
 		     ((f->file_status ? COB_SELECT_FILE_STATUS : 0) |
+		     (f->linage ? COB_SELECT_LINAGE : 0) |
 		     (f->external_assign ? COB_SELECT_EXTERNAL : 0)));
 	output_line ("%s%s->flag_needs_nl = 0;", CB_PREFIX_FILE, f->cname);
 	output_line ("%s%s->flag_needs_top = 0;", CB_PREFIX_FILE, f->cname);
@@ -3032,7 +3125,7 @@ output_screen_definition (struct cb_field *p)
 	type = (p->children ? COB_SCREEN_TYPE_GROUP :
 		p->values ? COB_SCREEN_TYPE_VALUE :
 		(p->size > 0) ? COB_SCREEN_TYPE_FIELD : COB_SCREEN_TYPE_ATTRIBUTE);
-	output ("cob_screen s_%d = {%d, ", p->id, type);
+	output ("  static cob_screen s_%d = {", p->id);
 
 	if (type == COB_SCREEN_TYPE_GROUP) {
 		output ("&s_%d, ", p->children->id);
@@ -3058,30 +3151,23 @@ output_screen_definition (struct cb_field *p)
 	} else {
 		output ("NULL, ");
 	}
-	if (p->screen_from) {
-		if (CB_FIELD_P(p->screen_from) || CB_REFERENCE_P(p->screen_from)) {
-			cb_field (p->screen_from)->count++;
-			output_param (cb_build_field_reference (cb_field (p->screen_from),
-					NULL), cb_field (p->screen_from)->id);
-		} else {
-			output_param (p->screen_from, 0);
-		}
-		output (", ");
-	} else {
-		output ("NULL, ");
-	}
-	if (p->screen_to) {
-		cb_field (p->screen_to)->count++;
-		output_param (cb_build_field_reference (cb_field(p->screen_to), NULL),
-				cb_field (p->screen_to)->id);
-		output (", ");
-	} else {
-		output ("NULL, ");
-	}
 	output_param (p->screen_line, 0);
 	output (", ");
 	output_param (p->screen_column, 0);
-	output (", %ld};\n", p->screen_flag);
+	output (", ");
+	if (p->screen_foreg) {
+		output_param (p->screen_foreg, 0);
+		output (", ");
+	} else {
+		output ("NULL, ");
+	}
+	if (p->screen_backg) {
+		output_param (p->screen_backg, 0);
+		output (", ");
+	} else {
+		output ("NULL, ");
+	}
+	output ("%d, %d};\n", type, p->screen_flag);
 }
 
 /*
@@ -3097,6 +3183,10 @@ literal_value (cb_tree x)
 		return '0';
 	} else if (x == cb_quote) {
 		return '"';
+	} else if (x == cb_norm_low) {
+		return 0;
+	} else if (x == cb_norm_high) {
+		return 255;
 	} else if (x == cb_null) {
 		return 0;
 	} else if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
@@ -3113,14 +3203,14 @@ output_alphabet_name_definition (struct cb_alphabet_name *p)
 	cb_tree		ls;
 	cb_tree		x;
 	unsigned char	*data;
-	size_t		i;
-	size_t		n = 0;
-	size_t		size;
-	size_t		upper;
-	size_t		lower;
+	int		i;
+	int		n = 0;
+	int		size;
+	int		upper;
+	int		lower;
 	int		table[256];
 
-	/* reset by -1 */
+	/* reset to -1 */
 	for (i = 0; i < 256; i++) {
 		table[i] = -1;
 	}
@@ -3131,25 +3221,33 @@ output_alphabet_name_definition (struct cb_alphabet_name *p)
 			/* X THRU Y */
 			lower = literal_value (CB_PAIR_X (x));
 			upper = literal_value (CB_PAIR_Y (x));
-			for (i = lower; i <= upper; i++) {
-				table[i] = (int) n++;
+			if (lower <= upper) {
+				for (i = lower; i <= upper; i++) {
+					table[i] = n++;
+				}
+			} else {
+				for (i = upper; i >= lower; i--) {
+					table[i] = n++;
+				}
 			}
 		} else if (CB_LIST_P (x)) {
 			/* X ALSO Y ... */
 			for (ls = x; ls; ls = CB_CHAIN (ls)) {
-				table[literal_value (CB_VALUE (ls))] = (int) n;
+				table[literal_value (CB_VALUE (ls))] = n;
 			}
 			n++;
 		} else {
 			/* literal */
 			if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
-				table[literal_value (x)] = (int) n++;
-			} else {
-				size = CB_LITERAL (x)->size;
+				table[literal_value (x)] = n++;
+			} else if (CB_LITERAL_P (x)) {
+				size = (int)CB_LITERAL (x)->size;
 				data = CB_LITERAL (x)->data;
 				for (i = 0; i < size; i++) {
-					table[data[i]] = (int) n++;
+					table[data[i]] = n++;
 				}
+			} else {
+				table[literal_value (x)] = n++;
 			}
 		}
 	}
@@ -3157,14 +3255,18 @@ output_alphabet_name_definition (struct cb_alphabet_name *p)
 	/* fill the rest of characters */
 	for (i = 0; i < 256; i++) {
 		if (table[i] == -1) {
-			table[i] = (int) n++;
+			table[i] = n++;
 		}
 	}
 
 	/* output the table */
 	output ("static const unsigned char %s%s[256] = {\n", CB_PREFIX_SEQUENCE, p->cname);
 	for (i = 0; i < 256; i++) {
-		output (" %d,", table[i]);
+		if (i == 255) {
+			output (" %d", table[i]);
+		} else {
+			output (" %d,", table[i]);
+		}
 		if (i % 16 == 15) {
 			output_newline ();
 		}
@@ -3207,6 +3309,14 @@ output_class_name_definition (struct cb_class_name *p)
 		} else {
 			if (CB_TREE_CLASS (x) == CB_CLASS_NUMERIC) {
 				output ("f->data[i] == %d", literal_value(x));
+			} else if (x == cb_space) {
+				output ("f->data[i] == %d", ' ');
+			} else if (x == cb_zero) {
+				output ("f->data[i] == %d", '0');
+			} else if (x == cb_quote) {
+				output ("f->data[i] == %d", '"');
+			} else if (x == cb_null) {
+				output ("f->data[i] == 0");
 			} else {
 				size = CB_LITERAL (x)->size;
 				data = CB_LITERAL (x)->data;
@@ -3234,9 +3344,10 @@ output_class_name_definition (struct cb_class_name *p)
 static void
 output_initial_values (struct cb_field *p)
 {
-	cb_tree x;
-	cb_tree def = cb_auto_initialize ? cb_true : NULL;
+	cb_tree	x;
+	cb_tree	def;
 
+	def = cb_auto_initialize ? cb_true : NULL;
 	for (; p; p = p->sister) {
 		x = cb_build_field_reference (p, NULL);
 		if (p->flag_item_based) {
@@ -3357,8 +3468,15 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	if (prog->file_list) {
 		output_newline ();
 		output ("  /* Files */\n\n");
+		i = 0;
 		for (l = prog->file_list; l; l = CB_CHAIN (l)) {
 			output_file_allocation (CB_FILE (CB_VALUE (l)));
+			if (CB_FILE (CB_VALUE (l))->linage) {
+				i = 1;
+			}
+		}
+		if (i) {
+			output_line ("struct linage_struct *lingptr;");
 		}
 		output_newline ();
 	}
@@ -3474,18 +3592,6 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 	}
 
 	output_line ("/* Start of function code */");
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-	if (cb_flag_static_call == 2) {
-		output_newline ();
-		output_line ("/* Prototype for contained initialization function */");
-		output_line ("auto void init_%s (void);", prog->program_id);
-	}
-	if (has_external) {
-		output_newline ();
-		output_line ("/* Prototype for contained initialization function */");
-		output_line ("auto void init_external (void);");
-	}
-#endif
 	output_newline ();
 	output_line ("if (unlikely(entry < 0)) {");
 	output_line ("	if (!initialized) {");
@@ -3556,16 +3662,9 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 				prog->program_id);
 		}
 	}
-	if (prog->flag_screen) {
-		output_line ("cob_screen_init ();");
-	}
 	if (cb_flag_static_call == 2) {
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-		output_line ("init_%s ();", prog->program_id);
-#else
 		output_line ("goto L_init_%s;", prog->program_id);
 		output_line ("LRET_init_%s: ;", prog->program_id);
-#endif
 	}
 	if (prog->decimal_index_max) {
 		output_line ("/* initialize decimal numbers */");
@@ -3591,12 +3690,8 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		}
 		output_initial_values (prog->working_storage);
 		if (has_external) {
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-			output_line ("init_external ();");
-#else
 			output_line ("goto L_init_external;");
 			output_line ("LRET_init_external: ;");
-#endif
 		}
 		output_newline ();
 		for (l = prog->file_list; l; l = CB_CHAIN (l)) {
@@ -3630,12 +3725,8 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 		}
 		output_initial_values (prog->working_storage);
 		if (has_external) {
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-			output_line ("init_external ();");
-#else
 			output_line ("goto L_init_external;");
 			output_line ("LRET_init_external: ;");
-#endif
 		}
 		output_newline ();
 		for (l = prog->file_list; l; l = CB_CHAIN (l)) {
@@ -3765,43 +3856,25 @@ output_internal_function (struct cb_program *prog, cb_tree parameter_list)
 #endif
 
 	if (cb_flag_static_call == 2) {
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-		output_line ("void init_%s (void)", prog->program_id);
-		output_line ("{");
-#else
 		output_line ("L_init_%s: ;", prog->program_id);
-#endif
 		for (clp = call_cache; clp; clp = clp->next) {
-			output_line ("	call_%s = cob_resolve ((const char *)\"%s\");",
+			output_line ("\tcall_%s = cob_resolve ((const char *)\"%s\");",
 				     clp->callname, clp->callorig);
 		}
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-		output_line ("}");
-#else
-		output_line ("goto LRET_init_%s;", prog->program_id);
-#endif
+		output_line ("\tgoto LRET_init_%s;", prog->program_id);
 	}
 
 	if (has_external) {
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-		output_line ("void init_external (void)");
-		output_line ("{");
-#else
-		output_line ("L_init_external:");
-#endif
+		output_line ("L_init_external: ;");
 		for (k = field_cache; k; k = k->next) {
 			if (k->f->flag_item_external) {
 				output_prefix ();
-				output ("%s%d.data = ", CB_PREFIX_FIELD, k->f->id);
+				output ("\t%s%d.data = ", CB_PREFIX_FIELD, k->f->id);
 				output_data (k->x);
 				output (";\n");
 			}
 		}
-#if defined (__GNUC__) && (__GNUC__ >= 3)
-		output_line ("}");
-#else
-		output_line ("goto LRET_init_external;");
-#endif
+		output_line ("\tgoto LRET_init_external;");
 	}
 
 	output_indent ("}");
@@ -3813,12 +3886,14 @@ output_entry_function (struct cb_program *prog,
 		       cb_tree entry, cb_tree parameter_list, const int gencode)
 {
 
-	const unsigned char	*entry_name = CB_LABEL (CB_PURPOSE (entry))->name;
-	cb_tree			using_list = CB_VALUE (entry);
+	const unsigned char	*entry_name;
+	cb_tree			using_list;
 	cb_tree			l, l1, l2;
 	struct cb_field		*f;
 	int			parmnum;
 
+	entry_name = CB_LABEL (CB_PURPOSE (entry))->name;
+	using_list = CB_VALUE (entry);
 #ifdef	_MSC_VER
 	if (!gencode) {
 		output ("__declspec(dllexport) ");
@@ -3953,11 +4028,6 @@ codegen (struct cb_program *prog, int nested)
 #endif
 		if (optimize_flag) {
 			output ("#define COB_LOCAL_INLINE\n");
-/* RXW
-			if (optimize_flag > 1) {
-				output ("#define SUPER_OPTIMIZE\n");
-			}
-*/
 		}
 		output ("#include <libcob.h>\n\n");
 

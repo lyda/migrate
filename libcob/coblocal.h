@@ -51,15 +51,8 @@ COB_HIDDEN extern const char		*cob_orig_section;
 COB_HIDDEN extern const char		*cob_orig_paragraph;
 
 COB_HIDDEN extern void		cob_memcpy (cob_field *dst, unsigned char *src, int size);
-COB_HIDDEN extern void		cob_set_signal (void);
 COB_HIDDEN extern void		cob_exit_fileio (void);
 COB_HIDDEN extern void		cob_field_to_string (const cob_field *f, char *s);
-COB_HIDDEN extern int		cob_binary_get_int (const cob_field * const f);
-COB_HIDDEN extern long long	cob_binary_get_int64 (const cob_field * const f);
-COB_HIDDEN extern unsigned long long	cob_binary_get_uint64 (const cob_field * const f);
-COB_HIDDEN extern void		cob_binary_set_int (cob_field *f, int n);
-COB_HIDDEN extern void		cob_binary_set_int64 (cob_field *f, long long n);
-COB_HIDDEN extern void		cob_binary_set_uint64 (cob_field *f, unsigned long long n);
 COB_HIDDEN extern void		cob_init_numeric (void);
 #if 0
 COB_HIDDEN extern void		cob_init_termio (void);
@@ -67,7 +60,11 @@ COB_HIDDEN extern void		cob_init_termio (void);
 COB_HIDDEN extern void		cob_init_fileio (void);
 COB_HIDDEN extern void		cob_init_call (void);
 COB_HIDDEN extern void		cob_init_intrinsic (void);
+COB_HIDDEN extern void		cob_init_strings (void);
+COB_HIDDEN extern void		cob_init_move (void);
+COB_HIDDEN extern void		cob_screen_terminate (void);
 COB_HIDDEN extern int		cob_real_get_sign (cob_field *f);
 COB_HIDDEN extern void		cob_real_put_sign (cob_field *f, const int sign);
+COB_HIDDEN extern long long	cob_get_long_long (cob_field *f);
 
 #endif /* COB_LOCAL_H */

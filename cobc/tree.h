@@ -32,7 +32,7 @@
 #define CB_PREFIX_DECIMAL	"d_"	/* decimal number (cob_decimal) */
 #define CB_PREFIX_FIELD		"f_"	/* field (cob_field) */
 #define CB_PREFIX_FILE		"h_"	/* file (cob_file) */
-#define CB_PREFIX_KEYS		"k_"	/* file keys (cob_file_key []) */
+#define CB_PREFIX_KEYS		"k_"	/* file keys (struct cob_file_key []) */
 #define CB_PREFIX_LABEL		"l_"	/* label */
 #define CB_PREFIX_SEQUENCE	"s_"	/* collating sequence */
 
@@ -235,36 +235,40 @@ extern int		cb_tree_type (cb_tree x);
 extern int		cb_fits_int (cb_tree x);
 extern int		cb_fits_long_long (cb_tree x);
 extern int		cb_get_int (cb_tree x);
-
+extern long long	cb_get_long_long (cb_tree x);
 
 /*
  * Constants
  */
 
-extern cb_tree cb_any;
-extern cb_tree cb_true;
-extern cb_tree cb_false;
-extern cb_tree cb_null;
-extern cb_tree cb_zero;
-extern cb_tree cb_one;
-extern cb_tree cb_space;
-extern cb_tree cb_low;
-extern cb_tree cb_high;
-extern cb_tree cb_quote;
-extern cb_tree cb_int0;
-extern cb_tree cb_int1;
-extern cb_tree cb_int2;
-extern cb_tree cb_int3;
-extern cb_tree cb_int4;
-extern cb_tree cb_int5;
-extern cb_tree cb_i[8];
-extern cb_tree cb_error_node;
+extern cb_tree	cb_any;
+extern cb_tree	cb_true;
+extern cb_tree	cb_false;
+extern cb_tree	cb_null;
+extern cb_tree	cb_zero;
+extern cb_tree	cb_one;
+extern cb_tree	cb_space;
+extern cb_tree	cb_low;
+extern cb_tree	cb_high;
+extern cb_tree	cb_norm_low;
+extern cb_tree	cb_norm_high;
+extern cb_tree	cb_quote;
+extern cb_tree	cb_int0;
+extern cb_tree	cb_int1;
+extern cb_tree	cb_int2;
+extern cb_tree	cb_int3;
+extern cb_tree	cb_int4;
+extern cb_tree	cb_int5;
+extern cb_tree	cb_i[8];
+extern cb_tree	cb_error_node;
 
-extern cb_tree cb_intr_whencomp;
-extern cb_tree cb_intr_pi;
-extern cb_tree cb_intr_e;
+extern cb_tree	cb_intr_whencomp;
+extern cb_tree	cb_intr_pi;
+extern cb_tree	cb_intr_e;
 
-extern cb_tree cb_standard_error_handler;
+extern cb_tree	cb_standard_error_handler;
+
+extern size_t	gen_screen_ptr;
 
 struct cb_const {
 	struct cb_tree_common	common;
@@ -318,8 +322,10 @@ struct cb_alphabet_name {
 	struct cb_tree_common		common;
 	const char			*name;
 	char				*cname;
-	enum cb_alphabet_name_type	type;
 	cb_tree				custom_list;
+	enum cb_alphabet_name_type	type;
+	int				low_val_char;
+	int				high_val_char;
 };
 
 #define CB_ALPHABET_NAME(x)	(CB_TREE_CAST (CB_TAG_ALPHABET_NAME, struct cb_alphabet_name, x))
@@ -484,7 +490,9 @@ struct cb_field {
 	cb_tree			screen_column;
 	cb_tree			screen_from;
 	cb_tree			screen_to;
-	long			screen_flag; /* flags used in SCREEN SECTION */
+	cb_tree			screen_foreg;
+	cb_tree			screen_backg;
+	int			screen_flag; /* flags used in SCREEN SECTION */
 	/* flags */
 	unsigned int flag_external	: 1;	/* EXTERNAL */
 	unsigned int flag_blank_zero	: 1;	/* BLANK WHEN ZERO */
@@ -506,7 +514,9 @@ struct cb_field {
 	unsigned int flag_any_length	: 1;	/* is ANY LENGTH */
 	unsigned int flag_anylen_done	: 1;	/* ANY LENGTH is set up */
 	unsigned int flag_indexed_by	: 1;	/* INDEXED BY item */
-	unsigned int flag_spare		: 12;
+	unsigned int flag_is_pointer	: 1;	/* is POINTER */
+	unsigned int flag_is_verified	: 1;	/* has been verified */
+	unsigned int flag_spare		: 10;
 };
 
 #define CB_FIELD(x)		(CB_TREE_CAST (CB_TAG_FIELD, struct cb_field, x))
@@ -548,6 +558,21 @@ struct cb_file {
 	char			*cname;			/* the name used in C */
 	/* SELECT */
 	cb_tree			assign;			/* ASSIGN */
+	cb_tree			file_status;		/* FILE STATUS */
+	cb_tree			sharing;		/* SHARING */
+	cb_tree			key;			/* RELATIVE/RECORD KEY */
+	struct cb_alt_key	*alt_key_list;		/* ALTERNATE RECORD KEY */
+	/* FD/SD */
+	struct cb_field		*record;		/* record descriptor */
+	cb_tree			record_depending;	/* RECORD DEPENDING */
+	cb_tree			linage_ctr;
+	cb_tree			linage;
+	cb_tree			latfoot;
+	cb_tree			lattop;
+	cb_tree			latbot;
+	struct cb_label		*handler;		/* error handler */
+	int			record_min;		/* RECORD CONTAINS */
+	int			record_max;		/* RECORD CONTAINS */
 	int			optional;		/* OPTIONAL */
 	int			organization;		/* ORGANIZATION */
 	int			access_mode;		/* ACCESS MODE */
@@ -555,22 +580,6 @@ struct cb_file {
 	int			same_clause;		/* SAME clause */
 	int			finalized;		/* is finalized */
 	int			external;		/* is EXTERNAL */
-	cb_tree			file_status;		/* FILE STATUS */
-	cb_tree			sharing;		/* SHARING */
-	cb_tree			key;			/* RELATIVE/RECORD KEY */
-	struct cb_alt_key	*alt_key_list;		/* ALTERNATE RECORD KEY */
-	/* FD/SD */
-	struct cb_field		*record;		/* record descriptor */
-	int			record_min;		/* RECORD CONTAINS */
-	int			record_max;		/* RECORD CONTAINS */
-	cb_tree			record_depending;	/* RECORD DEPENDING */
-	cb_tree			linage_ctr;
-	cb_tree			linage;
-	cb_tree			latfoot;
-	cb_tree			lattop;
-	cb_tree			latbot;
-	/* STANDARD ERROR PROCEDURE */
-	struct cb_label		*handler;		/* error handler */
 	int			special;		/* Special file */
 	int			external_assign;	/* ASSIGN EXTERNAL */
 	int			fileid_assign;		/* ASSIGN DISK */
@@ -660,23 +669,25 @@ extern cb_tree cb_build_binary_list (cb_tree l, int op);
 struct cb_funcall {
 	struct cb_tree_common	common;
 	const char		*name;
+	cb_tree			argv[6];
 	int			argc;
 	int			varcnt;
-	cb_tree			argv[5];
+	size_t			screenptr;
 };
 
 #define CB_FUNCALL(x)		(CB_TREE_CAST (CB_TAG_FUNCALL, struct cb_funcall, x))
 #define CB_FUNCALL_P(x)		(CB_TREE_TAG (x) == CB_TAG_FUNCALL)
 
-extern cb_tree cb_build_funcall (const char *name, int argc, cb_tree a1,
-				 cb_tree a2, cb_tree a3, cb_tree a4, cb_tree a5);
+extern cb_tree cb_build_funcall (const char *name, int argc, cb_tree a1, cb_tree a2,
+				 cb_tree a3, cb_tree a4, cb_tree a5, cb_tree a6);
 
-#define cb_build_funcall_0(f)			cb_build_funcall (f, 0, NULL, NULL, NULL, NULL, NULL)
-#define cb_build_funcall_1(f,a1)		cb_build_funcall (f, 1, a1, NULL, NULL, NULL, NULL)
-#define cb_build_funcall_2(f,a1,a2)		cb_build_funcall (f, 2, a1, a2, NULL, NULL, NULL)
-#define cb_build_funcall_3(f,a1,a2,a3)		cb_build_funcall (f, 3, a1, a2, a3, NULL, NULL)
-#define cb_build_funcall_4(f,a1,a2,a3,a4)	cb_build_funcall (f, 4, a1, a2, a3, a4, NULL)
-#define cb_build_funcall_5(f,a1,a2,a3,a4,a5)	cb_build_funcall (f, 5, a1, a2, a3, a4, a5)
+#define cb_build_funcall_0(f)			cb_build_funcall (f, 0, NULL, NULL, NULL, NULL, NULL, NULL)
+#define cb_build_funcall_1(f,a1)		cb_build_funcall (f, 1, a1, NULL, NULL, NULL, NULL, NULL)
+#define cb_build_funcall_2(f,a1,a2)		cb_build_funcall (f, 2, a1, a2, NULL, NULL, NULL, NULL)
+#define cb_build_funcall_3(f,a1,a2,a3)		cb_build_funcall (f, 3, a1, a2, a3, NULL, NULL, NULL)
+#define cb_build_funcall_4(f,a1,a2,a3,a4)	cb_build_funcall (f, 4, a1, a2, a3, a4, NULL, NULL)
+#define cb_build_funcall_5(f,a1,a2,a3,a4,a5)	cb_build_funcall (f, 5, a1, a2, a3, a4, a5, NULL)
+#define cb_build_funcall_6(f,a1,a2,a3,a4,a5,a6)	cb_build_funcall (f, 6, a1, a2, a3, a4, a5, a6)
 
 
 /*
@@ -1104,6 +1115,7 @@ struct cb_program {
 	cb_tree			class_name_list;
 	cb_tree			parameter_list;
 	cb_tree			locale_list;
+	cb_tree			symbolic_list;
 	cb_tree			cb_return_code;
 	cb_tree			cb_sort_return;
 	cb_tree			cb_call_params;
@@ -1128,10 +1140,11 @@ struct cb_program {
 	int			decimal_index;
 	int			decimal_index_max;
 	int			gen_main;		/* Gen main function */
-	int			validated;		/* End program validate */
-	int			is_chained;		/* PROCEDURE CHAINING */
-	int			gen_decset;		/* Gen decimal_set_int */
-	int			gen_ptrmanip;		/* Gen cob_pointer_manip */
+	unsigned char		validated;		/* End program validate */
+	unsigned char		is_chained;		/* PROCEDURE CHAINING */
+	unsigned char		gen_decset;		/* Gen decimal_set_int */
+	unsigned char		gen_ptrmanip;		/* Gen cob_pointer_manip */
+	unsigned char		spare[4];		/* Spare */
 	struct cb_word		*word_table[CB_WORD_HASH_SIZE];
 };
 
@@ -1178,11 +1191,7 @@ extern void cb_validate_88_item (struct cb_field *p);
 extern void cb_validate_78_item (struct cb_field *p);
 
 /* typeck.c */
-extern cb_tree cb_check_group_name (cb_tree x);
-extern cb_tree cb_check_numeric_name (cb_tree x);
-extern cb_tree cb_check_numeric_edited_name (cb_tree x);
 extern cb_tree cb_check_numeric_value (cb_tree x);
-extern cb_tree cb_check_integer_value (cb_tree x);
 
 extern void cb_build_registers (void);
 extern char *cb_encode_program_id (const char *name);
@@ -1193,6 +1202,7 @@ extern cb_tree cb_build_assignment_name (struct cb_file *curfile, cb_tree name);
 extern cb_tree cb_build_index (cb_tree name, cb_tree values, int indexed_by, struct cb_field *qual);
 extern cb_tree cb_build_identifier (cb_tree x);
 extern cb_tree cb_build_length (cb_tree x);
+extern cb_tree cb_build_const_length (cb_tree x);
 extern cb_tree cb_build_address (cb_tree x);
 extern cb_tree cb_build_ppointer (cb_tree x);
 
@@ -1209,7 +1219,7 @@ extern cb_tree cb_build_sub (cb_tree v, cb_tree n, cb_tree round_opt);
 extern void cb_emit_corresponding (cb_tree (*func) (cb_tree f1, cb_tree f2, cb_tree f3), cb_tree x1, cb_tree x2, cb_tree opt);
 extern void cb_emit_move_corresponding (cb_tree x1, cb_tree x2);
 
-extern void cb_emit_accept (cb_tree var, cb_tree pos);
+extern void cb_emit_accept (cb_tree var, cb_tree pos, cb_tree fgc, cb_tree bgc, int dispattrs);
 extern void cb_emit_accept_date (cb_tree var);
 extern void cb_emit_accept_date_yyyymmdd (cb_tree var);
 extern void cb_emit_accept_day (cb_tree var);
@@ -1217,6 +1227,7 @@ extern void cb_emit_accept_day_yyyyddd (cb_tree var);
 extern void cb_emit_accept_day_of_week (cb_tree var);
 extern void cb_emit_accept_time (cb_tree var);
 extern void cb_emit_accept_command_line (cb_tree var);
+extern void cb_emit_get_environment (cb_tree envvar, cb_tree envval);
 extern void cb_emit_accept_environment (cb_tree var);
 extern void cb_emit_accept_mnemonic (cb_tree var, cb_tree mnemonic);
 extern void cb_emit_accept_name (cb_tree var, cb_tree name);
@@ -1238,9 +1249,14 @@ extern void cb_emit_continue (void);
 
 extern void cb_emit_delete (cb_tree file);
 
-extern void cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos, long dispattrs);
+extern void cb_emit_display (cb_tree values, cb_tree upon, cb_tree no_adv, cb_tree pos,
+				cb_tree fgc, cb_tree bgc, int dispattrs);
 extern cb_tree cb_build_display_upon (cb_tree x);
 extern cb_tree cb_build_display_upon_direct (cb_tree x);
+extern void cb_emit_env_name (cb_tree value);
+extern void cb_emit_env_value (cb_tree value);
+extern void cb_emit_arg_number (cb_tree value);
+extern void cb_emit_command_line (cb_tree value);
 
 extern void cb_emit_divide (cb_tree dividend, cb_tree divisor, cb_tree quotient, cb_tree remainder);
 
@@ -1270,7 +1286,7 @@ extern cb_tree cb_build_converting (cb_tree x, cb_tree y, cb_tree l);
 extern cb_tree cb_build_inspect_region_start (void);
 extern cb_tree cb_build_inspect_region (cb_tree l, cb_tree pos, cb_tree x);
 
-extern int validate_move (cb_tree src, cb_tree dst, int is_value);
+extern int validate_move (cb_tree src, cb_tree dst, size_t is_value);
 extern cb_tree cb_build_move (cb_tree src, cb_tree dst);
 extern void cb_emit_move (cb_tree src, cb_tree dsts);
 
@@ -1313,6 +1329,8 @@ extern void cb_emit_start (cb_tree file, cb_tree op, cb_tree key);
 extern void cb_emit_stop_run (cb_tree x);
 
 extern void cb_emit_string (cb_tree items, cb_tree into, cb_tree pointer);
+
+extern void cb_emit_unlock (cb_tree ref);
 
 extern void cb_emit_unstring (cb_tree name, cb_tree delimited, cb_tree into, cb_tree pointer, cb_tree tallying);
 extern cb_tree cb_build_unstring_delimited (cb_tree all, cb_tree value);

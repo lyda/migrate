@@ -179,9 +179,6 @@
 /* Define to 1 if you have the `memset' function. */
 #undef HAVE_MEMSET
 
-/* Has mvgetnstr in curses library */
-#undef HAVE_MVGETNSTR
-
 /* Define to 1 if you have the <ncurses.h> header file. */
 #undef HAVE_NCURSES_H
 
@@ -193,9 +190,6 @@
 
 /* Has -Wno-pointer-sign */
 #undef HAVE_PSIGN_OPT
-
-/* Define to 1 if you have the `regcomp' function. */
-#undef HAVE_REGCOMP
 
 /* Define to 1 if you have the `setlocale' function. */
 #undef HAVE_SETLOCALE

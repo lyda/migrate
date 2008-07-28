@@ -40,11 +40,11 @@ print_error (char *file, int line, const char *prefix, const char *fmt, va_list 
 	/* print the paragraph or section name */
 	if (current_section != last_section || current_paragraph != last_paragraph) {
 		if (current_paragraph &&
-		    strcmp ((char *)(current_paragraph->name), "MAIN PARAGRAPH")) {
+		    strcmp ((const char *)(current_paragraph->name), "MAIN PARAGRAPH")) {
 			fprintf (stderr, _("%s: In paragraph '%s':\n"),
 				 file, current_paragraph->name);
 		} else {
-			if (strcmp ((char *)(current_section->name), "MAIN SECTION")) {
+			if (strcmp ((const char *)(current_section->name), "MAIN SECTION")) {
 				fprintf (stderr, _("%s: In section '%s':\n"),
 					file, current_section->name);
 			}
@@ -90,6 +90,7 @@ cb_error (const char *fmt, ...)
 	va_end (ap);
 
 	errorcount++;
+
 }
 
 void
@@ -151,8 +152,9 @@ cb_verify (enum cb_support tag, const char *feature)
 void
 redefinition_error (cb_tree x)
 {
-	struct cb_word	*w = CB_REFERENCE (x)->word;
+	struct cb_word	*w;
 
+	w = CB_REFERENCE (x)->word;
 	cb_error_x (x, _("Redefinition of '%s'"), w->name);
 	cb_error_x (CB_VALUE (w->items), _("'%s' previously defined here"), w->name);
 }
@@ -160,8 +162,9 @@ redefinition_error (cb_tree x)
 void
 redefinition_warning (cb_tree x, cb_tree y)
 {
-	struct cb_word	*w = CB_REFERENCE (x)->word;
+	struct cb_word	*w;
 
+	w = CB_REFERENCE (x)->word;
 	cb_warning_x (x, _("Redefinition of '%s'"), w->name);
 	if (y) {
 		cb_warning_x (y, _("'%s' previously defined here"), w->name);
@@ -173,10 +176,11 @@ redefinition_warning (cb_tree x, cb_tree y)
 void
 undefined_error (cb_tree x)
 {
-	struct cb_reference	*r = CB_REFERENCE (x);
+	struct cb_reference	*r;
 	cb_tree			c;
 	char			buff[CB_MAX_CNAME];
 
+	r = CB_REFERENCE (x);
 	sprintf (buff, "'%s'", CB_NAME (x));
 	for (c = r->chain; c; c = CB_REFERENCE (c)->chain) {
 		strcat (buff, " in '");
@@ -189,13 +193,14 @@ undefined_error (cb_tree x)
 void
 ambiguous_error (cb_tree x)
 {
-	struct cb_word	*w = CB_REFERENCE (x)->word;
+	struct cb_word	*w;
 	struct cb_field	*p;
 	struct cb_label	*l2;
 	cb_tree		l;
 	cb_tree		y;
 	char		buff[CB_MAX_CNAME];
 
+	w = CB_REFERENCE (x)->word;
 	if (w->error == 0) {
 		/* display error on the first time */
 		sprintf (buff, "'%s'", CB_NAME (x));
@@ -223,7 +228,7 @@ ambiguous_error (cb_tree x)
 				l2 = CB_LABEL (y);
 				if (l2->section) {
 					strcat (buff, "in '");
-					strcat (buff, (char *)(l2->section->name));
+					strcat (buff, (const char *)(l2->section->name));
 					strcat (buff, "' ");
 				}
 				break;

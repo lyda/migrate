@@ -1,3 +1,160 @@
+2008-07-28  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Check min/max values on BINARY-xxx/COMP-5/COMP-X properly
+
+2008-07-26  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Allow literal on FROM clause for WRITE/REWRITE/RELEASE
+	* pplex.l : Rewrite source reading
+	* warning.def : Don't set column-overflow/terminator with -Wall
+
+2008-07-22  Roger While <simrw@sim-basis.de>
+
+	* cobc.[ch], warning.def : Remove unused field from macros
+
+2008-07-21  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Tighten up 88 level checking
+	* pplex.l : Directives parsing rewrite
+
+2008-07-20  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Catch mutliple PROGRAM-ID without matching END PROGRAM
+
+2008-07-19  Roger While <simrw@sim-basis.de>
+
+	* General : Tidy up syntax
+
+2008-07-18  Roger While <simrw@sim-basis.de>
+
+	* General : Tighten up invalid syntax checking
+	* parser.y, tree.[ch], typeck.c : Experimental CONSTANT support
+
+2008-07-16  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Fix segfault on invalid expressions, fix gcc warning
+	* parser.y : Preliminary CONSTANT support
+	* reserved.c : ACU keywords
+
+2008-07-11  Roger While <simrw@sim-basis.de>
+
+	* parser.y, tree.c, typeck.c, codegen.c : ALPHABET/CLASS
+		syntax/checking changes
+
+2008-07-09  Roger While <simrw@sim-basis.de>
+
+	* tree.h, typeck.c, codegen.c : Fix up SCREEN handling
+
+2008-07-08  Roger While <simrw@sim-basis.de>
+
+	* cobc.c : Prevent display of -fstatic-call in help text
+
+2008-07-07  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Remove gcc nested function code
+
+2008-07-05  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Prevent C warning with -fstatic-call and pointer return
+
+2008-07-04  Roger While <simrw@sim-basis.de>
+
+	* General : Cleanup
+	* pplex.l : Fix for strict directive parsing
+
+2008-07-02  Roger While <simrw@sim-basis.de>
+
+	* reserved.c, parser.y : Implement BINARY-C-LONG
+	* parser.y : Proper checks for missing END-xxx terminators
+
+2008-07-01  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix BY VALUE passing of POINTER
+
+2008-06-29  Roger While <simrw@sim-basis.de>
+
+	* tree.c : Temporary nuke of literal length test
+
+2008-06-25  Roger While <simrw@sim-basis.de>
+
+	* parser.y : SCREEN section input field definition
+
+2008-06-22  Roger While <simrw@sim-basis.de>
+
+	* pplex.l, ppparse.y : Fix SOURCE FORMAT directive
+
+2008-06-17  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Ammendments to SCREEN/ACCEPT/DISPLAY
+
+2008-06-12  Roger While <simrw@sim-basis.de>
+
+	* tree.c, codegen.c : Fix possible segfault
+
+2008-06-11  Roger While <simrw@sim-basis.de>
+
+	* parser.y : Fix ALTERNATE key
+
+2008-06-10  Roger While <simrw@sim-basis.de>
+
+	* parser.y, tree.[ch], typeck.c, codegen.c : More SCREEN changes
+
+2008-06-05  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Prepare for linptr reuse
+
+2008-06-03  Roger While <simrw@sim-basis.de>
+
+	* tree.h, parser.y, typeck.c : Support UNLOCK statement
+
+2008-05-31  Roger While <simrw@sim-basis.de>
+
+	* parser.y, tree.c : Allow VARYING on LINE SEQUENTIAL
+	* tree.h, typeck.c : Prepare for parser changes
+	* codegen.c : Do not do screen initialization until required
+
+2008-05-23  Roger While <simrw@sim-basis.de>
+
+	* parser.y, typeck.c : Allow FUNCTION (obviously only alphanumeric) as the
+		object of a CALL (eg. CALL FUNCTION UPPER-CASE (dataitem) ...
+	* parser.y, tree.h, codegen.c : Better display of POINTER items
+
+2008-05-22  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix pointer usage for non-aligned architecture
+
+2008-05-21  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix use of special literals in CLASS clause
+
+2008-05-19  Roger While <simrw@sim-basis.de>
+
+	* cobc.c : Fix "translating" verbose message being printed too early
+	* parser.y, codegen.c, tree.h : More support for SCREEN
+
+2008-05-16  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Allow MOVE NULL to index item
+
+2008-05-14  Roger While <simrw@sim-basis.de>
+
+	* tree.h, typeck.c, parser.y : Simplify accept from environment
+	* pplex.l : Add legacy REMARKS
+
+2008-05-12  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix NULL params for sticky linkage
+	* field.c, typeck.c, codegen.c : Add some more SCREEN code
+	* typeck.c : Allow DISPLAY on stderr when screen active
+
+2008-04-21  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix offset for fields following an ODO (MF)
+
+2008-04-18  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Fix initialization of fractional packed fields
+
 2008-04-15  Roger While <simrw@sim-basis.de>
 
 	* tree.[ch], parser.y, typeck.c : Handle qualified INDEXED BY items

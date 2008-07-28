@@ -1,3 +1,11 @@
+2008-07-02  Roger While <simrw@sim-basis.de>
+
+	* General for all OC tests - Cater for activated END-xxx checking
+
+2008-05-23  Roger While <simrw@sim-basis.de>
+
+	* Due to display POINTER changes, ignore output from POINTER datarep test
+
 2008-03-25  Roger While <simrw@sim-basis.de>
 
 	* Add OC tests for reference modification of FUNCTIONS

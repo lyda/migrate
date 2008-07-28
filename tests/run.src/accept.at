@@ -29,18 +29,26 @@ AT_DATA([prog.cob], [
        WORKING-STORAGE  SECTION.
        01 X             PIC X(8).
        PROCEDURE        DIVISION.
-           ACCEPT X FROM DATE.
+           ACCEPT X FROM DATE
+           END-ACCEPT.
            INSPECT X CONVERTING "012345678" TO "999999999".
-           DISPLAY "(" X ")".
-           ACCEPT X FROM DATE YYYYMMDD.
+           DISPLAY "(" X ")"
+           END-DISPLAY.
+           ACCEPT X FROM DATE YYYYMMDD
+           END-ACCEPT.
            INSPECT X CONVERTING "012345678" TO "999999999".
-           DISPLAY "(" X ")".
-           ACCEPT X FROM DAY.
+           DISPLAY "(" X ")"
+           END-DISPLAY.
+           ACCEPT X FROM DAY
+           END-ACCEPT.
            INSPECT X CONVERTING "012345678" TO "999999999".
-           DISPLAY "(" X ")".
-           ACCEPT X FROM DAY YYYYDDD.
+           DISPLAY "(" X ")"
+           END-DISPLAY.
+           ACCEPT X FROM DAY YYYYDDD
+           END-ACCEPT.
            INSPECT X CONVERTING "012345678" TO "999999999".
-           DISPLAY "(" X ")".
+           DISPLAY "(" X ")"
+           END-DISPLAY.
            STOP RUN.
 ])
 

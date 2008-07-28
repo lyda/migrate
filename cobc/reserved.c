@@ -106,16 +106,20 @@ static const struct reserved reserved_words[] = {
   {"AT",		AT},			/* 2002 */
   {"ATTRIBUTE",		-1},			/* 2002 (C/S) */
   {"AUTO",		AUTO},			/* 2002 (C/S) */
+  {"AUTO-SKIP",		AUTO},			/* extension */
   {"AUTOMATIC",		AUTOMATIC},		/* extension */
+  {"AUTOTERMINATE",	AUTO},			/* extension */
   {"B-AND",		-1},			/* 2002 */
   {"B-NOT",		-1},			/* 2002 */
   {"B-OR",		-1},			/* 2002 */
   {"B-XOR",		-1},			/* 2002 */
   {"BACKGROUND-COLOR",	BACKGROUND_COLOR},	/* 2002 (C/S) */
   {"BASED",		BASED},			/* 2002 */
+  {"BEEP",		BELL},			/* extension */
   {"BEFORE",		BEFORE},		/* 2002 */
   {"BELL",		BELL},			/* 2002 (C/S) */
   {"BINARY",		BINARY},		/* 2002 */
+  {"BINARY-C-LONG",	BINARY_C_LONG},		/* Extension */
   {"BINARY-CHAR",	BINARY_CHAR},		/* 2002 */
   {"BINARY-DOUBLE",	BINARY_DOUBLE},		/* 2002 */
   {"BINARY-LONG",	BINARY_LONG},		/* 2002 */
@@ -181,7 +185,7 @@ static const struct reserved reserved_words[] = {
   {"COMPUTE",		COMPUTE},		/* 2002 */
   {"CONDITION",		-1},			/* 2002 */
   {"CONFIGURATION",	CONFIGURATION},		/* 2002 */
-  {"CONSTANT",		-1},			/* 2002 */
+  {"CONSTANT",		CONSTANT},		/* 2002 */
   {"CONTAINS",		CONTAINS},		/* 2002 */
   {"CONTENT",		CONTENT},		/* 2002 */
   {"CONTINUE",		CONTINUE},		/* 2002 */

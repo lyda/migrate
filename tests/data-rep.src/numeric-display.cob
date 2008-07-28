@@ -39,40 +39,76 @@
        01 X-N17         PIC S9(17) VALUE -12345678901234567 @USAGE@.
        01 X-N18         PIC S9(18) VALUE -123456789012345678 @USAGE@.
        PROCEDURE        DIVISION.
-           DISPLAY X-P1.
-           DISPLAY X-P2.
-           DISPLAY X-P3.
-           DISPLAY X-P4.
-           DISPLAY X-P5.
-           DISPLAY X-P6.
-           DISPLAY X-P7.
-           DISPLAY X-P8.
-           DISPLAY X-P9.
-           DISPLAY X-P10.
-           DISPLAY X-P11.
-           DISPLAY X-P12.
-           DISPLAY X-P13.
-           DISPLAY X-P14.
-           DISPLAY X-P15.
-           DISPLAY X-P16.
-           DISPLAY X-P17.
-           DISPLAY X-P18.
-           DISPLAY X-N1.
-           DISPLAY X-N2.
-           DISPLAY X-N3.
-           DISPLAY X-N4.
-           DISPLAY X-N5.
-           DISPLAY X-N6.
-           DISPLAY X-N7.
-           DISPLAY X-N8.
-           DISPLAY X-N9.
-           DISPLAY X-N10.
-           DISPLAY X-N11.
-           DISPLAY X-N12.
-           DISPLAY X-N13.
-           DISPLAY X-N14.
-           DISPLAY X-N15.
-           DISPLAY X-N16.
-           DISPLAY X-N17.
-           DISPLAY X-N18.
+           DISPLAY X-P1
+           END-DISPLAY.
+           DISPLAY X-P2
+           END-DISPLAY.
+           DISPLAY X-P3
+           END-DISPLAY.
+           DISPLAY X-P4
+           END-DISPLAY.
+           DISPLAY X-P5
+           END-DISPLAY.
+           DISPLAY X-P6
+           END-DISPLAY.
+           DISPLAY X-P7
+           END-DISPLAY.
+           DISPLAY X-P8
+           END-DISPLAY.
+           DISPLAY X-P9
+           END-DISPLAY.
+           DISPLAY X-P10
+           END-DISPLAY.
+           DISPLAY X-P11
+           END-DISPLAY.
+           DISPLAY X-P12
+           END-DISPLAY.
+           DISPLAY X-P13
+           END-DISPLAY.
+           DISPLAY X-P14
+           END-DISPLAY.
+           DISPLAY X-P15
+           END-DISPLAY.
+           DISPLAY X-P16
+           END-DISPLAY.
+           DISPLAY X-P17
+           END-DISPLAY.
+           DISPLAY X-P18
+           END-DISPLAY.
+           DISPLAY X-N1
+           END-DISPLAY.
+           DISPLAY X-N2
+           END-DISPLAY.
+           DISPLAY X-N3
+           END-DISPLAY.
+           DISPLAY X-N4
+           END-DISPLAY.
+           DISPLAY X-N5
+           END-DISPLAY.
+           DISPLAY X-N6
+           END-DISPLAY.
+           DISPLAY X-N7
+           END-DISPLAY.
+           DISPLAY X-N8
+           END-DISPLAY.
+           DISPLAY X-N9
+           END-DISPLAY.
+           DISPLAY X-N10
+           END-DISPLAY.
+           DISPLAY X-N11
+           END-DISPLAY.
+           DISPLAY X-N12
+           END-DISPLAY.
+           DISPLAY X-N13
+           END-DISPLAY.
+           DISPLAY X-N14
+           END-DISPLAY.
+           DISPLAY X-N15
+           END-DISPLAY.
+           DISPLAY X-N16
+           END-DISPLAY.
+           DISPLAY X-N17
+           END-DISPLAY.
+           DISPLAY X-N18
+           END-DISPLAY.
            STOP RUN.

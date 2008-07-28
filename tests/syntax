@@ -311,35 +311,35 @@ at_format='..'
 # Description of all the test groups.
 at_help_all='1;copy.at:22;COPY: file not found;copy;
 2;copy.at:42;COPY: replacement order;copy;
-3;copy.at:68;COPY: separators;copy;
-4;copy.at:96;COPY: partial replacement;copy;
-5;copy.at:124;COPY: recursive replacement;copy;
+3;copy.at:69;COPY: separators;copy;
+4;copy.at:98;COPY: partial replacement;copy;
+5;copy.at:128;COPY: recursive replacement;copy;
 6;definition.at:27;Undefined data name;;
-7;definition.at:43;Undefined group name;;
-8;definition.at:62;Undefined data name in group;;
-9;definition.at:83;Reference not a group name;;
-10;definition.at:105;Incomplete 01 definition;;
-11;definition.at:124;Same labels in different sections;;
-12;definition.at:148;Redefinition of 01 items;;
-13;definition.at:166;Redefinition of 01 and 02 items;;
-14;definition.at:184;Redefinition of 02 items;;
-15;definition.at:203;Redefinition of 77 items;;
-16;definition.at:221;Redefinition of 01 and 77 items;;
-17;definition.at:239;Redefinition of 88 items;;
-18;definition.at:258;Ambiguous reference to 02 items;;
-19;definition.at:282;Ambiguous reference to 02 and 03 items;;
-20;definition.at:305;Ambigous reference with qualification;;
-21;definition.at:333;Unique reference with ambiguous qualifiers;;
-22;definition.at:367;Undefined procedure name;;
-23;definition.at:386;Redefinition of section names;;
-24;definition.at:405;Redefinition of section and paragraph names;;
-25;definition.at:424;Redefinition of paragraph names;;
-26;definition.at:447;Ambiguous reference to paragraph name;;
-27;definition.at:471;Non-matching level numbers (extension);;
+7;definition.at:44;Undefined group name;;
+8;definition.at:64;Undefined data name in group;;
+9;definition.at:86;Reference not a group name;;
+10;definition.at:109;Incomplete 01 definition;;
+11;definition.at:128;Same labels in different sections;;
+12;definition.at:152;Redefinition of 01 items;;
+13;definition.at:170;Redefinition of 01 and 02 items;;
+14;definition.at:188;Redefinition of 02 items;;
+15;definition.at:207;Redefinition of 77 items;;
+16;definition.at:225;Redefinition of 01 and 77 items;;
+17;definition.at:243;Redefinition of 88 items;;
+18;definition.at:262;Ambiguous reference to 02 items;;
+19;definition.at:287;Ambiguous reference to 02 and 03 items;;
+20;definition.at:311;Ambigous reference with qualification;;
+21;definition.at:340;Unique reference with ambiguous qualifiers;;
+22;definition.at:375;Undefined procedure name;;
+23;definition.at:394;Redefinition of section names;;
+24;definition.at:413;Redefinition of section and paragraph names;;
+25;definition.at:432;Redefinition of paragraph names;;
+26;definition.at:455;Ambiguous reference to paragraph name;;
+27;definition.at:479;Non-matching level numbers (extension);;
 28;expression.at:21;Ambiguous AND/OR;;
-29;expression.at:43;START on SEQUENTIAL file;;
+29;expression.at:45;START on SEQUENTIAL file;;
 30;subscripts.at:31;Subscripted item requires OCCURS clause;;
-31;subscripts.at:56;The number of subscripts;;
+31;subscripts.at:58;The number of subscripts;;
 32;occurs.at:28;OCCURS with level 01, 66, 77, and 88;;
 33;occurs.at:53;OCCURS with variable-occurrence data item;;
 34;occurs.at:90;Nested OCCURS clause;;
@@ -380,8 +380,8 @@ at_help_all='1;copy.at:22;COPY: file not found;copy;
 69;move.at:263;Operands must be groups;;
 70;move.at:295;MOVE: misc;;
 71;multiply.at:28;Category check of Format 1;;
-72;multiply.at:61;Category check of Format 2;;
-73;multiply.at:96;Category check of literals;;
+72;multiply.at:66;Category check of Format 2;;
+73;multiply.at:106;Category check of literals;;
 74;set.at:24;SET: misc;;
 '
 
@@ -929,14 +929,15 @@ cat >prog.cob <<'_ATEOF'
           REPLACING ==TEST-VAR== BY ==FIRST-MATCH==
                     ==TEST-VAR== BY ==SECOND-MATCH==.
        PROCEDURE        DIVISION.
-           DISPLAY FIRST-MATCH NO ADVANCING.
+           DISPLAY FIRST-MATCH NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "copy.at:62: \${COMPILE} -o prog prog.cob"
-echo copy.at:62 >$at_check_line_file
+echo "copy.at:63: \${COMPILE} -o prog prog.cob"
+echo copy.at:63 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -948,7 +949,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "copy.at:62: exit code was $at_status, expected 0"
+   *) echo "copy.at:63: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -960,8 +961,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "copy.at:63: ./prog"
-echo copy.at:63 >$at_check_line_file
+echo "copy.at:64: ./prog"
+echo copy.at:64 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -973,7 +974,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "copy.at:63: exit code was $at_status, expected 0"
+   *) echo "copy.at:64: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -991,13 +992,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  3 ) # 3. copy.at:68: COPY: separators
-    at_setup_line='copy.at:68'
+  3 ) # 3. copy.at:69: COPY: separators
+    at_setup_line='copy.at:69'
     at_desc='COPY: separators'
     $at_quiet $ECHO_N "  3: COPY: separators                             $ECHO_C"
     at_xfail=no
     (
-      echo "3. copy.at:68: testing ..."
+      echo "3. copy.at:69: testing ..."
       $at_traceon
 
 
@@ -1020,14 +1021,15 @@ cat >prog.cob <<'_ATEOF'
                  ;  ==TEST-VAR== , BY ==THIRD-MATCH==
                     ==TEST-VAR== ; BY ==FOURTH-MATCH==.
        PROCEDURE        DIVISION.
-           DISPLAY FIRST-MATCH NO ADVANCING.
+           DISPLAY FIRST-MATCH NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "copy.at:90: \${COMPILE} -o prog prog.cob"
-echo copy.at:90 >$at_check_line_file
+echo "copy.at:92: \${COMPILE} -o prog prog.cob"
+echo copy.at:92 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1039,7 +1041,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "copy.at:90: exit code was $at_status, expected 0"
+   *) echo "copy.at:92: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1051,8 +1053,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "copy.at:91: ./prog"
-echo copy.at:91 >$at_check_line_file
+echo "copy.at:93: ./prog"
+echo copy.at:93 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1064,7 +1066,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "copy.at:91: exit code was $at_status, expected 0"
+   *) echo "copy.at:93: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1082,13 +1084,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  4 ) # 4. copy.at:96: COPY: partial replacement
-    at_setup_line='copy.at:96'
+  4 ) # 4. copy.at:98: COPY: partial replacement
+    at_setup_line='copy.at:98'
     at_desc='COPY: partial replacement'
     $at_quiet $ECHO_N "  4: COPY: partial replacement                    $ECHO_C"
     at_xfail=no
     (
-      echo "4. copy.at:96: testing ..."
+      echo "4. copy.at:98: testing ..."
       $at_traceon
 
 
@@ -1110,15 +1112,17 @@ cat >prog.cob <<'_ATEOF'
           REPLACING ==:TEST:== BY ==COLON==
 	            ==(TEST)== BY ==PAREN==.
        PROCEDURE        DIVISION.
-           DISPLAY COLON-VAR NO ADVANCING.
-           DISPLAY PAREN-VAR NO ADVANCING.
+           DISPLAY COLON-VAR NO ADVANCING
+           END-DISPLAY.
+           DISPLAY PAREN-VAR NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "copy.at:118: \${COMPILE} -o prog prog.cob"
-echo copy.at:118 >$at_check_line_file
+echo "copy.at:122: \${COMPILE} -o prog prog.cob"
+echo copy.at:122 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1130,7 +1134,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "copy.at:118: exit code was $at_status, expected 0"
+   *) echo "copy.at:122: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1142,8 +1146,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "copy.at:119: ./prog"
-echo copy.at:119 >$at_check_line_file
+echo "copy.at:123: ./prog"
+echo copy.at:123 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1155,7 +1159,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "copy.at:119: exit code was $at_status, expected 0"
+   *) echo "copy.at:123: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1173,13 +1177,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  5 ) # 5. copy.at:124: COPY: recursive replacement
-    at_setup_line='copy.at:124'
+  5 ) # 5. copy.at:128: COPY: recursive replacement
+    at_setup_line='copy.at:128'
     at_desc='COPY: recursive replacement'
     $at_quiet $ECHO_N "  5: COPY: recursive replacement                  $ECHO_C"
     at_xfail=no
     (
-      echo "5. copy.at:124: testing ..."
+      echo "5. copy.at:128: testing ..."
       $at_traceon
 
 
@@ -1205,14 +1209,15 @@ cat >prog.cob <<'_ATEOF'
        COPY "copy-1.inc"
            REPLACING ==TEST-VAR== BY ==COPY-VAR==.
        PROCEDURE        DIVISION.
-           DISPLAY COPY-VAR NO ADVANCING.
+           DISPLAY COPY-VAR NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "copy.at:147: \${COMPILE} -o prog prog.cob"
-echo copy.at:147 >$at_check_line_file
+echo "copy.at:152: \${COMPILE} -o prog prog.cob"
+echo copy.at:152 >$at_check_line_file
 ( $at_traceon; ${COMPILE} -o prog prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1224,7 +1229,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "copy.at:147: exit code was $at_status, expected 0"
+   *) echo "copy.at:152: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1236,8 +1241,8 @@ fi
 $at_traceon
 
 $at_traceoff
-echo "copy.at:148: ./prog"
-echo copy.at:148 >$at_check_line_file
+echo "copy.at:153: ./prog"
+echo copy.at:153 >$at_check_line_file
 ( $at_traceon; ./prog ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1249,7 +1254,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "copy.at:148: exit code was $at_status, expected 0"
+   *) echo "copy.at:153: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1282,14 +1287,15 @@ cat >prog.cob <<'_ATEOF'
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      prog.
        PROCEDURE        DIVISION.
-           DISPLAY X.
+           DISPLAY X
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "definition.at:39: \${COMPILE_ONLY} prog.cob"
-echo definition.at:39 >$at_check_line_file
+echo "definition.at:40: \${COMPILE_ONLY} prog.cob"
+echo definition.at:40 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1302,7 +1308,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:39: exit code was $at_status, expected 1"
+   *) echo "definition.at:40: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1320,13 +1326,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  7 ) # 7. definition.at:43: Undefined group name
-    at_setup_line='definition.at:43'
+  7 ) # 7. definition.at:44: Undefined group name
+    at_setup_line='definition.at:44'
     at_desc='Undefined group name'
     $at_quiet $ECHO_N "  7: Undefined group name                         $ECHO_C"
     at_xfail=no
     (
-      echo "7. definition.at:43: testing ..."
+      echo "7. definition.at:44: testing ..."
       $at_traceon
 
 
@@ -1338,14 +1344,15 @@ cat >prog.cob <<'_ATEOF'
        WORKING-STORAGE  SECTION.
        01 X             PIC X.
        PROCEDURE        DIVISION.
-           DISPLAY X IN G.
+           DISPLAY X IN G
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "definition.at:58: \${COMPILE_ONLY} prog.cob"
-echo definition.at:58 >$at_check_line_file
+echo "definition.at:60: \${COMPILE_ONLY} prog.cob"
+echo definition.at:60 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1358,7 +1365,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:58: exit code was $at_status, expected 1"
+   *) echo "definition.at:60: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1376,13 +1383,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  8 ) # 8. definition.at:62: Undefined data name in group
-    at_setup_line='definition.at:62'
+  8 ) # 8. definition.at:64: Undefined data name in group
+    at_setup_line='definition.at:64'
     at_desc='Undefined data name in group'
     $at_quiet $ECHO_N "  8: Undefined data name in group                 $ECHO_C"
     at_xfail=no
     (
-      echo "8. definition.at:62: testing ..."
+      echo "8. definition.at:64: testing ..."
       $at_traceon
 
 
@@ -1396,14 +1403,15 @@ cat >prog.cob <<'_ATEOF'
          02 X           PIC X.
        01 Y             PIC X.
        PROCEDURE        DIVISION.
-           DISPLAY Y IN G.
+           DISPLAY Y IN G
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "definition.at:79: \${COMPILE_ONLY} prog.cob"
-echo definition.at:79 >$at_check_line_file
+echo "definition.at:82: \${COMPILE_ONLY} prog.cob"
+echo definition.at:82 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1416,7 +1424,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:79: exit code was $at_status, expected 1"
+   *) echo "definition.at:82: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1434,13 +1442,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  9 ) # 9. definition.at:83: Reference not a group name
-    at_setup_line='definition.at:83'
+  9 ) # 9. definition.at:86: Reference not a group name
+    at_setup_line='definition.at:86'
     at_desc='Reference not a group name'
     $at_quiet $ECHO_N "  9: Reference not a group name                   $ECHO_C"
     at_xfail=no
     (
-      echo "9. definition.at:83: testing ..."
+      echo "9. definition.at:86: testing ..."
       $at_traceon
 
 
@@ -1452,14 +1460,15 @@ cat >prog.cob <<'_ATEOF'
        WORKING-STORAGE  SECTION.
        01 X             PIC X.
        PROCEDURE        DIVISION.
-           DISPLAY X IN X.
+           DISPLAY X IN X
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "definition.at:98: \${COMPILE_ONLY} prog.cob"
-echo definition.at:98 >$at_check_line_file
+echo "definition.at:102: \${COMPILE_ONLY} prog.cob"
+echo definition.at:102 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1472,7 +1481,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:98: exit code was $at_status, expected 1"
+   *) echo "definition.at:102: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1490,13 +1499,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  10 ) # 10. definition.at:105: Incomplete 01 definition
-    at_setup_line='definition.at:105'
+  10 ) # 10. definition.at:109: Incomplete 01 definition
+    at_setup_line='definition.at:109'
     at_desc='Incomplete 01 definition'
     $at_quiet $ECHO_N " 10: Incomplete 01 definition                     $ECHO_C"
     at_xfail=no
     (
-      echo "10. definition.at:105: testing ..."
+      echo "10. definition.at:109: testing ..."
       $at_traceon
 
 
@@ -1511,8 +1520,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:117: \${COMPILE_ONLY} prog.cob"
-echo definition.at:117 >$at_check_line_file
+echo "definition.at:121: \${COMPILE_ONLY} prog.cob"
+echo definition.at:121 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1525,7 +1534,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:117: exit code was $at_status, expected 1"
+   *) echo "definition.at:121: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1543,13 +1552,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  11 ) # 11. definition.at:124: Same labels in different sections
-    at_setup_line='definition.at:124'
+  11 ) # 11. definition.at:128: Same labels in different sections
+    at_setup_line='definition.at:128'
     at_desc='Same labels in different sections'
     $at_quiet $ECHO_N " 11: Same labels in different sections            $ECHO_C"
     at_xfail=no
     (
-      echo "11. definition.at:124: testing ..."
+      echo "11. definition.at:128: testing ..."
       $at_traceon
 
 
@@ -1571,8 +1580,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:141: \${COMPILE_ONLY} prog.cob"
-echo definition.at:141 >$at_check_line_file
+echo "definition.at:145: \${COMPILE_ONLY} prog.cob"
+echo definition.at:145 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1584,7 +1593,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:141: exit code was $at_status, expected 0"
+   *) echo "definition.at:145: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1602,13 +1611,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  12 ) # 12. definition.at:148: Redefinition of 01 items
-    at_setup_line='definition.at:148'
+  12 ) # 12. definition.at:152: Redefinition of 01 items
+    at_setup_line='definition.at:152'
     at_desc='Redefinition of 01 items'
     $at_quiet $ECHO_N " 12: Redefinition of 01 items                     $ECHO_C"
     at_xfail=no
     (
-      echo "12. definition.at:148: testing ..."
+      echo "12. definition.at:152: testing ..."
       $at_traceon
 
 
@@ -1624,8 +1633,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:162: \${COMPILE_ONLY} prog.cob"
-echo definition.at:162 >$at_check_line_file
+echo "definition.at:166: \${COMPILE_ONLY} prog.cob"
+echo definition.at:166 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1639,7 +1648,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:162: exit code was $at_status, expected 0"
+   *) echo "definition.at:166: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1657,13 +1666,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  13 ) # 13. definition.at:166: Redefinition of 01 and 02 items
-    at_setup_line='definition.at:166'
+  13 ) # 13. definition.at:170: Redefinition of 01 and 02 items
+    at_setup_line='definition.at:170'
     at_desc='Redefinition of 01 and 02 items'
     $at_quiet $ECHO_N " 13: Redefinition of 01 and 02 items              $ECHO_C"
     at_xfail=no
     (
-      echo "13. definition.at:166: testing ..."
+      echo "13. definition.at:170: testing ..."
       $at_traceon
 
 
@@ -1679,8 +1688,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:180: \${COMPILE_ONLY} prog.cob"
-echo definition.at:180 >$at_check_line_file
+echo "definition.at:184: \${COMPILE_ONLY} prog.cob"
+echo definition.at:184 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1694,7 +1703,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:180: exit code was $at_status, expected 0"
+   *) echo "definition.at:184: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1712,13 +1721,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  14 ) # 14. definition.at:184: Redefinition of 02 items
-    at_setup_line='definition.at:184'
+  14 ) # 14. definition.at:188: Redefinition of 02 items
+    at_setup_line='definition.at:188'
     at_desc='Redefinition of 02 items'
     $at_quiet $ECHO_N " 14: Redefinition of 02 items                     $ECHO_C"
     at_xfail=no
     (
-      echo "14. definition.at:184: testing ..."
+      echo "14. definition.at:188: testing ..."
       $at_traceon
 
 
@@ -1735,8 +1744,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:199: \${COMPILE_ONLY} prog.cob"
-echo definition.at:199 >$at_check_line_file
+echo "definition.at:203: \${COMPILE_ONLY} prog.cob"
+echo definition.at:203 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1750,7 +1759,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:199: exit code was $at_status, expected 0"
+   *) echo "definition.at:203: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1768,13 +1777,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  15 ) # 15. definition.at:203: Redefinition of 77 items
-    at_setup_line='definition.at:203'
+  15 ) # 15. definition.at:207: Redefinition of 77 items
+    at_setup_line='definition.at:207'
     at_desc='Redefinition of 77 items'
     $at_quiet $ECHO_N " 15: Redefinition of 77 items                     $ECHO_C"
     at_xfail=no
     (
-      echo "15. definition.at:203: testing ..."
+      echo "15. definition.at:207: testing ..."
       $at_traceon
 
 
@@ -1790,8 +1799,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:217: \${COMPILE_ONLY} prog.cob"
-echo definition.at:217 >$at_check_line_file
+echo "definition.at:221: \${COMPILE_ONLY} prog.cob"
+echo definition.at:221 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1805,7 +1814,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:217: exit code was $at_status, expected 0"
+   *) echo "definition.at:221: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1823,13 +1832,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  16 ) # 16. definition.at:221: Redefinition of 01 and 77 items
-    at_setup_line='definition.at:221'
+  16 ) # 16. definition.at:225: Redefinition of 01 and 77 items
+    at_setup_line='definition.at:225'
     at_desc='Redefinition of 01 and 77 items'
     $at_quiet $ECHO_N " 16: Redefinition of 01 and 77 items              $ECHO_C"
     at_xfail=no
     (
-      echo "16. definition.at:221: testing ..."
+      echo "16. definition.at:225: testing ..."
       $at_traceon
 
 
@@ -1845,8 +1854,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:235: \${COMPILE_ONLY} prog.cob"
-echo definition.at:235 >$at_check_line_file
+echo "definition.at:239: \${COMPILE_ONLY} prog.cob"
+echo definition.at:239 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1860,7 +1869,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:235: exit code was $at_status, expected 0"
+   *) echo "definition.at:239: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1878,13 +1887,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  17 ) # 17. definition.at:239: Redefinition of 88 items
-    at_setup_line='definition.at:239'
+  17 ) # 17. definition.at:243: Redefinition of 88 items
+    at_setup_line='definition.at:243'
     at_desc='Redefinition of 88 items'
     $at_quiet $ECHO_N " 17: Redefinition of 88 items                     $ECHO_C"
     at_xfail=no
     (
-      echo "17. definition.at:239: testing ..."
+      echo "17. definition.at:243: testing ..."
       $at_traceon
 
 
@@ -1901,8 +1910,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:254: \${COMPILE_ONLY} prog.cob"
-echo definition.at:254 >$at_check_line_file
+echo "definition.at:258: \${COMPILE_ONLY} prog.cob"
+echo definition.at:258 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1916,7 +1925,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:254: exit code was $at_status, expected 0"
+   *) echo "definition.at:258: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1934,13 +1943,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  18 ) # 18. definition.at:258: Ambiguous reference to 02 items
-    at_setup_line='definition.at:258'
+  18 ) # 18. definition.at:262: Ambiguous reference to 02 items
+    at_setup_line='definition.at:262'
     at_desc='Ambiguous reference to 02 items'
     $at_quiet $ECHO_N " 18: Ambiguous reference to 02 items              $ECHO_C"
     at_xfail=no
     (
-      echo "18. definition.at:258: testing ..."
+      echo "18. definition.at:262: testing ..."
       $at_traceon
 
 
@@ -1955,14 +1964,15 @@ cat >prog.cob <<'_ATEOF'
        01 G2.
          02 X           PIC X.
        PROCEDURE        DIVISION.
-           DISPLAY X.
+           DISPLAY X
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "definition.at:278: \${COMPILE_ONLY} prog.cob"
-echo definition.at:278 >$at_check_line_file
+echo "definition.at:283: \${COMPILE_ONLY} prog.cob"
+echo definition.at:283 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1977,7 +1987,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:278: exit code was $at_status, expected 1"
+   *) echo "definition.at:283: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1995,13 +2005,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  19 ) # 19. definition.at:282: Ambiguous reference to 02 and 03 items
-    at_setup_line='definition.at:282'
+  19 ) # 19. definition.at:287: Ambiguous reference to 02 and 03 items
+    at_setup_line='definition.at:287'
     at_desc='Ambiguous reference to 02 and 03 items'
     $at_quiet $ECHO_N " 19: Ambiguous reference to 02 and 03 items       $ECHO_C"
     at_xfail=no
     (
-      echo "19. definition.at:282: testing ..."
+      echo "19. definition.at:287: testing ..."
       $at_traceon
 
 
@@ -2015,14 +2025,15 @@ cat >prog.cob <<'_ATEOF'
          02 X.
            03 X         PIC X.
        PROCEDURE        DIVISION.
-           DISPLAY X.
+           DISPLAY X
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "definition.at:301: \${COMPILE_ONLY} prog.cob"
-echo definition.at:301 >$at_check_line_file
+echo "definition.at:307: \${COMPILE_ONLY} prog.cob"
+echo definition.at:307 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2037,7 +2048,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:301: exit code was $at_status, expected 1"
+   *) echo "definition.at:307: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2055,13 +2066,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  20 ) # 20. definition.at:305: Ambigous reference with qualification
-    at_setup_line='definition.at:305'
+  20 ) # 20. definition.at:311: Ambigous reference with qualification
+    at_setup_line='definition.at:311'
     at_desc='Ambigous reference with qualification'
     $at_quiet $ECHO_N " 20: Ambigous reference with qualification        $ECHO_C"
     at_xfail=no
     (
-      echo "20. definition.at:305: testing ..."
+      echo "20. definition.at:311: testing ..."
       $at_traceon
 
 
@@ -2078,14 +2089,15 @@ cat >prog.cob <<'_ATEOF'
          02 X.
            03 Y         PIC X.
        PROCEDURE        DIVISION.
-           DISPLAY Y OF X.
+           DISPLAY Y OF X
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "definition.at:327: \${COMPILE_ONLY} prog.cob"
-echo definition.at:327 >$at_check_line_file
+echo "definition.at:334: \${COMPILE_ONLY} prog.cob"
+echo definition.at:334 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2100,7 +2112,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:327: exit code was $at_status, expected 1"
+   *) echo "definition.at:334: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2118,13 +2130,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  21 ) # 21. definition.at:333: Unique reference with ambiguous qualifiers
-    at_setup_line='definition.at:333'
+  21 ) # 21. definition.at:340: Unique reference with ambiguous qualifiers
+    at_setup_line='definition.at:340'
     at_desc='Unique reference with ambiguous qualifiers'
     $at_quiet $ECHO_N " 21: Unique reference with ambiguous qualifiers   $ECHO_C"
     at_xfail=no
     (
-      echo "21. definition.at:333: testing ..."
+      echo "21. definition.at:340: testing ..."
       $at_traceon
 
 
@@ -2141,14 +2153,15 @@ cat >prog.cob <<'_ATEOF'
          02 X.
            03 Z         PIC X VALUE "Z".
        PROCEDURE        DIVISION.
-           DISPLAY Z OF X NO ADVANCING.
+           DISPLAY Z OF X NO ADVANCING
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "definition.at:351: \${COMPILE_ONLY} prog.cob"
-echo definition.at:351 >$at_check_line_file
+echo "definition.at:359: \${COMPILE_ONLY} prog.cob"
+echo definition.at:359 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2160,7 +2173,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:351: exit code was $at_status, expected 0"
+   *) echo "definition.at:359: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2178,13 +2191,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  22 ) # 22. definition.at:367: Undefined procedure name
-    at_setup_line='definition.at:367'
+  22 ) # 22. definition.at:375: Undefined procedure name
+    at_setup_line='definition.at:375'
     at_desc='Undefined procedure name'
     $at_quiet $ECHO_N " 22: Undefined procedure name                     $ECHO_C"
     at_xfail=no
     (
-      echo "22. definition.at:367: testing ..."
+      echo "22. definition.at:375: testing ..."
       $at_traceon
 
 
@@ -2199,8 +2212,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:379: \${COMPILE_ONLY} prog.cob"
-echo definition.at:379 >$at_check_line_file
+echo "definition.at:387: \${COMPILE_ONLY} prog.cob"
+echo definition.at:387 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2213,7 +2226,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:379: exit code was $at_status, expected 1"
+   *) echo "definition.at:387: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2231,13 +2244,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  23 ) # 23. definition.at:386: Redefinition of section names
-    at_setup_line='definition.at:386'
+  23 ) # 23. definition.at:394: Redefinition of section names
+    at_setup_line='definition.at:394'
     at_desc='Redefinition of section names'
     $at_quiet $ECHO_N " 23: Redefinition of section names                $ECHO_C"
     at_xfail=no
     (
-      echo "23. definition.at:386: testing ..."
+      echo "23. definition.at:394: testing ..."
       $at_traceon
 
 
@@ -2253,8 +2266,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:401: \${COMPILE_ONLY} prog.cob"
-echo definition.at:401 >$at_check_line_file
+echo "definition.at:409: \${COMPILE_ONLY} prog.cob"
+echo definition.at:409 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2269,7 +2282,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:401: exit code was $at_status, expected 1"
+   *) echo "definition.at:409: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2287,13 +2300,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  24 ) # 24. definition.at:405: Redefinition of section and paragraph names
-    at_setup_line='definition.at:405'
+  24 ) # 24. definition.at:413: Redefinition of section and paragraph names
+    at_setup_line='definition.at:413'
     at_desc='Redefinition of section and paragraph names'
     $at_quiet $ECHO_N " 24: Redefinition of section and paragraph names  $ECHO_C"
     at_xfail=no
     (
-      echo "24. definition.at:405: testing ..."
+      echo "24. definition.at:413: testing ..."
       $at_traceon
 
 
@@ -2309,8 +2322,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:420: \${COMPILE_ONLY} prog.cob"
-echo definition.at:420 >$at_check_line_file
+echo "definition.at:428: \${COMPILE_ONLY} prog.cob"
+echo definition.at:428 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2325,7 +2338,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:420: exit code was $at_status, expected 1"
+   *) echo "definition.at:428: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2343,13 +2356,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  25 ) # 25. definition.at:424: Redefinition of paragraph names
-    at_setup_line='definition.at:424'
+  25 ) # 25. definition.at:432: Redefinition of paragraph names
+    at_setup_line='definition.at:432'
     at_desc='Redefinition of paragraph names'
     $at_quiet $ECHO_N " 25: Redefinition of paragraph names              $ECHO_C"
     at_xfail=no
     (
-      echo "25. definition.at:424: testing ..."
+      echo "25. definition.at:432: testing ..."
       $at_traceon
 
 
@@ -2365,8 +2378,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:436: \${COMPILE_ONLY} prog.cob"
-echo definition.at:436 >$at_check_line_file
+echo "definition.at:444: \${COMPILE_ONLY} prog.cob"
+echo definition.at:444 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2378,7 +2391,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:436: exit code was $at_status, expected 0"
+   *) echo "definition.at:444: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2403,13 +2416,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  26 ) # 26. definition.at:447: Ambiguous reference to paragraph name
-    at_setup_line='definition.at:447'
+  26 ) # 26. definition.at:455: Ambiguous reference to paragraph name
+    at_setup_line='definition.at:455'
     at_desc='Ambiguous reference to paragraph name'
     $at_quiet $ECHO_N " 26: Ambiguous reference to paragraph name        $ECHO_C"
     at_xfail=no
     (
-      echo "26. definition.at:447: testing ..."
+      echo "26. definition.at:455: testing ..."
       $at_traceon
 
 
@@ -2429,8 +2442,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:467: \${COMPILE_ONLY} prog.cob"
-echo definition.at:467 >$at_check_line_file
+echo "definition.at:475: \${COMPILE_ONLY} prog.cob"
+echo definition.at:475 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2446,7 +2459,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:467: exit code was $at_status, expected 1"
+   *) echo "definition.at:475: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2464,13 +2477,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  27 ) # 27. definition.at:471: Non-matching level numbers (extension)
-    at_setup_line='definition.at:471'
+  27 ) # 27. definition.at:479: Non-matching level numbers (extension)
+    at_setup_line='definition.at:479'
     at_desc='Non-matching level numbers (extension)'
     $at_quiet $ECHO_N " 27: Non-matching level numbers (extension)       $ECHO_C"
     at_xfail=no
     (
-      echo "27. definition.at:471: testing ..."
+      echo "27. definition.at:479: testing ..."
       $at_traceon
 
 
@@ -2498,8 +2511,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:494: \${COMPILE_ONLY} -conf=test.conf prog.cob"
-echo definition.at:494 >$at_check_line_file
+echo "definition.at:502: \${COMPILE_ONLY} -conf=test.conf prog.cob"
+echo definition.at:502 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} -conf=test.conf prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2512,7 +2525,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:494: exit code was $at_status, expected 0"
+   *) echo "definition.at:502: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2547,31 +2560,33 @@ cat >prog.cob <<'_ATEOF'
        PROCEDURE        DIVISION.
            IF 3 = 1 AND 2 OR 3
                DISPLAY "OK"
+               END-DISPLAY
            END-IF.
            IF 3 = 1 OR 2 AND 3
                DISPLAY "NO"
+               END-DISPLAY
            END-IF.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "expression.at:39: \${COMPILE_ONLY} prog.cob"
-echo expression.at:39 >$at_check_line_file
+echo "expression.at:41: \${COMPILE_ONLY} prog.cob"
+echo expression.at:41 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
 echo >>$at_stderr; echo "prog.cob:6: Warning: Suggest parentheses around AND within OR
-prog.cob:9: Warning: Suggest parentheses around AND within OR
+prog.cob:10: Warning: Suggest parentheses around AND within OR
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "expression.at:39: exit code was $at_status, expected 0"
+   *) echo "expression.at:41: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2589,13 +2604,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  29 ) # 29. expression.at:43: START on SEQUENTIAL file
-    at_setup_line='expression.at:43'
+  29 ) # 29. expression.at:45: START on SEQUENTIAL file
+    at_setup_line='expression.at:45'
     at_desc='START on SEQUENTIAL file'
     $at_quiet $ECHO_N " 29: START on SEQUENTIAL file                     $ECHO_C"
     at_xfail=no
     (
-      echo "29. expression.at:43: testing ..."
+      echo "29. expression.at:45: testing ..."
       $at_traceon
 
 
@@ -2614,28 +2629,29 @@ cat >prog.cob <<'_ATEOF'
        01 TEST-REC      PIC X(4).
        PROCEDURE        DIVISION.
            OPEN  INPUT TEST-FILE.
-           START TEST-FILE KEY EQUAL TEST-REC.
+           START TEST-FILE KEY EQUAL TEST-REC
+           END-START.
            CLOSE TEST-FILE.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "expression.at:66: \${COMPILE_ONLY} prog.cob"
-echo expression.at:66 >$at_check_line_file
+echo "expression.at:69: \${COMPILE_ONLY} prog.cob"
+echo expression.at:69 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:15: Error: START not allowed on SEQUENTIAL files
+echo >>$at_stderr; echo "prog.cob:16: Error: START not allowed on SEQUENTIAL files
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "expression.at:66: exit code was $at_status, expected 1"
+   *) echo "expression.at:69: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2672,29 +2688,31 @@ cat >prog.cob <<'_ATEOF'
        01 G.
          02 X           PIC X.
        PROCEDURE        DIVISION.
-           DISPLAY G(1).
-           DISPLAY X(1).
+           DISPLAY G(1)
+           END-DISPLAY.
+           DISPLAY X(1)
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "subscripts.at:49: \${COMPILE_ONLY} prog.cob"
-echo subscripts.at:49 >$at_check_line_file
+echo "subscripts.at:51: \${COMPILE_ONLY} prog.cob"
+echo subscripts.at:51 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
 echo >>$at_stderr; echo "prog.cob:9: Error: 'G' cannot be subscripted
-prog.cob:10: Error: 'X' cannot be subscripted
+prog.cob:11: Error: 'X' cannot be subscripted
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "subscripts.at:49: exit code was $at_status, expected 1"
+   *) echo "subscripts.at:51: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2712,13 +2730,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  31 ) # 31. subscripts.at:56: The number of subscripts
-    at_setup_line='subscripts.at:56'
+  31 ) # 31. subscripts.at:58: The number of subscripts
+    at_setup_line='subscripts.at:58'
     at_desc='The number of subscripts'
     $at_quiet $ECHO_N " 31: The number of subscripts                     $ECHO_C"
     at_xfail=no
     (
-      echo "31. subscripts.at:56: testing ..."
+      echo "31. subscripts.at:58: testing ..."
       $at_traceon
 
 
@@ -2732,35 +2750,41 @@ cat >prog.cob <<'_ATEOF'
          02 X           OCCURS 2.
            03 Y         PIC X OCCURS 3.
        PROCEDURE        DIVISION.
-           DISPLAY X.
-           DISPLAY X(1).
-           DISPLAY X(1, 2).
-           DISPLAY Y(1).
-           DISPLAY Y(1, 2).
-           DISPLAY Y(1, 2, 3).
+           DISPLAY X
+           END-DISPLAY.
+           DISPLAY X(1)
+           END-DISPLAY.
+           DISPLAY X(1, 2)
+           END-DISPLAY.
+           DISPLAY Y(1)
+           END-DISPLAY.
+           DISPLAY Y(1, 2)
+           END-DISPLAY.
+           DISPLAY Y(1, 2, 3)
+           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "subscripts.at:81: \${COMPILE_ONLY} prog.cob"
-echo subscripts.at:81 >$at_check_line_file
+echo "subscripts.at:89: \${COMPILE_ONLY} prog.cob"
+echo subscripts.at:89 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
 echo >>$at_stderr; echo "prog.cob:10: Error: 'X' requires 1 subscript
-prog.cob:12: Error: 'X' requires 1 subscript
-prog.cob:13: Error: 'Y' requires 2 subscripts
-prog.cob:15: Error: 'Y' requires 2 subscripts
+prog.cob:14: Error: 'X' requires 1 subscript
+prog.cob:16: Error: 'Y' requires 2 subscripts
+prog.cob:20: Error: 'Y' requires 2 subscripts
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "subscripts.at:81: exit code was $at_status, expected 1"
+   *) echo "subscripts.at:89: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5204,37 +5228,42 @@ cat >prog.cob <<'_ATEOF'
        01 X-9           PIC 9.
        01 X-09          PIC 09.
        PROCEDURE        DIVISION.
-           MULTIPLY 123  BY 456.
-           MULTIPLY "a"  BY "b".
-           MULTIPLY X-X  BY X-9.
-           MULTIPLY X-9  BY X-09.
-           MULTIPLY X-09 BY X-X.
+           MULTIPLY 123  BY 456
+           END-MULTIPLY.
+           MULTIPLY "a"  BY "b"
+           END-MULTIPLY.
+           MULTIPLY X-X  BY X-9
+           END-MULTIPLY.
+           MULTIPLY X-9  BY X-09
+           END-MULTIPLY.
+           MULTIPLY X-09 BY X-X
+           END-MULTIPLY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "multiply.at:55: \${COMPILE_ONLY} prog.cob"
-echo multiply.at:55 >$at_check_line_file
+echo "multiply.at:60: \${COMPILE_ONLY} prog.cob"
+echo multiply.at:60 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:10: Error: '456' is not numeric name
-prog.cob:11: Error: '\"a\"' is not numeric value
-prog.cob:11: Error: '\"b\"' is not numeric name
-prog.cob:12: Error: 'X-X' is not numeric value
-prog.cob:13: Error: 'X-09' is not numeric name
-prog.cob:14: Error: 'X-09' is not numeric value
-prog.cob:14: Error: 'X-X' is not numeric name
+echo >>$at_stderr; echo "prog.cob:10: Error: '456' is not a numeric name
+prog.cob:12: Error: '\"a\"' is not a numeric value
+prog.cob:12: Error: '\"b\"' is not a numeric name
+prog.cob:14: Error: 'X-X' is not a numeric value
+prog.cob:16: Error: 'X-09' is not a numeric name
+prog.cob:18: Error: 'X-09' is not a numeric value
+prog.cob:18: Error: 'X-X' is not a numeric name
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "multiply.at:55: exit code was $at_status, expected 1"
+   *) echo "multiply.at:60: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5252,13 +5281,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  72 ) # 72. multiply.at:61: Category check of Format 2
-    at_setup_line='multiply.at:61'
+  72 ) # 72. multiply.at:66: Category check of Format 2
+    at_setup_line='multiply.at:66'
     at_desc='Category check of Format 2'
     $at_quiet $ECHO_N " 72: Category check of Format 2                   $ECHO_C"
     at_xfail=no
     (
-      echo "72. multiply.at:61: testing ..."
+      echo "72. multiply.at:66: testing ..."
       $at_traceon
 
 
@@ -5272,39 +5301,44 @@ cat >prog.cob <<'_ATEOF'
        01 X-9           PIC 9.
        01 X-09          PIC 09.
        PROCEDURE        DIVISION.
-           MULTIPLY 123  BY 456  GIVING 789.
-           MULTIPLY "a"  BY "b"  GIVING "c".
-           MULTIPLY X-X  BY X-9  GIVING X-09.
-           MULTIPLY X-9  BY X-09 GIVING X-X.
-           MULTIPLY X-09 BY X-X  GIVING X-9.
+           MULTIPLY 123  BY 456  GIVING 789
+           END-MULTIPLY.
+           MULTIPLY "a"  BY "b"  GIVING "c"
+           END-MULTIPLY.
+           MULTIPLY X-X  BY X-9  GIVING X-09
+           END-MULTIPLY.
+           MULTIPLY X-9  BY X-09 GIVING X-X
+           END-MULTIPLY.
+           MULTIPLY X-09 BY X-X  GIVING X-9
+           END-MULTIPLY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "multiply.at:90: \${COMPILE_ONLY} prog.cob"
-echo multiply.at:90 >$at_check_line_file
+echo "multiply.at:100: \${COMPILE_ONLY} prog.cob"
+echo multiply.at:100 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
 echo >>$at_stderr; echo "prog.cob:10: Error: '789' is not numeric or numeric-edited name
-prog.cob:11: Error: '\"a\"' is not numeric value
-prog.cob:11: Error: '\"b\"' is not numeric value
-prog.cob:11: Error: '\"c\"' is not numeric or numeric-edited name
-prog.cob:12: Error: 'X-X' is not numeric value
-prog.cob:13: Error: 'X-09' is not numeric value
-prog.cob:13: Error: 'X-X' is not numeric or numeric-edited name
-prog.cob:14: Error: 'X-09' is not numeric value
-prog.cob:14: Error: 'X-X' is not numeric value
+prog.cob:12: Error: '\"a\"' is not a numeric value
+prog.cob:12: Error: '\"b\"' is not a numeric value
+prog.cob:12: Error: '\"c\"' is not numeric or numeric-edited name
+prog.cob:14: Error: 'X-X' is not a numeric value
+prog.cob:16: Error: 'X-09' is not a numeric value
+prog.cob:16: Error: 'X-X' is not numeric or numeric-edited name
+prog.cob:18: Error: 'X-09' is not a numeric value
+prog.cob:18: Error: 'X-X' is not a numeric value
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "multiply.at:90: exit code was $at_status, expected 1"
+   *) echo "multiply.at:100: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -5322,13 +5356,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  73 ) # 73. multiply.at:96: Category check of literals
-    at_setup_line='multiply.at:96'
+  73 ) # 73. multiply.at:106: Category check of literals
+    at_setup_line='multiply.at:106'
     at_desc='Category check of literals'
     $at_quiet $ECHO_N " 73: Category check of literals                   $ECHO_C"
     at_xfail=no
     (
-      echo "73. multiply.at:96: testing ..."
+      echo "73. multiply.at:106: testing ..."
       $at_traceon
 
 
@@ -5340,32 +5374,36 @@ cat >prog.cob <<'_ATEOF'
        WORKING-STORAGE  SECTION.
        01 X             PIC 9.
        PROCEDURE        DIVISION.
-           MULTIPLY 123  BY X.
-           MULTIPLY "a"  BY X.
-           MULTIPLY 123  BY 456 GIVING X.
-           MULTIPLY "a"  BY "b" GIVING X.
+           MULTIPLY 123  BY X
+           END-MULTIPLY.
+           MULTIPLY "a"  BY X
+           END-MULTIPLY.
+           MULTIPLY 123  BY 456 GIVING X
+           END-MULTIPLY.
+           MULTIPLY "a"  BY "b" GIVING X
+           END-MULTIPLY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "multiply.at:116: \${COMPILE_ONLY} prog.cob"
-echo multiply.at:116 >$at_check_line_file
+echo "multiply.at:130: \${COMPILE_ONLY} prog.cob"
+echo multiply.at:130 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:9: Error: '\"a\"' is not numeric value
-prog.cob:11: Error: '\"a\"' is not numeric value
-prog.cob:11: Error: '\"b\"' is not numeric value
+echo >>$at_stderr; echo "prog.cob:10: Error: '\"a\"' is not a numeric value
+prog.cob:14: Error: '\"a\"' is not a numeric value
+prog.cob:14: Error: '\"b\"' is not a numeric value
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "multiply.at:116: exit code was $at_status, expected 1"
+   *) echo "multiply.at:130: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then

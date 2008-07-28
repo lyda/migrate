@@ -34,6 +34,8 @@
 
 #include "cobc.h"
 
+#define YYDEBUG		1
+#define YYERROR_VERBOSE	1
 #define pperror cb_error
 
 static char *fix_filename (char *name);
@@ -49,7 +51,7 @@ static struct cb_replace_list *cb_replace_list_add (struct cb_replace_list *repl
 	struct cb_replace_list	*r;
 }
 
-%token DIRECTIVE SOURCE FORMAT IS FIXED FREE
+%token TOKEN_EOF 0 "end of file"
 %token COPY REPLACE SUPPRESS PRINTING REPLACING OFF IN OF BY EQEQ
 %token <s> TOKEN
 %type <s> copy_in
@@ -59,20 +61,7 @@ static struct cb_replace_list *cb_replace_list_add (struct cb_replace_list *repl
 %%
 
 statement_list: | statement_list statement ;
-statement: directive | copy_statement | replace_statement ;
-
-directive:
-  DIRECTIVE source_format
-;
-
-source_format:
-  SOURCE _format _is format
-;
-
-format:
-  FIXED				{ cb_source_format = CB_FORMAT_FIXED; }
-| FREE				{ cb_source_format = CB_FORMAT_FREE; }
-;
+statement: copy_statement | replace_statement ;
 
 copy_statement:
   COPY TOKEN copy_in copy_suppress copy_replacing '.'
@@ -173,8 +162,6 @@ subscripts:
   }
 ;
 
-_format:   | FORMAT ;
-_is:       | IS ;
 _printing: | PRINTING ;
 
 %%
@@ -220,9 +207,10 @@ cb_replace_list_add (struct cb_replace_list *list,
 		     struct cb_text_list *old_text,
 		     struct cb_text_list *new_text)
 {
-	struct cb_replace_list *p = cobc_malloc (sizeof (struct cb_replace_list));
+	struct cb_replace_list *p;
 	struct cb_replace_list *l;
 
+	p = cobc_malloc (sizeof (struct cb_replace_list));
 	p->old_text = old_text;
 	p->new_text = new_text;
 	p->next = NULL;

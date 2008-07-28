@@ -1,3 +1,7 @@
+2008-07-05  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : No need to check for regex or mvgetnstr
+
 2008-04-16  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : Add in "copy" directory for OC supplied COPY elements

@@ -1,3 +1,105 @@
+2008-07-21  Roger While <simrw@sim-basis.de>
+
+	* screenio.c : Do not display SECURE items
+	* General : Cleanup, do early malloc initializations
+
+2008-07-19  Roger While <simrw@sim-basis.de>
+
+	* General : Tidy up syntax
+	* intrinsic.c : Optimize field generation
+
+2008-07-18  Roger While <simrw@sim-basis.de>
+
+	* common.c : Win does not have nanosleep
+
+2008-07-14  Roger While <simrw@sim-basis.de>
+
+	* termio.c, move.c : Preliminary changes for zero-length fields
+
+2008-07-11  Roger While <simrw@sim-basis.de>
+
+	* strings.c : Handle special replacement correctly
+
+2008-07-09  Roger While <simrw@sim-basis.de>
+
+	* screenio.[ch] : Fix up SCREEN handling
+
+2008-07-05  Roger While <simrw@sim-basis.de>
+
+	* screenio.c : Extend SCREEN processing
+
+2008-07-01  Roger While <simrw@sim-basis.de>
+
+	* termio.c : Revert '.' display of non-displayable characters
+
+2008-06-29  Roger While <simrw@sim-basis.de>
+
+	* common.[ch], system.def : Implement CBL_OC_NANOSLEEP
+	* coblocal.h, move.c : support routines for the above
+
+2008-06-25  Roger While <simrw@sim-basis.de>
+
+	* screenio.[ch] : Define input fields for SCREEN section
+
+2008-06-23  Roger While <simrw@sim-basis.de>
+
+	* screenio.c : New env COB_SCREEN_EXCEPTIONS to retrun extended
+		exception codes on ACCEPT
+
+2008-06-17  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Fix return from ISAM (not BDB) from OPEN
+	* common.c : redirect to stderr when necessary
+	* screenio.c : More support
+
+2008-06-10  Roger While <simrw@sim-basis.de>
+
+	* screenio.[ch], termio.c : More Screen changes
+
+2008-06-05  Roger While <simrw@sim-basis.de>
+
+	* coblocal.h, common.c, fileio.[ch] : Cleanup, prepare for linptr reuse
+
+2008-06-04  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Cleanup /simplification
+
+2008-06-03  Roger While <simrw@sim-basis.de>
+
+	* fileio.[ch] : Support UNLOCK statement
+
+2008-06-01  Roger While <simrw@sim-basis.de>
+
+	* coblocal.h, move.c, numeric.c : Localize cob_binary_get/set routines
+	* common.c, move.c : Cater for spaces in numeric fields
+	* termio.c : Display '.' for invalid characters
+
+2008-05-31  Roger While <simrw@sim-basis.de>
+
+	* fileio.c : Allow VARYING on LINE SEQUENTIAL
+
+2008-05-23  Roger While <simrw@sim-basis.de>
+
+	* common.h, termio.c : Better display of POINTER items
+
+2008-05-19  Roger While <simrw@sim-basis.de>
+
+	* screenio.[ch] : More support for SCREEN
+
+2008-05-14  Roger While <simrw@sim-basis.de>
+
+	* common.c : Fix C$NARG for chaining syntax
+	* common.[ch] : Simplify accept from environment
+
+2008-05-12  Roger While <simrw@sim-basis.de>
+
+	* screenio.c : Fix some screen displays
+
+2008-04-17  Roger While <simrw@sim-basis.de>
+
+	* common.[ch], system.def : Implement MF call X"91",
+		subfunctions 11, 12, 16
+
 2008-04-02  Roger While <simrw@sim-basis.de>
 
 	* intrinsic.[ch] : Implement FUNCTION COMBINED-DATETIME

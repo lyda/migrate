@@ -84,7 +84,7 @@ static size_t			commlncnt = 0;
 static char			*locale_save = NULL;
 
 static size_t			sort_nkeys;
-static cob_file_key		*sort_keys;
+static struct cob_file_key	*sort_keys;
 static const unsigned char	*sort_collate;
 
 static const char		*cob_current_program_id = NULL;
@@ -308,6 +308,19 @@ static struct handlerlist {
  * General functions
  */
 
+void *
+cob_malloc (const size_t size)
+{
+	void *mptr;
+
+	mptr = calloc (1, size);
+	if (unlikely(!mptr)) {
+		cob_runtime_error ("Cannot acquire %d bytes of memory - Aborting", size);
+		cob_stop_run (1);
+	}
+	return mptr;
+}
+
 void
 cob_set_location (const char *progid, const char *sfile, const unsigned int sline,
 		  const char *csect, const char *cpara, const char *cstatement)
@@ -404,10 +417,10 @@ cob_set_exception (const int id)
 static void
 cob_sig_handler (int sig)
 {
-	fprintf (stderr, "Abnormal termination - File contents may not be correct\n");
-	fflush (stderr);
 	cob_screen_terminate ();
 	cob_exit_fileio ();
+	fprintf (stderr, "Abnormal termination - File contents may not be correct\n");
+	fflush (stderr);
 	switch (sig) {
 	case SIGHUP:
 		if ((hupsig != SIG_IGN) && (hupsig != SIG_DFL)) {
@@ -429,7 +442,7 @@ cob_sig_handler (int sig)
 }
 #endif
 
-void
+static void
 cob_set_signal (void)
 {
 #ifdef	HAVE_SIGNAL_H
@@ -480,9 +493,11 @@ cob_init (int argc, char **argv)
 #if 0
 		cob_init_termio ();
 #endif
+		cob_init_strings ();
+		cob_init_move ();
+		cob_init_intrinsic ();
 		cob_init_fileio ();
 		cob_init_call ();
-		cob_init_intrinsic ();
 
 		for (i = 0; i < 8; i++) {
 			memset (buff, 0, sizeof (buff));
@@ -497,6 +512,8 @@ cob_init (int argc, char **argv)
 		if (s && (*s == 'Y' || *s == 'y')) {
 			cob_line_trace = 1;
 		}
+
+		cob_set_signal ();
 
 		cob_initialized = 1;
 	}
@@ -579,7 +596,7 @@ cob_runtime_error (const char *fmt, ...)
 }
 
 void
-cob_fatal_error (const enum cob_enum_error fatal_error)
+cob_fatal_error (const unsigned int fatal_error)
 {
 	switch (fatal_error) {
 	case COB_FERROR_INITIALIZED:
@@ -595,7 +612,7 @@ cob_fatal_error (const enum cob_enum_error fatal_error)
 		cob_runtime_error ("Stack overflow, possible PERFORM depth exceeded");
 		break;
 	default:
-		cob_runtime_error ("Unknown failure");
+		cob_runtime_error ("Unknown failure : %d", (int)fatal_error);
 		break;
 	}
 	cob_stop_run (1);
@@ -832,6 +849,10 @@ cob_real_get_sign (cob_field *f)
 			if (*p >= '0' && *p <= '9') {
 				return 1;
 			}
+			if (*p == ' ') {
+				*p = (unsigned char)'0';
+				return 1;
+			}
 			if (unlikely(cob_current_module->display_sign)) {
 				return cob_get_sign_ebcdic (p);
 			} else {
@@ -922,7 +943,11 @@ cob_get_switch (const int n)
 void
 cob_set_switch (const int n, const int flag)
 {
-	cob_switch[n] = flag;
+	if (flag == 0) {
+		cob_switch[n] = 0;
+	} else if (flag == 1) {
+		cob_switch[n] = 1;
+	}
 }
 
 /*
@@ -1256,7 +1281,7 @@ void
 cob_table_sort_init (const int nkeys, const unsigned char *collating_sequence)
 {
 	sort_nkeys = 0;
-	sort_keys = cob_malloc (nkeys * sizeof (cob_file_key));
+	sort_keys = cob_malloc (nkeys * sizeof (struct cob_file_key));
 	if (collating_sequence) {
 		sort_collate = collating_sequence;
 	} else {
@@ -1351,9 +1376,9 @@ cob_check_ref_mod (const int offset, const int length, const int size, const cha
 unsigned char *
 cob_external_addr (const char *exname, const int exlength)
 {
-	static cob_external *basext = NULL;
+	static struct cob_external *basext = NULL;
 
-	cob_external *eptr;
+	struct cob_external *eptr;
 
 	for (eptr = basext; eptr; eptr = eptr->next) {
 		if (!strcmp (exname, eptr->ename)) {
@@ -1366,7 +1391,7 @@ cob_external_addr (const char *exname, const int exlength)
 			return (ucharptr)eptr->ext_alloc;
 		}
 	}
-	eptr = (cob_external *) cob_malloc (sizeof (cob_external));
+	eptr = (struct cob_external *) cob_malloc (sizeof (struct cob_external));
 	eptr->next = basext;
 	eptr->esize = exlength;
 	eptr->ename = cob_malloc (strlen (exname) + 1);
@@ -1375,19 +1400,6 @@ cob_external_addr (const char *exname, const int exlength)
 	basext = eptr;
 	cob_initial_external = 1;
 	return (ucharptr)eptr->ext_alloc;
-}
-
-void *
-cob_malloc (const size_t size)
-{
-	void *mptr;
-
-	mptr = calloc (1, size);
-	if (unlikely(!mptr)) {
-		cob_runtime_error ("Cannot acquire %d bytes of memory - Aborting", size);
-		cob_stop_run (1);
-	}
-	return mptr;
 }
 
 /* Extended ACCEPT/DISPLAY */
@@ -1620,6 +1632,27 @@ cob_display_env_value (cob_field *f)
 }
 
 void
+cob_get_environment (cob_field *envname, cob_field *envval)
+{
+	const char	*p;
+	char		buff[COB_SMALL_BUFF];
+
+	if (envname->size < COB_SMALL_BUFF) {
+		cob_field_to_string (envname, buff);
+		p = getenv (buff);
+		if (!p) {
+			cob_set_exception (COB_EC_IMP_ACCEPT);
+			p = " ";
+		}
+		cob_memcpy (envval, (ucharptr)p, (int) strlen (p));
+	} else {
+		cob_set_exception (COB_EC_IMP_ACCEPT);
+		p = " ";
+		cob_memcpy (envval, (ucharptr)p, (int) strlen (p));
+	}
+}
+
+void
 cob_accept_environment (cob_field *f)
 {
 	const char *p = NULL;
@@ -1629,7 +1662,7 @@ cob_accept_environment (cob_field *f)
 	}
 	if (!p) {
 		cob_set_exception (COB_EC_IMP_ACCEPT);
-		p = "";
+		p = " ";
 	}
 	cob_memcpy (f, (ucharptr)p, (int) strlen (p));
 }
@@ -1647,7 +1680,10 @@ cob_chain_setup (void *data, const size_t parm, const size_t size)
 		} else {
 			memcpy (data, cob_argv[parm], size);
 		}
+	} else {
+		memset (data, ' ', size);
 	}
+	cob_call_params = cob_argc - 1;
 }
 
 void
@@ -1722,7 +1758,7 @@ CBL_EXIT_PROC (unsigned char *x, unsigned char *pptr)
 	struct exit_handlerlist *h = exit_hdlrs;
 	int			(**p)(void) = NULL;
 
-	COB_CHK_PARMS (CBL_ERROR_PROC, 2);
+	COB_CHK_PARMS (CBL_EXIT_PROC, 2);
 
 	memcpy (&p, &pptr, sizeof (void *));
 	if (!p || !*p) {
@@ -1957,13 +1993,40 @@ CBL_XF5 (unsigned char *data_1, unsigned char *data_2)
 }
 
 int
-CBL_X91 (unsigned char *result, unsigned char *func, unsigned char *parm)
+CBL_X91 (unsigned char *result, const unsigned char *func, unsigned char *parm)
 {
-	if (*func == 16) {
+	unsigned char	*p;
+	size_t		i;
+
+	switch (*func) {
+	case 11:
+		/* Set switches */
+		p = parm;
+		for (i = 0; i < 8; i++, p++) {
+			if (*p == 0) {
+				cob_switch[i] = 0;
+			} else if (*p == 1) {
+				cob_switch[i] = 1;
+			}
+		}
+		*result = 0;
+		break;
+	case 12:
+		/* Get switches */
+		p = parm;
+		for (i = 0; i < 8; i++, p++) {
+			*p = cob_switch[i];
+		}
+		*result = 0;
+		break;
+	case 16:
+		/* Return number of call parameters */
 		*parm = cob_save_call_params;
 		*result = 0;
-	} else {
+		break;
+	default:
 		*result = 1;
+		break;
 	}
 	return 0;
 }
@@ -1995,6 +2058,48 @@ CBL_TOLOWER (unsigned char *data, const int length)
 			if (isupper (data[n])) {
 				data[n] = tolower (data[n]);
 			}
+		}
+	}
+	return 0;
+}
+
+int
+cob_oc_nanosleep (unsigned char *data)
+{
+	long long	nsecs;
+#ifdef	_WIN32
+#if 0
+	struct timeval	tv;
+#else
+	unsigned int	msecs;
+#endif
+#else
+	struct timespec	tsec;
+#endif
+
+	COB_CHK_PARMS (CBL_OC_NANOSLEEP, 1);
+	if (cob_current_module->cob_procedure_parameters[0]) {
+		nsecs = cob_get_long_long (cob_current_module->cob_procedure_parameters[0]);
+		if (nsecs > 0) {
+#ifdef	_WIN32
+#if 0
+			nsecs /= 1000;
+			if (nsecs > 0) {
+				tv.tv_sec = (long)(nsecs / 1000000);
+				tv.tv_usec = (long)(nsecs % 1000000);
+				select (0, (void *)0, (void *)0, (void *)0, &tv);
+			}
+#else
+			msecs = (unsigned int)(nsecs / 1000000);
+			if (msecs > 0) {
+				Sleep (msecs);
+			}
+#endif
+#else
+			tsec.tv_sec = nsecs / 1000000000;
+			tsec.tv_nsec = nsecs % 1000000000;
+			nanosleep (&tsec, NULL);
+#endif
 		}
 	}
 	return 0;

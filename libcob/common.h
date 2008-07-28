@@ -100,12 +100,12 @@ typedef unsigned char *	ucharptr;
  * External
  */
 
-typedef struct __cob_external {
-	struct __cob_external	*next;
+struct cob_external {
+	struct cob_external	*next;
 	char			*ext_alloc;
 	char			*ename;
 	int			esize;
-} cob_external;
+};
 
 /*
  * Field
@@ -141,6 +141,7 @@ typedef struct __cob_external {
 #define COB_FLAG_JUSTIFIED		0x10
 #define COB_FLAG_BINARY_SWAP		0x20
 #define COB_FLAG_REAL_BINARY		0x40
+#define COB_FLAG_IS_POINTER		0x80
 
 #define COB_FIELD_HAVE_SIGN(f)		((f)->attr->flags & COB_FLAG_HAVE_SIGN)
 #define COB_FIELD_SIGN_SEPARATE(f)	((f)->attr->flags & COB_FLAG_SIGN_SEPARATE)
@@ -149,6 +150,7 @@ typedef struct __cob_external {
 #define COB_FIELD_JUSTIFIED(f)		((f)->attr->flags & COB_FLAG_JUSTIFIED)
 #define COB_FIELD_BINARY_SWAP(f)	((f)->attr->flags & COB_FLAG_BINARY_SWAP)
 #define COB_FIELD_REAL_BINARY(f)	((f)->attr->flags & COB_FLAG_REAL_BINARY)
+#define COB_FIELD_IS_POINTER(f)		((f)->attr->flags & COB_FLAG_IS_POINTER)
 
 /* field attributes */
 
@@ -231,12 +233,10 @@ enum cob_exception_id {
  * Fatal error
  */
 
-enum cob_enum_error {
-	COB_FERROR_INITIALIZED,
-	COB_FERROR_CODEGEN,
-	COB_FERROR_CHAINING,
-	COB_FERROR_STACK
-};
+#define COB_FERROR_INITIALIZED	0
+#define COB_FERROR_CODEGEN	1
+#define COB_FERROR_CHAINING	2
+#define COB_FERROR_STACK	3
 
 /*
  * Global variables
@@ -276,12 +276,12 @@ extern void cob_module_enter (cob_module *module);
 extern void cob_module_leave (cob_module *module);
 #ifdef __GNUC__
 extern void cob_stop_run (const int status) __attribute__ ((noreturn));
-extern void cob_fatal_error (const enum cob_enum_error fatal_error) __attribute__ ((noreturn));
+extern void cob_fatal_error (const unsigned int fatal_error) __attribute__ ((noreturn));
 extern void cob_runtime_error (const char *fmt, ...) __attribute__ ((format (printf, 1, 0)));
 extern void *cob_malloc (const size_t size) __attribute__ ((malloc));
 #else
 extern void cob_stop_run (const int status);
-extern void cob_fatal_error (const enum cob_enum_error fatal_error);
+extern void cob_fatal_error (const unsigned int fatal_error);
 extern void cob_runtime_error (const char *fmt, ...);
 extern void *cob_malloc (const size_t size);
 #endif
@@ -298,6 +298,7 @@ extern void cob_display_command_line (cob_field *f);
 extern void cob_accept_command_line (cob_field *f);
 extern void cob_set_environment (cob_field *f1, cob_field *f2);
 extern void cob_display_environment (cob_field *f);
+extern void cob_get_environment (cob_field *envname, cob_field *envval);
 extern void cob_accept_environment (cob_field *f);
 extern void cob_display_env_value (cob_field *f);
 extern void cob_display_arg_number (cob_field *f);
@@ -321,10 +322,11 @@ extern int CBL_EQ (unsigned char *data_1, unsigned char *data_2, const int lengt
 extern int CBL_NOT (unsigned char *data_1, const int length);
 extern int CBL_XF4 (unsigned char *data_1, unsigned char *data_2);
 extern int CBL_XF5 (unsigned char *data_1, unsigned char *data_2);
-extern int CBL_X91 (unsigned char *result, unsigned char *func, unsigned char *parm);
+extern int CBL_X91 (unsigned char *result, const unsigned char *func, unsigned char *parm);
 extern int CBL_TOUPPER (unsigned char *data, const int length);
 extern int CBL_TOLOWER (unsigned char *data, const int length);
 extern int cob_return_args (unsigned char *data);
+extern int cob_oc_nanosleep (unsigned char *data);
 extern int cob_parameter_size (unsigned char *data);
 extern int cob_acuw_sleep (unsigned char *data);
 extern int cob_acuw_justify (unsigned char *data, ...);
