@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2008-07-28 15:58+0200\n"
+"POT-Creation-Date: 2008-07-30 12:21+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: cobc/cobc.c:369
+#: cobc/cobc.c:370
 msgid ""
 "Options:\n"
 "  --help                Display this message\n"
@@ -60,12 +60,12 @@ msgid ""
 "  -Wall                 Enable all warnings"
 msgstr ""
 
-#: cobc/cobc.c:553
+#: cobc/cobc.c:554
 #, c-format
 msgid "Invalid option -std=%s\n"
 msgstr ""
 
-#: cobc/cobc.c:1018
+#: cobc/cobc.c:1019
 msgid "-MT must be given to specify target file\n"
 msgstr ""
 
@@ -553,8 +553,8 @@ msgstr ""
 msgid "Wrong number of CALL parameters for '%s'"
 msgstr ""
 
-#: cobc/typeck.c:3107 cobc/typeck.c:3149 cobc/typeck.c:4958 cobc/typeck.c:5063
-#: cobc/typeck.c:5112 cobc/typeck.c:5741
+#: cobc/typeck.c:3107 cobc/typeck.c:3149 cobc/typeck.c:4979 cobc/typeck.c:5084
+#: cobc/typeck.c:5133 cobc/typeck.c:5762
 msgid "Operation not allowed on SORT files"
 msgstr ""
 
@@ -649,113 +649,113 @@ msgstr ""
 msgid "Ignoring negative sign"
 msgstr ""
 
-#: cobc/typeck.c:4255
+#: cobc/typeck.c:4276
 msgid "Move non-integer to alphanumeric"
 msgstr ""
 
-#: cobc/typeck.c:4281
+#: cobc/typeck.c:4302
 msgid "Invalid source for MOVE"
 msgstr ""
 
-#: cobc/typeck.c:4298
+#: cobc/typeck.c:4319
 msgid "Invalid VALUE clause"
 msgstr ""
 
-#: cobc/typeck.c:4300
+#: cobc/typeck.c:4321
 msgid "Invalid MOVE statement"
 msgstr ""
 
-#: cobc/typeck.c:4306
+#: cobc/typeck.c:4327
 msgid "Numeric value is expected"
 msgstr ""
 
-#: cobc/typeck.c:4310
+#: cobc/typeck.c:4331
 msgid "Alphanumeric value is expected"
 msgstr ""
 
-#: cobc/typeck.c:4314
+#: cobc/typeck.c:4335
 msgid "Value does not fit the picture string"
 msgstr ""
 
-#: cobc/typeck.c:4318
+#: cobc/typeck.c:4339
 msgid "Value size exceeds data size"
 msgstr ""
 
-#: cobc/typeck.c:4322
+#: cobc/typeck.c:4343
 msgid "Sending field larger than receiving field"
 msgstr ""
 
-#: cobc/typeck.c:4326
+#: cobc/typeck.c:4347
 msgid "Some digits may be truncated"
 msgstr ""
 
-#: cobc/typeck.c:5071
+#: cobc/typeck.c:5092
 msgid "READ PREVIOUS only allowed for INDEXED SEQUENTIAL files"
 msgstr ""
 
-#: cobc/typeck.c:5078
+#: cobc/typeck.c:5099
 msgid "KEY ignored with sequential READ"
 msgstr ""
 
-#: cobc/typeck.c:5117 cobc/typeck.c:5746 cobc/parser.y:3971
+#: cobc/typeck.c:5138 cobc/typeck.c:5767 cobc/parser.y:3971
 msgid "INVALID KEY clause invalid with this file type"
 msgstr ""
 
-#: cobc/typeck.c:5120 cobc/typeck.c:5750 cobc/parser.y:3963
+#: cobc/typeck.c:5141 cobc/typeck.c:5771 cobc/parser.y:3963
 msgid "LOCK clause invalid with file LOCK AUTOMATIC"
 msgstr ""
 
-#: cobc/typeck.c:5223
+#: cobc/typeck.c:5244
 #, c-format
 msgid "Undeclared key '%s'"
 msgstr ""
 
-#: cobc/typeck.c:5227
+#: cobc/typeck.c:5248
 msgid "Invalid SEARCH ALL condition"
 msgstr ""
 
-#: cobc/typeck.c:5334
+#: cobc/typeck.c:5355
 msgid "The targets of SET must be either indexes or pointers"
 msgstr ""
 
-#: cobc/typeck.c:5346 cobc/typeck.c:5350
+#: cobc/typeck.c:5367 cobc/typeck.c:5371
 msgid "SET targets must be PROGRAM-POINTER"
 msgstr ""
 
-#: cobc/typeck.c:5364
+#: cobc/typeck.c:5385
 #, c-format
 msgid "The address of '%s' cannot be changed"
 msgstr ""
 
-#: cobc/typeck.c:5426 cobc/typeck.c:5431 cobc/typeck.c:5458 cobc/typeck.c:5463
+#: cobc/typeck.c:5447 cobc/typeck.c:5452 cobc/typeck.c:5479 cobc/typeck.c:5484
 msgid "Invalid SET statement"
 msgstr ""
 
-#: cobc/typeck.c:5467
+#: cobc/typeck.c:5488
 msgid "Field does not have FALSE clause"
 msgstr ""
 
-#: cobc/typeck.c:5501
+#: cobc/typeck.c:5522
 msgid "Invalid SORT filename"
 msgstr ""
 
-#: cobc/typeck.c:5515
+#: cobc/typeck.c:5536
 msgid "Table sort without keys not implemented yet"
 msgstr ""
 
-#: cobc/typeck.c:5539
+#: cobc/typeck.c:5560
 msgid "Invalid SORT USING parameter"
 msgstr ""
 
-#: cobc/typeck.c:5563
+#: cobc/typeck.c:5584
 msgid "Invalid SORT GIVING parameter"
 msgstr ""
 
-#: cobc/typeck.c:5753
+#: cobc/typeck.c:5774
 msgid "LOCK clause invalid here"
 msgstr ""
 
-#: cobc/typeck.c:5803
+#: cobc/typeck.c:5824
 msgid "Invalid mnemonic name"
 msgstr ""
 
@@ -768,25 +768,25 @@ msgstr ""
 msgid "%s: %s"
 msgstr ""
 
-#: cobc/pplex.l:406 cobc/pplex.l:451
+#: cobc/pplex.l:403 cobc/pplex.l:448
 msgid "Invalid directive - ignored"
 msgstr ""
 
-#: cobc/pplex.l:510
+#: cobc/pplex.l:507
 msgid "Line not terminated by a newline"
 msgstr ""
 
-#: cobc/pplex.l:551
+#: cobc/pplex.l:548
 #, c-format
 msgid "Invalid indicator '%c' at column 7"
 msgstr ""
 
-#: cobc/pplex.l:571
+#: cobc/pplex.l:568
 #, c-format
 msgid "Source text after column %d"
 msgstr ""
 
-#: cobc/pplex.l:600 cobc/pplex.l:610
+#: cobc/pplex.l:597 cobc/pplex.l:607
 msgid "Invalid line continuation"
 msgstr ""
 

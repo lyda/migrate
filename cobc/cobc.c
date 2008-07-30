@@ -55,6 +55,7 @@
 #endif
 
 #include <libcob.h>
+#include <tarstamp.h>
 
 #include "cobc.h"
 #include "tree.h"
@@ -74,7 +75,7 @@ enum cb_compile_level {
  * Global variables
  */
 
-size_t	cb_source_format = CB_FORMAT_FIXED;
+int	cb_source_format = CB_FORMAT_FIXED;
 
 #ifdef	COB_EBCDIC_MACHINE
 int	cb_display_sign = COB_DISPLAY_SIGN_EBCDIC;	/* 1 */
@@ -357,8 +358,8 @@ terminate (const char *str)
 static void
 print_version (void)
 {
-	printf ("cobc (%s) %s.%d Build date %s %s\n",
-		PACKAGE_NAME, PACKAGE_VERSION, PATCH_LEVEL, __DATE__, __TIME__);
+	printf ("cobc (%s) %s.%d\nBuilt    %s %s\nPackaged %s\n",
+		PACKAGE_NAME, PACKAGE_VERSION, PATCH_LEVEL, __DATE__, __TIME__, octardate);
 	puts ("Copyright (C) 2001-2008 Keisuke Nishida / Roger While");
 }
 

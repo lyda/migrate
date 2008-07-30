@@ -9,6 +9,9 @@ BUILT_SOURCES = defaults.h
 DISTCLEANFILES = $(BUILT_SOURCES) cpucheck
 EXTRA_DIST = cpucheck.c COPYING.DOC
 
+dist-hook:
+	echo "static char octardate[] = \"`date`\";" > $(distdir)/tarstamp.h
+
 defaults.h: Makefile.am $(top_builddir)/config.status
 	@echo "Creating defaults.h..."
 	@{								\

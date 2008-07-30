@@ -27,6 +27,7 @@
 #include <ctype.h>
 
 #include <libcob.h>
+#include <tarstamp.h>
 
 #include "cobc.h"
 #include "tree.h"
@@ -4007,9 +4008,11 @@ codegen (struct cb_program *prog, int nested)
 
 	if (!nested) {
 		num_cob_genned = 0;
-		output ("/* Generated from %s by cobc %s.%d (Build date - %s %s) */\n\n",
-			cb_source_file, PACKAGE_VERSION, PATCH_LEVEL,
+		output ("/* Generated from %s by cobc %s.%d */\n",
+			cb_source_file, PACKAGE_VERSION, PATCH_LEVEL);
+		output ("/* Built -    %s %s */\n",
 			__DATE__, __TIME__);
+		output ("/* Packaged - %s */\n\n", octardate);
 		output ("#define  __USE_STRING_INLINES 1\n");
 #ifdef	_XOPEN_SOURCE_EXTENDED
 		output ("#ifndef	_XOPEN_SOURCE_EXTENDED\n");
@@ -4035,9 +4038,11 @@ codegen (struct cb_program *prog, int nested)
 		output ("#define COB_PACKAGE_VERSION	\"%s\"\n", PACKAGE_VERSION);
 		output ("#define COB_PATCH_LEVEL		%d\n\n", PATCH_LEVEL);
 
-		output_storage ("/* Generated from %s by cobc %s.%d (Build date - %s %s) */\n\n",
-				cb_source_file, PACKAGE_VERSION, PATCH_LEVEL,
-				__DATE__, __TIME__);
+		output_storage ("/* Generated from %s by cobc %s.%d */\n",
+			cb_source_file, PACKAGE_VERSION, PATCH_LEVEL);
+		output_storage ("/* Built -    %s %s */\n",
+			__DATE__, __TIME__);
+		output_storage ("/* Packaged - %s */\n\n", octardate);
 		for (cp = prog; cp; cp = cp->next_program) {
 			if (cp->gen_decset) {
 /* Hmm, autoconf redefines inline and we do not have config.h here

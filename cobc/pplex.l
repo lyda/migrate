@@ -387,9 +387,6 @@ check_directive (char *buff, int *line_size)
 		if (cb_flag_debugging_line) {
 			memset (dirptr, ' ', 3);
 		} else {
-			/* RXW
-			memcpy (dirptr, "*> ", 3);
-			*/
 			strcpy (buff, "      *> DEBUG\n");
 			*line_size = strlen (buff);
 		}

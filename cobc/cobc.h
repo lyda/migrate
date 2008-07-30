@@ -46,7 +46,7 @@
 #define CB_FORMAT_FIXED	0
 #define CB_FORMAT_FREE	1
 
-extern size_t	cb_source_format;
+extern int	cb_source_format;
 
 extern int	cb_display_sign;
 

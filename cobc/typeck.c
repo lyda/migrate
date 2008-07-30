@@ -4004,8 +4004,19 @@ validate_move (cb_tree src, cb_tree dst, size_t is_value)
 			    ((f->usage == CB_USAGE_COMP_5 ||
 			      f->usage == CB_USAGE_COMP_X) &&
 			      f->pic->scale == 0)) {
+				p = l->data;
+				for (i = 0; i < l->size; i++) {
+					if (l->data[i] != '0') {
+						p = &l->data[i];
+						break;
+					}
+				}
+				i = l->size - i;
 				switch (f->size) {
 				case 1:
+					if (i > 18) {
+						goto invalid;
+					}
 					val = cb_get_long_long (src);
 					if (f->pic->have_sign) {
 						if (val < -128LL ||
@@ -4019,6 +4030,9 @@ validate_move (cb_tree src, cb_tree dst, size_t is_value)
 					}
 					break;
 				case 2:
+					if (i > 18) {
+						goto invalid;
+					}
 					val = cb_get_long_long (src);
 					if (f->pic->have_sign) {
 						if (val < -32768LL ||
@@ -4032,6 +4046,9 @@ validate_move (cb_tree src, cb_tree dst, size_t is_value)
 					}
 					break;
 				case 3:
+					if (i > 18) {
+						goto invalid;
+					}
 					val = cb_get_long_long (src);
 					if (f->pic->have_sign) {
 						if (val < -8388608LL ||
@@ -4045,6 +4062,9 @@ validate_move (cb_tree src, cb_tree dst, size_t is_value)
 					}
 					break;
 				case 4:
+					if (i > 18) {
+						goto invalid;
+					}
 					val = cb_get_long_long (src);
 					if (f->pic->have_sign) {
 						if (val < -2147483648LL ||
@@ -4058,6 +4078,9 @@ validate_move (cb_tree src, cb_tree dst, size_t is_value)
 					}
 					break;
 				case 5:
+					if (i > 18) {
+						goto invalid;
+					}
 					val = cb_get_long_long (src);
 					if (f->pic->have_sign) {
 						if (val < -549755813888LL ||
@@ -4071,6 +4094,9 @@ validate_move (cb_tree src, cb_tree dst, size_t is_value)
 					}
 					break;
 				case 6:
+					if (i > 18) {
+						goto invalid;
+					}
 					val = cb_get_long_long (src);
 					if (f->pic->have_sign) {
 						if (val < -140737488355328LL ||
@@ -4084,6 +4110,9 @@ validate_move (cb_tree src, cb_tree dst, size_t is_value)
 					}
 					break;
 				case 7:
+					if (i > 18) {
+						goto invalid;
+					}
 					val = cb_get_long_long (src);
 					if (f->pic->have_sign) {
 						if (val < -36028797018963968LL ||
@@ -4097,14 +4126,6 @@ validate_move (cb_tree src, cb_tree dst, size_t is_value)
 					}
 					break;
 				default:
-					p = l->data;
-					for (i = 0; i < l->size; i++) {
-						if (l->data[i] != '0') {
-							p = &l->data[i];
-							break;
-						}
-					}
-					i = l->size - i;
 					if (f->pic->have_sign) {
 						if (i < 19) {
 							break;
