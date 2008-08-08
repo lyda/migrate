@@ -2339,6 +2339,8 @@ screen_description:
 	current_field = CB_FIELD (x);
 	if (current_field->parent) {
 		current_field->screen_flag |= current_field->parent->screen_flag;
+		current_field->screen_foreg = current_field->parent->screen_foreg;
+		current_field->screen_backg = current_field->parent->screen_backg;
 	}
   }
   screen_options '.'

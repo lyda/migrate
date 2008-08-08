@@ -1,3 +1,7 @@
+2008-08-01  Roger While <simrw@sim-basis.de>
+
+	* byteswap.h : Do not rely on gcc doing the right thing for short
+
 2008-07-21  Roger While <simrw@sim-basis.de>
 
 	* screenio.c : Do not display SECURE items

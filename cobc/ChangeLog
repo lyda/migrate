@@ -1,3 +1,11 @@
+2008-08-01  Roger While <simrw@sim-basis.de>
+
+	* pplex.l : Specific fix for >>D
+
+2008-07-31  Roger While <simrw@sim-basis.de>
+
+	* parser.y : FOREGROUND/BACKGROUND must be propogated from parent
+
 2008-07-28  Roger While <simrw@sim-basis.de>
 
 	* typeck.c : Check min/max values on BINARY-xxx/COMP-5/COMP-X properly

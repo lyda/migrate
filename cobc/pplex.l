@@ -380,18 +380,23 @@ check_directive (char *buff, int *line_size)
 		return;
 	}
 	s++;
-	memset (sbuff[0], 0, sizeof (sbuff));
-	n = sscanf (s, "%255s %255s %255s %255s %255s",
-			sbuff[0], sbuff[1], sbuff[2], sbuff[3], sbuff[4]);
-	if (sbuff[0][0] == 'D') {
+	if (*s == 'D') {
 		if (cb_flag_debugging_line) {
 			memset (dirptr, ' ', 3);
 		} else {
-			strcpy (buff, "      *> DEBUG\n");
+			for (cnt = 0; cnt < newline_count; cnt++) {
+				buff[cnt] = '\n';
+			}
+			buff[cnt] = 0;
+			strcat (buff, "      *> DEBUG\n");
 			*line_size = strlen (buff);
+			newline_count = 0;
 		}
 		return;
 	}
+	memset (sbuff[0], 0, sizeof (sbuff));
+	n = sscanf (s, "%255s %255s %255s %255s %255s",
+			sbuff[0], sbuff[1], sbuff[2], sbuff[3], sbuff[4]);
 	for (cnt = 0; cnt < newline_count; cnt++) {
 		buff[cnt] = '\n';
 	}

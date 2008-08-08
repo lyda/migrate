@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: open-cobol-list@lists.sourceforge.net\n"
-"POT-Creation-Date: 2008-07-30 12:21+0200\n"
+"POT-Creation-Date: 2008-08-01 17:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -697,11 +697,11 @@ msgstr ""
 msgid "KEY ignored with sequential READ"
 msgstr ""
 
-#: cobc/typeck.c:5138 cobc/typeck.c:5767 cobc/parser.y:3971
+#: cobc/typeck.c:5138 cobc/typeck.c:5767 cobc/parser.y:3973
 msgid "INVALID KEY clause invalid with this file type"
 msgstr ""
 
-#: cobc/typeck.c:5141 cobc/typeck.c:5771 cobc/parser.y:3963
+#: cobc/typeck.c:5141 cobc/typeck.c:5771 cobc/parser.y:3965
 msgid "LOCK clause invalid with file LOCK AUTOMATIC"
 msgstr ""
 
@@ -768,25 +768,25 @@ msgstr ""
 msgid "%s: %s"
 msgstr ""
 
-#: cobc/pplex.l:403 cobc/pplex.l:448
+#: cobc/pplex.l:408 cobc/pplex.l:453
 msgid "Invalid directive - ignored"
 msgstr ""
 
-#: cobc/pplex.l:507
+#: cobc/pplex.l:512
 msgid "Line not terminated by a newline"
 msgstr ""
 
-#: cobc/pplex.l:548
+#: cobc/pplex.l:553
 #, c-format
 msgid "Invalid indicator '%c' at column 7"
 msgstr ""
 
-#: cobc/pplex.l:568
+#: cobc/pplex.l:573
 #, c-format
 msgid "Source text after column %d"
 msgstr ""
 
-#: cobc/pplex.l:597 cobc/pplex.l:607
+#: cobc/pplex.l:602 cobc/pplex.l:612
 msgid "Invalid line continuation"
 msgstr ""
 
@@ -883,145 +883,145 @@ msgstr ""
 msgid "RENAMES may not reference a level 01 or > 50"
 msgstr ""
 
-#: cobc/parser.y:2481
+#: cobc/parser.y:2483
 msgid "Executable program requested but PROCEDURE/ENTRY has USING clause"
 msgstr ""
 
-#: cobc/parser.y:2633
+#: cobc/parser.y:2635
 #, c-format
 msgid "Unknown statement '%s'"
 msgstr ""
 
-#: cobc/parser.y:2918
+#: cobc/parser.y:2920
 msgid "ALTER statement is obsolete and unsupported"
 msgstr ""
 
-#: cobc/parser.y:2981 cobc/parser.y:3035
+#: cobc/parser.y:2983 cobc/parser.y:3037
 msgid "BY VALUE not allowed in CHAINED program"
 msgstr ""
 
-#: cobc/parser.y:3004 cobc/parser.y:3011
+#: cobc/parser.y:3006 cobc/parser.y:3013
 msgid "OMITTED only allowed with BY REFERENCE"
 msgstr ""
 
-#: cobc/parser.y:3027
+#: cobc/parser.y:3029
 msgid "BY CONTENT not allowed in CHAINED program"
 msgstr ""
 
-#: cobc/parser.y:3451 cobc/parser.y:3468
+#: cobc/parser.y:3453 cobc/parser.y:3470
 msgid "EXIT PERFORM is only valid with inline PERFORM"
 msgstr ""
 
-#: cobc/parser.y:3485
+#: cobc/parser.y:3487
 msgid "EXIT SECTION is only valid with an active SECTION"
 msgstr ""
 
-#: cobc/parser.y:3503
+#: cobc/parser.y:3505
 msgid "EXIT PARAGRAPH is only valid with an active PARAGRAPH"
 msgstr ""
 
-#: cobc/parser.y:3737
+#: cobc/parser.y:3739
 msgid "INSPECT missing a keyword"
 msgstr ""
 
-#: cobc/parser.y:3967
+#: cobc/parser.y:3969
 msgid "KEY clause invalid with this file type"
 msgstr ""
 
-#: cobc/parser.y:4240
+#: cobc/parser.y:4242
 msgid "File sort requires KEY phrase"
 msgstr ""
 
-#: cobc/parser.y:4288
+#: cobc/parser.y:4290
 msgid "File sort requires USING or INPUT PROCEDURE"
 msgstr ""
 
-#: cobc/parser.y:4294
+#: cobc/parser.y:4296
 msgid "USING invalid with table SORT"
 msgstr ""
 
-#: cobc/parser.y:4302
+#: cobc/parser.y:4304
 msgid "INPUT PROCEDURE invalid with table SORT"
 msgstr ""
 
-#: cobc/parser.y:4313
+#: cobc/parser.y:4315
 msgid "File sort requires GIVING or OUTPUT PROCEDURE"
 msgstr ""
 
-#: cobc/parser.y:4319
+#: cobc/parser.y:4321
 msgid "GIVING invalid with table SORT"
 msgstr ""
 
-#: cobc/parser.y:4327
+#: cobc/parser.y:4329
 msgid "OUTPUT PROCEDURE invalid with table SORT"
 msgstr ""
 
-#: cobc/parser.y:4348
+#: cobc/parser.y:4350
 msgid "START not allowed on SEQUENTIAL files"
 msgstr ""
 
-#: cobc/parser.y:4354 cobc/parser.y:4970 cobc/parser.y:5028
+#: cobc/parser.y:4356 cobc/parser.y:4972 cobc/parser.y:5030
 #, c-format
 msgid "'%s' is not a file name"
 msgstr ""
 
-#: cobc/parser.y:4570
+#: cobc/parser.y:4572
 msgid "USE statement must be within DECLARATIVES"
 msgstr ""
 
-#: cobc/parser.y:4572
+#: cobc/parser.y:4574
 msgid "SECTION header missing before USE statement"
 msgstr ""
 
-#: cobc/parser.y:4956
+#: cobc/parser.y:4958
 msgid "LINAGE-COUNTER must be qualified here"
 msgstr ""
 
-#: cobc/parser.y:4959
+#: cobc/parser.y:4961
 msgid "Invalid LINAGE-COUNTER usage"
 msgstr ""
 
-#: cobc/parser.y:5006
+#: cobc/parser.y:5008
 #, c-format
 msgid "'%s' not indexed"
 msgstr ""
 
-#: cobc/parser.y:5007
+#: cobc/parser.y:5009
 #, c-format
 msgid "'%s' defined here"
 msgstr ""
 
-#: cobc/parser.y:5521
+#: cobc/parser.y:5523
 #, c-format
 msgid "'%s' not level 01 or 77"
 msgstr ""
 
-#: cobc/parser.y:5525
+#: cobc/parser.y:5527
 #, c-format
 msgid "'%s' is not in LINKAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:5528
+#: cobc/parser.y:5530
 #, c-format
 msgid "'%s' can not be BASED/EXTERNAL"
 msgstr ""
 
-#: cobc/parser.y:5532
+#: cobc/parser.y:5534
 #, c-format
 msgid "'%s' is not in WORKING-STORAGE SECTION"
 msgstr ""
 
-#: cobc/parser.y:5539
+#: cobc/parser.y:5541
 #, c-format
 msgid "'%s' REDEFINES field not allowed here"
 msgstr ""
 
-#: cobc/parser.y:5545
+#: cobc/parser.y:5547
 #, c-format
 msgid "ENTRY '%s' duplicated"
 msgstr ""
 
-#: cobc/parser.y:5560 cobc/parser.y:5572
+#: cobc/parser.y:5562 cobc/parser.y:5574
 #, c-format
 msgid "%s statement not terminated by END-%s"
 msgstr ""

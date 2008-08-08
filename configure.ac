@@ -60,7 +60,6 @@ AH_TEMPLATE([WITH_CISAM], [Use CISAM as ISAM handler])
 AH_TEMPLATE([WITH_DISAM], [Use DISAM as ISAM handler])
 AH_TEMPLATE([WITH_VBISAM], [Use VBISAM as ISAM handler])
 AH_TEMPLATE([WITH_LFS64], [Compile with large file system 64])
-AH_TEMPLATE([COB_DEBUG], [Enable debugging features in the compiler])
 AH_TEMPLATE([COB_EXPERIMENTAL], [Enable experimemental code (Developers only!)])
 AH_TEMPLATE([COB_PARAM_CHECK], [Enable CALL parameter checking])
 AH_TEMPLATE([COB_EXPORT_DYN], [Compile/link option for exporting symbols])
@@ -83,7 +82,6 @@ AH_TEMPLATE([COB_STRFTIME], [Can use strftime for timezone])
 AH_TEMPLATE([COB_LI_IS_LL], [long int is long long])
 
 # enable debug mode by default for now
-AC_DEFINE(COB_DEBUG)
 AC_DEFINE(__USE_STRING_INLINES)
 
 LIBCOB_LIBS="-lm"
@@ -199,15 +197,6 @@ AC_ARG_WITH(dl,
     *)		AC_MSG_ERROR(["--with/without-dl can not have a value"])
 		;;
   esac])
-
-GEN_DEBUG_OPT="no"
-
-AC_ARG_ENABLE(debug,
-  [  --enable-debug          (OpenCOBOL) enable debugging options],
-  [if test "$enable_debug" = "yes"; then
-	AC_DEFINE(COB_DEBUG)
-	GEN_DEBUG_OPT="yes"
-   fi])
 
 AC_ARG_ENABLE(experimental,
   [  --enable-experimental   (OpenCOBOL) enable experimental code (Developers only!)],
@@ -568,28 +557,20 @@ COB_SHARED_OPT="-shared"
 COB_EXEEXT="$EXEEXT"
 COB_EXTRA_FLAGS=""
 
-if test "$GEN_DEBUG_OPT" = "no"
-then
-	CFLAGS=`echo "$CFLAGS " | sed -e 's/-g / /'`
-fi
-
 # Include CFLAGS in COB_CFLAGS without optimization/debug options
 cob_temp_flags=`echo "$CFLAGS " | sed -e 's/@<:@+-@:>@O@<:@0-9@:>@//' | sed -e 's/-O / /' | sed -e 's/-g / /' | sed -e 's/$-O//' | sed -e 's/$-g//'`
 COB_CFLAGS="$COB_CFLAGS $cob_temp_flags"
 
-if test "$GEN_DEBUG_OPT" = "no"
+if test "`basename $COB_CC`" = "gcc"
 then
-	if test "`basename $COB_CC`" = "gcc"
+	cob_temp_flags="`${COB_CC} ${srcdir}/cpucheck.c -o cpucheck 1>/dev/null 2>&1 && ./cpucheck 2>/dev/null`"
+	rm -f cpucheck${EXEEXT}
+	if test "x$cob_temp_flags" != "x"
 	then
-		cob_temp_flags="`${COB_CC} ${srcdir}/cpucheck.c -o cpucheck 1>/dev/null 2>&1 && ./cpucheck 2>/dev/null`"
-		rm -f cpucheck${EXEEXT}
-		if test "x$cob_temp_flags" != "x"
-		then
-			CFLAGS="$CFLAGS $cob_temp_flags -finline-functions -fomit-frame-pointer"
-			COB_EXTRA_FLAGS=" $cob_temp_flags"
-		else
-			CFLAGS="$CFLAGS -finline-functions -fomit-frame-pointer"
-		fi
+		CFLAGS="$CFLAGS $cob_temp_flags -finline-functions"
+		COB_EXTRA_FLAGS=" $cob_temp_flags"
+	else
+		CFLAGS="$CFLAGS -finline-functions"
 	fi
 fi
 

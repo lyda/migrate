@@ -11,6 +11,9 @@ EXTRA_DIST = cpucheck.c COPYING.DOC
 
 dist-hook:
 	echo "static char octardate[] = \"`date`\";" > $(distdir)/tarstamp.h
+	find $(distdir) -type d -print | xargs chmod 777
+	chmod 644 $(distdir)/cpucheck.c
+	chmod 644 $(distdir)/cob-config.in
 
 defaults.h: Makefile.am $(top_builddir)/config.status
 	@echo "Creating defaults.h..."

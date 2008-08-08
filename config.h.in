@@ -1,8 +1,5 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Enable debugging features in the compiler */
-#undef COB_DEBUG
-
 /* Executable extension */
 #undef COB_EXEEXT
 

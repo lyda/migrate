@@ -780,7 +780,7 @@ AT_DATA([caller.cob], [
            STOP RUN.
 ])
 
-AT_DATA([callee.cob], [
+AT_DATA([hello.cob], [
        IDENTIFICATION   DIVISION.
        PROGRAM-ID.      hello.
        DATA             DIVISION.
@@ -801,10 +801,9 @@ AT_DATA([callee.cob], [
            EXIT PROGRAM.
 ])
 
-AT_CHECK([${COMPILE} -std=mvs -c -fstatic-call caller.cob])
-AT_CHECK([${COMPILE_MODULE} -std=mvs -c -fstatic-call callee.cob])
-AT_CHECK([${COMPILE} -o prog caller.o callee.o])
-AT_CHECK([./prog], [0],
+AT_CHECK([${COMPILE} -std=mvs caller.cob])
+AT_CHECK([${COMPILE_MODULE} -std=mvs hello.cob])
+AT_CHECK([./caller], [0],
 [Hello, COBOL!
 Bye, COBOL!
 ])
