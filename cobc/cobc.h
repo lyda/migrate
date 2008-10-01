@@ -106,6 +106,7 @@ extern int			optimize_flag;
 extern int			entry_number;
 extern int			has_external;
 
+extern char			*cb_oc_build_stamp;
 extern char			*cb_source_file;
 extern int			cb_source_line;
 
@@ -115,6 +116,9 @@ extern char			*source_name;
 extern char			*demangle_name;
 extern FILE			*cb_storage_file;
 extern char			*cb_storage_file_name;
+
+extern char			**cb_saveargv;
+extern int			cb_saveargc;
 
 extern FILE			*cb_listing_file;
 extern FILE			*cb_depend_file;
@@ -137,6 +141,7 @@ extern void	cobc_abort (const char *filename, const int linenum) __attribute__ (
 extern void	cobc_abort (const char *filename, const int linenum);
 #endif
 
+extern size_t			cob_check_valid_name (char *name);
 
 /* config.c */
 

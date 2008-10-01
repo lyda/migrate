@@ -303,7 +303,7 @@ at_times_file=$at_suite_dir/at-times
 # List of the tested programs.
 at_tested='cobc'
 # List of the all the test groups.
-at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74'
+at_groups_all=' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75'
 # As many dots as there are digits in the last test group number.
 # Used to normalize the test group numbers so that `ls' lists them in
 # numerical order.
@@ -314,75 +314,76 @@ at_help_all='1;copy.at:22;COPY: file not found;copy;
 3;copy.at:69;COPY: separators;copy;
 4;copy.at:98;COPY: partial replacement;copy;
 5;copy.at:128;COPY: recursive replacement;copy;
-6;definition.at:27;Undefined data name;;
-7;definition.at:44;Undefined group name;;
-8;definition.at:64;Undefined data name in group;;
-9;definition.at:86;Reference not a group name;;
-10;definition.at:109;Incomplete 01 definition;;
-11;definition.at:128;Same labels in different sections;;
-12;definition.at:152;Redefinition of 01 items;;
-13;definition.at:170;Redefinition of 01 and 02 items;;
-14;definition.at:188;Redefinition of 02 items;;
-15;definition.at:207;Redefinition of 77 items;;
-16;definition.at:225;Redefinition of 01 and 77 items;;
-17;definition.at:243;Redefinition of 88 items;;
-18;definition.at:262;Ambiguous reference to 02 items;;
-19;definition.at:287;Ambiguous reference to 02 and 03 items;;
-20;definition.at:311;Ambigous reference with qualification;;
-21;definition.at:340;Unique reference with ambiguous qualifiers;;
-22;definition.at:375;Undefined procedure name;;
-23;definition.at:394;Redefinition of section names;;
-24;definition.at:413;Redefinition of section and paragraph names;;
-25;definition.at:432;Redefinition of paragraph names;;
-26;definition.at:455;Ambiguous reference to paragraph name;;
-27;definition.at:479;Non-matching level numbers (extension);;
-28;expression.at:21;Ambiguous AND/OR;;
-29;expression.at:45;START on SEQUENTIAL file;;
-30;subscripts.at:31;Subscripted item requires OCCURS clause;;
-31;subscripts.at:58;The number of subscripts;;
-32;occurs.at:28;OCCURS with level 01, 66, 77, and 88;;
-33;occurs.at:53;OCCURS with variable-occurrence data item;;
-34;occurs.at:90;Nested OCCURS clause;;
-35;occurs.at:136;OCCURS DEPENDING followed by another field;;
-36;occurs.at:174;OCCURS DEPENDING without TO clause;;
-37;redefines.at:28;REDEFINES: not following entry-name;redefines;
-38;redefines.at:49;REDEFINES: level 02 by 01;redefines;
-39;redefines.at:70;REDEFINES: level 03 by 02;redefines;
-40;redefines.at:92;REDEFINES: level 66;redefines;
-41;redefines.at:114;REDEFINES: level 88;redefines;
-42;redefines.at:143;REDEFINES: lower level number;redefines;
-43;redefines.at:169;REDEFINES: with OCCURS;redefines;
-44;redefines.at:190;REDEFINES: with subscript;redefines;
-45;redefines.at:212;REDEFINES: with variable occurrence;redefines;
-46;redefines.at:247;REDEFINES: with qualification;redefines;
-47;redefines.at:273;REDEFINES: multiple redefinition;redefines;
-48;redefines.at:301;REDEFINES: size exceeds;redefines;
-49;redefines.at:334;REDEFINES: with VALUE;redefines;
-50;redefines.at:362;REDEFINES: with intervention;redefines;
-51;redefines.at:391;REDEFINES: within REDEFINES;redefines;
-52;value.at:43;Numeric item (integer);;
-53;value.at:68;Numeric item (non-integer);;
-54;value.at:90;Numeric item with picture P;;
-55;value.at:121;Signed numeric literal;;
-56;value.at:146;Alphabetic item;;
-57;value.at:171;Alphanumeric item;;
-58;value.at:192;Alphanumeric group item;;
-59;value.at:226;Numeric-edited item;;
-60;value.at:249;Alphanumeric-edited item;;
-61;move.at:37;MOVE SPACE TO numeric or numeric-edited item;;
-62;move.at:62;MOVE ZERO TO alphabetic item;;
-63;move.at:87;MOVE alphabetic TO x;;
-64;move.at:116;MOVE alphanumeric TO x;;
-65;move.at:142;MOVE alphanumeric-edited TO x;;
-66;move.at:171;MOVE numeric (integer) TO x;;
-67;move.at:199;MOVE numeric (non-integer) TO x;;
-68;move.at:229;MOVE numeric-edited TO x;;
-69;move.at:263;Operands must be groups;;
-70;move.at:295;MOVE: misc;;
-71;multiply.at:28;Category check of Format 1;;
-72;multiply.at:66;Category check of Format 2;;
-73;multiply.at:106;Category check of literals;;
-74;set.at:24;SET: misc;;
+6;definition.at:25;Invalid PROGRAM-ID;;
+7;definition.at:46;Undefined data name;;
+8;definition.at:63;Undefined group name;;
+9;definition.at:83;Undefined data name in group;;
+10;definition.at:105;Reference not a group name;;
+11;definition.at:128;Incomplete 01 definition;;
+12;definition.at:147;Same labels in different sections;;
+13;definition.at:171;Redefinition of 01 items;;
+14;definition.at:189;Redefinition of 01 and 02 items;;
+15;definition.at:207;Redefinition of 02 items;;
+16;definition.at:226;Redefinition of 77 items;;
+17;definition.at:244;Redefinition of 01 and 77 items;;
+18;definition.at:262;Redefinition of 88 items;;
+19;definition.at:281;Ambiguous reference to 02 items;;
+20;definition.at:306;Ambiguous reference to 02 and 03 items;;
+21;definition.at:330;Ambigous reference with qualification;;
+22;definition.at:359;Unique reference with ambiguous qualifiers;;
+23;definition.at:394;Undefined procedure name;;
+24;definition.at:413;Redefinition of section names;;
+25;definition.at:432;Redefinition of section and paragraph names;;
+26;definition.at:451;Redefinition of paragraph names;;
+27;definition.at:474;Ambiguous reference to paragraph name;;
+28;definition.at:498;Non-matching level numbers (extension);;
+29;expression.at:21;Ambiguous AND/OR;;
+30;expression.at:45;START on SEQUENTIAL file;;
+31;subscripts.at:31;Subscripted item requires OCCURS clause;;
+32;subscripts.at:58;The number of subscripts;;
+33;occurs.at:28;OCCURS with level 01, 66, 77, and 88;;
+34;occurs.at:53;OCCURS with variable-occurrence data item;;
+35;occurs.at:90;Nested OCCURS clause;;
+36;occurs.at:136;OCCURS DEPENDING followed by another field;;
+37;occurs.at:174;OCCURS DEPENDING without TO clause;;
+38;redefines.at:28;REDEFINES: not following entry-name;redefines;
+39;redefines.at:49;REDEFINES: level 02 by 01;redefines;
+40;redefines.at:70;REDEFINES: level 03 by 02;redefines;
+41;redefines.at:92;REDEFINES: level 66;redefines;
+42;redefines.at:114;REDEFINES: level 88;redefines;
+43;redefines.at:143;REDEFINES: lower level number;redefines;
+44;redefines.at:169;REDEFINES: with OCCURS;redefines;
+45;redefines.at:190;REDEFINES: with subscript;redefines;
+46;redefines.at:212;REDEFINES: with variable occurrence;redefines;
+47;redefines.at:247;REDEFINES: with qualification;redefines;
+48;redefines.at:273;REDEFINES: multiple redefinition;redefines;
+49;redefines.at:301;REDEFINES: size exceeds;redefines;
+50;redefines.at:334;REDEFINES: with VALUE;redefines;
+51;redefines.at:362;REDEFINES: with intervention;redefines;
+52;redefines.at:391;REDEFINES: within REDEFINES;redefines;
+53;value.at:43;Numeric item (integer);;
+54;value.at:68;Numeric item (non-integer);;
+55;value.at:90;Numeric item with picture P;;
+56;value.at:121;Signed numeric literal;;
+57;value.at:146;Alphabetic item;;
+58;value.at:171;Alphanumeric item;;
+59;value.at:192;Alphanumeric group item;;
+60;value.at:226;Numeric-edited item;;
+61;value.at:249;Alphanumeric-edited item;;
+62;move.at:37;MOVE SPACE TO numeric or numeric-edited item;;
+63;move.at:62;MOVE ZERO TO alphabetic item;;
+64;move.at:87;MOVE alphabetic TO x;;
+65;move.at:116;MOVE alphanumeric TO x;;
+66;move.at:142;MOVE alphanumeric-edited TO x;;
+67;move.at:171;MOVE numeric (integer) TO x;;
+68;move.at:199;MOVE numeric (non-integer) TO x;;
+69;move.at:229;MOVE numeric-edited TO x;;
+70;move.at:263;Operands must be groups;;
+71;move.at:295;MOVE: misc;;
+72;multiply.at:28;Category check of Format 1;;
+73;multiply.at:66;Category check of Format 2;;
+74;multiply.at:106;Category check of literals;;
+75;set.at:24;SET: misc;;
 '
 
 at_keywords=
@@ -1272,43 +1273,41 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  6 ) # 6. definition.at:27: Undefined data name
-    at_setup_line='definition.at:27'
-    at_desc='Undefined data name'
-    $at_quiet $ECHO_N "  6: Undefined data name                          $ECHO_C"
+  6 ) # 6. definition.at:25: Invalid PROGRAM-ID
+    at_setup_line='definition.at:25'
+    at_desc='Invalid PROGRAM-ID'
+    $at_quiet $ECHO_N "  6: Invalid PROGRAM-ID                           $ECHO_C"
     at_xfail=no
     (
-      echo "6. definition.at:27: testing ..."
+      echo "6. definition.at:25: testing ..."
       $at_traceon
 
 
 cat >prog.cob <<'_ATEOF'
 
        IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
+       PROGRAM-ID.      short.
        PROCEDURE        DIVISION.
-           DISPLAY X
-           END-DISPLAY.
            STOP RUN.
 _ATEOF
 
 
 $at_traceoff
-echo "definition.at:40: \${COMPILE_ONLY} prog.cob"
-echo definition.at:40 >$at_check_line_file
+echo "definition.at:36: \${COMPILE_ONLY} prog.cob"
+echo definition.at:36 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:5: Error: 'X' undefined
+echo >>$at_stderr; echo "prog.cob:3: Error: PROGRAM-ID 'short' invalid
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:40: exit code was $at_status, expected 1"
+   *) echo "definition.at:36: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1326,13 +1325,67 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  7 ) # 7. definition.at:44: Undefined group name
-    at_setup_line='definition.at:44'
-    at_desc='Undefined group name'
-    $at_quiet $ECHO_N "  7: Undefined group name                         $ECHO_C"
+  7 ) # 7. definition.at:46: Undefined data name
+    at_setup_line='definition.at:46'
+    at_desc='Undefined data name'
+    $at_quiet $ECHO_N "  7: Undefined data name                          $ECHO_C"
     at_xfail=no
     (
-      echo "7. definition.at:44: testing ..."
+      echo "7. definition.at:46: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+           DISPLAY X
+           END-DISPLAY.
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "definition.at:59: \${COMPILE_ONLY} prog.cob"
+echo definition.at:59 >$at_check_line_file
+( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+echo >>$at_stderr; echo "prog.cob:5: Error: 'X' undefined
+" | $at_diff - $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   1) ;;
+   *) echo "definition.at:59: exit code was $at_status, expected 1"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  8 ) # 8. definition.at:63: Undefined group name
+    at_setup_line='definition.at:63'
+    at_desc='Undefined group name'
+    $at_quiet $ECHO_N "  8: Undefined group name                         $ECHO_C"
+    at_xfail=no
+    (
+      echo "8. definition.at:63: testing ..."
       $at_traceon
 
 
@@ -1351,8 +1404,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:60: \${COMPILE_ONLY} prog.cob"
-echo definition.at:60 >$at_check_line_file
+echo "definition.at:79: \${COMPILE_ONLY} prog.cob"
+echo definition.at:79 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1365,7 +1418,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:60: exit code was $at_status, expected 1"
+   *) echo "definition.at:79: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1383,13 +1436,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  8 ) # 8. definition.at:64: Undefined data name in group
-    at_setup_line='definition.at:64'
+  9 ) # 9. definition.at:83: Undefined data name in group
+    at_setup_line='definition.at:83'
     at_desc='Undefined data name in group'
-    $at_quiet $ECHO_N "  8: Undefined data name in group                 $ECHO_C"
+    $at_quiet $ECHO_N "  9: Undefined data name in group                 $ECHO_C"
     at_xfail=no
     (
-      echo "8. definition.at:64: testing ..."
+      echo "9. definition.at:83: testing ..."
       $at_traceon
 
 
@@ -1410,8 +1463,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:82: \${COMPILE_ONLY} prog.cob"
-echo definition.at:82 >$at_check_line_file
+echo "definition.at:101: \${COMPILE_ONLY} prog.cob"
+echo definition.at:101 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1424,7 +1477,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:82: exit code was $at_status, expected 1"
+   *) echo "definition.at:101: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1442,13 +1495,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  9 ) # 9. definition.at:86: Reference not a group name
-    at_setup_line='definition.at:86'
+  10 ) # 10. definition.at:105: Reference not a group name
+    at_setup_line='definition.at:105'
     at_desc='Reference not a group name'
-    $at_quiet $ECHO_N "  9: Reference not a group name                   $ECHO_C"
+    $at_quiet $ECHO_N " 10: Reference not a group name                   $ECHO_C"
     at_xfail=no
     (
-      echo "9. definition.at:86: testing ..."
+      echo "10. definition.at:105: testing ..."
       $at_traceon
 
 
@@ -1467,59 +1520,6 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:102: \${COMPILE_ONLY} prog.cob"
-echo definition.at:102 >$at_check_line_file
-( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
-at_status=$?
-grep '^ *+' $at_stder1 >&2
-grep -v '^ *+' $at_stder1 >$at_stderr
-at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: Error: 'X' in 'X' undefined
-" | $at_diff - $at_stderr || at_failed=:
-$at_diff $at_devnull $at_stdout || at_failed=:
-case $at_status in
-   77) echo 77 > $at_status_file
-            exit 77;;
-   1) ;;
-   *) echo "definition.at:102: exit code was $at_status, expected 1"
-      at_failed=:;;
-esac
-if $at_failed; then
-
-  echo 1 > $at_status_file
-  exit 1
-fi
-
-$at_traceon
-
-
-      $at_traceoff
-      $at_times_p && times >$at_times_file
-    ) 5>&1 2>&1 | eval $at_tee_pipe
-    at_status=`cat $at_status_file`
-    ;;
-
-  10 ) # 10. definition.at:109: Incomplete 01 definition
-    at_setup_line='definition.at:109'
-    at_desc='Incomplete 01 definition'
-    $at_quiet $ECHO_N " 10: Incomplete 01 definition                     $ECHO_C"
-    at_xfail=no
-    (
-      echo "10. definition.at:109: testing ..."
-      $at_traceon
-
-
-cat >prog.cob <<'_ATEOF'
-
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X.
-_ATEOF
-
-
-$at_traceoff
 echo "definition.at:121: \${COMPILE_ONLY} prog.cob"
 echo definition.at:121 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
@@ -1527,7 +1527,7 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:6: Error: PICTURE clause required for 'X'
+echo >>$at_stderr; echo "prog.cob:8: Error: 'X' in 'X' undefined
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1552,13 +1552,66 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  11 ) # 11. definition.at:128: Same labels in different sections
+  11 ) # 11. definition.at:128: Incomplete 01 definition
     at_setup_line='definition.at:128'
-    at_desc='Same labels in different sections'
-    $at_quiet $ECHO_N " 11: Same labels in different sections            $ECHO_C"
+    at_desc='Incomplete 01 definition'
+    $at_quiet $ECHO_N " 11: Incomplete 01 definition                     $ECHO_C"
     at_xfail=no
     (
       echo "11. definition.at:128: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X.
+_ATEOF
+
+
+$at_traceoff
+echo "definition.at:140: \${COMPILE_ONLY} prog.cob"
+echo definition.at:140 >$at_check_line_file
+( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+echo >>$at_stderr; echo "prog.cob:6: Error: PICTURE clause required for 'X'
+" | $at_diff - $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   1) ;;
+   *) echo "definition.at:140: exit code was $at_status, expected 1"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  12 ) # 12. definition.at:147: Same labels in different sections
+    at_setup_line='definition.at:147'
+    at_desc='Same labels in different sections'
+    $at_quiet $ECHO_N " 12: Same labels in different sections            $ECHO_C"
+    at_xfail=no
+    (
+      echo "12. definition.at:147: testing ..."
       $at_traceon
 
 
@@ -1580,8 +1633,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:145: \${COMPILE_ONLY} prog.cob"
-echo definition.at:145 >$at_check_line_file
+echo "definition.at:164: \${COMPILE_ONLY} prog.cob"
+echo definition.at:164 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1593,7 +1646,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:145: exit code was $at_status, expected 0"
+   *) echo "definition.at:164: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1611,13 +1664,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  12 ) # 12. definition.at:152: Redefinition of 01 items
-    at_setup_line='definition.at:152'
+  13 ) # 13. definition.at:171: Redefinition of 01 items
+    at_setup_line='definition.at:171'
     at_desc='Redefinition of 01 items'
-    $at_quiet $ECHO_N " 12: Redefinition of 01 items                     $ECHO_C"
+    $at_quiet $ECHO_N " 13: Redefinition of 01 items                     $ECHO_C"
     at_xfail=no
     (
-      echo "12. definition.at:152: testing ..."
+      echo "13. definition.at:171: testing ..."
       $at_traceon
 
 
@@ -1633,8 +1686,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:166: \${COMPILE_ONLY} prog.cob"
-echo definition.at:166 >$at_check_line_file
+echo "definition.at:185: \${COMPILE_ONLY} prog.cob"
+echo definition.at:185 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1648,7 +1701,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:166: exit code was $at_status, expected 0"
+   *) echo "definition.at:185: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1666,13 +1719,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  13 ) # 13. definition.at:170: Redefinition of 01 and 02 items
-    at_setup_line='definition.at:170'
+  14 ) # 14. definition.at:189: Redefinition of 01 and 02 items
+    at_setup_line='definition.at:189'
     at_desc='Redefinition of 01 and 02 items'
-    $at_quiet $ECHO_N " 13: Redefinition of 01 and 02 items              $ECHO_C"
+    $at_quiet $ECHO_N " 14: Redefinition of 01 and 02 items              $ECHO_C"
     at_xfail=no
     (
-      echo "13. definition.at:170: testing ..."
+      echo "14. definition.at:189: testing ..."
       $at_traceon
 
 
@@ -1688,62 +1741,6 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:184: \${COMPILE_ONLY} prog.cob"
-echo definition.at:184 >$at_check_line_file
-( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
-at_status=$?
-grep '^ *+' $at_stder1 >&2
-grep -v '^ *+' $at_stder1 >$at_stderr
-at_failed=false
-echo >>$at_stderr; echo "prog.cob:7: Warning: Redefinition of 'X'
-prog.cob:6: Warning: 'X' previously defined here
-" | $at_diff - $at_stderr || at_failed=:
-$at_diff $at_devnull $at_stdout || at_failed=:
-case $at_status in
-   77) echo 77 > $at_status_file
-            exit 77;;
-   0) ;;
-   *) echo "definition.at:184: exit code was $at_status, expected 0"
-      at_failed=:;;
-esac
-if $at_failed; then
-
-  echo 1 > $at_status_file
-  exit 1
-fi
-
-$at_traceon
-
-
-      $at_traceoff
-      $at_times_p && times >$at_times_file
-    ) 5>&1 2>&1 | eval $at_tee_pipe
-    at_status=`cat $at_status_file`
-    ;;
-
-  14 ) # 14. definition.at:188: Redefinition of 02 items
-    at_setup_line='definition.at:188'
-    at_desc='Redefinition of 02 items'
-    $at_quiet $ECHO_N " 14: Redefinition of 02 items                     $ECHO_C"
-    at_xfail=no
-    (
-      echo "14. definition.at:188: testing ..."
-      $at_traceon
-
-
-cat >prog.cob <<'_ATEOF'
-
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 G.
-         02 X           PIC X.
-         02 X           PIC X.
-_ATEOF
-
-
-$at_traceoff
 echo "definition.at:203: \${COMPILE_ONLY} prog.cob"
 echo definition.at:203 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
@@ -1751,8 +1748,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: Warning: Redefinition of 'X'
-prog.cob:7: Warning: 'X' previously defined here
+echo >>$at_stderr; echo "prog.cob:7: Warning: Redefinition of 'X'
+prog.cob:6: Warning: 'X' previously defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1777,10 +1774,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  15 ) # 15. definition.at:207: Redefinition of 77 items
+  15 ) # 15. definition.at:207: Redefinition of 02 items
     at_setup_line='definition.at:207'
-    at_desc='Redefinition of 77 items'
-    $at_quiet $ECHO_N " 15: Redefinition of 77 items                     $ECHO_C"
+    at_desc='Redefinition of 02 items'
+    $at_quiet $ECHO_N " 15: Redefinition of 02 items                     $ECHO_C"
     at_xfail=no
     (
       echo "15. definition.at:207: testing ..."
@@ -1793,28 +1790,29 @@ cat >prog.cob <<'_ATEOF'
        PROGRAM-ID.      prog.
        DATA             DIVISION.
        WORKING-STORAGE  SECTION.
-       77 X             PIC X.
-       77 X             PIC X.
+       01 G.
+         02 X           PIC X.
+         02 X           PIC X.
 _ATEOF
 
 
 $at_traceoff
-echo "definition.at:221: \${COMPILE_ONLY} prog.cob"
-echo definition.at:221 >$at_check_line_file
+echo "definition.at:222: \${COMPILE_ONLY} prog.cob"
+echo definition.at:222 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:7: Warning: Redefinition of 'X'
-prog.cob:6: Warning: 'X' previously defined here
+echo >>$at_stderr; echo "prog.cob:8: Warning: Redefinition of 'X'
+prog.cob:7: Warning: 'X' previously defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:221: exit code was $at_status, expected 0"
+   *) echo "definition.at:222: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -1832,13 +1830,68 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  16 ) # 16. definition.at:225: Redefinition of 01 and 77 items
-    at_setup_line='definition.at:225'
+  16 ) # 16. definition.at:226: Redefinition of 77 items
+    at_setup_line='definition.at:226'
+    at_desc='Redefinition of 77 items'
+    $at_quiet $ECHO_N " 16: Redefinition of 77 items                     $ECHO_C"
+    at_xfail=no
+    (
+      echo "16. definition.at:226: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       77 X             PIC X.
+       77 X             PIC X.
+_ATEOF
+
+
+$at_traceoff
+echo "definition.at:240: \${COMPILE_ONLY} prog.cob"
+echo definition.at:240 >$at_check_line_file
+( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+echo >>$at_stderr; echo "prog.cob:7: Warning: Redefinition of 'X'
+prog.cob:6: Warning: 'X' previously defined here
+" | $at_diff - $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "definition.at:240: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  17 ) # 17. definition.at:244: Redefinition of 01 and 77 items
+    at_setup_line='definition.at:244'
     at_desc='Redefinition of 01 and 77 items'
-    $at_quiet $ECHO_N " 16: Redefinition of 01 and 77 items              $ECHO_C"
+    $at_quiet $ECHO_N " 17: Redefinition of 01 and 77 items              $ECHO_C"
     at_xfail=no
     (
-      echo "16. definition.at:225: testing ..."
+      echo "17. definition.at:244: testing ..."
       $at_traceon
 
 
@@ -1850,62 +1903,6 @@ cat >prog.cob <<'_ATEOF'
        WORKING-STORAGE  SECTION.
        01 X             PIC X.
        77 X             PIC X.
-_ATEOF
-
-
-$at_traceoff
-echo "definition.at:239: \${COMPILE_ONLY} prog.cob"
-echo definition.at:239 >$at_check_line_file
-( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
-at_status=$?
-grep '^ *+' $at_stder1 >&2
-grep -v '^ *+' $at_stder1 >$at_stderr
-at_failed=false
-echo >>$at_stderr; echo "prog.cob:7: Warning: Redefinition of 'X'
-prog.cob:6: Warning: 'X' previously defined here
-" | $at_diff - $at_stderr || at_failed=:
-$at_diff $at_devnull $at_stdout || at_failed=:
-case $at_status in
-   77) echo 77 > $at_status_file
-            exit 77;;
-   0) ;;
-   *) echo "definition.at:239: exit code was $at_status, expected 0"
-      at_failed=:;;
-esac
-if $at_failed; then
-
-  echo 1 > $at_status_file
-  exit 1
-fi
-
-$at_traceon
-
-
-      $at_traceoff
-      $at_times_p && times >$at_times_file
-    ) 5>&1 2>&1 | eval $at_tee_pipe
-    at_status=`cat $at_status_file`
-    ;;
-
-  17 ) # 17. definition.at:243: Redefinition of 88 items
-    at_setup_line='definition.at:243'
-    at_desc='Redefinition of 88 items'
-    $at_quiet $ECHO_N " 17: Redefinition of 88 items                     $ECHO_C"
-    at_xfail=no
-    (
-      echo "17. definition.at:243: testing ..."
-      $at_traceon
-
-
-cat >prog.cob <<'_ATEOF'
-
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       DATA             DIVISION.
-       WORKING-STORAGE  SECTION.
-       01 X             PIC X.
-         88 A           VALUE "A".
-         88 A           VALUE "B".
 _ATEOF
 
 
@@ -1917,8 +1914,8 @@ at_status=$?
 grep '^ *+' $at_stder1 >&2
 grep -v '^ *+' $at_stder1 >$at_stderr
 at_failed=false
-echo >>$at_stderr; echo "prog.cob:8: Warning: Redefinition of 'A'
-prog.cob:7: Warning: 'A' previously defined here
+echo >>$at_stderr; echo "prog.cob:7: Warning: Redefinition of 'X'
+prog.cob:6: Warning: 'X' previously defined here
 " | $at_diff - $at_stderr || at_failed=:
 $at_diff $at_devnull $at_stdout || at_failed=:
 case $at_status in
@@ -1943,13 +1940,69 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  18 ) # 18. definition.at:262: Ambiguous reference to 02 items
+  18 ) # 18. definition.at:262: Redefinition of 88 items
     at_setup_line='definition.at:262'
-    at_desc='Ambiguous reference to 02 items'
-    $at_quiet $ECHO_N " 18: Ambiguous reference to 02 items              $ECHO_C"
+    at_desc='Redefinition of 88 items'
+    $at_quiet $ECHO_N " 18: Redefinition of 88 items                     $ECHO_C"
     at_xfail=no
     (
       echo "18. definition.at:262: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       DATA             DIVISION.
+       WORKING-STORAGE  SECTION.
+       01 X             PIC X.
+         88 A           VALUE "A".
+         88 A           VALUE "B".
+_ATEOF
+
+
+$at_traceoff
+echo "definition.at:277: \${COMPILE_ONLY} prog.cob"
+echo definition.at:277 >$at_check_line_file
+( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+echo >>$at_stderr; echo "prog.cob:8: Warning: Redefinition of 'A'
+prog.cob:7: Warning: 'A' previously defined here
+" | $at_diff - $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   0) ;;
+   *) echo "definition.at:277: exit code was $at_status, expected 0"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  19 ) # 19. definition.at:281: Ambiguous reference to 02 items
+    at_setup_line='definition.at:281'
+    at_desc='Ambiguous reference to 02 items'
+    $at_quiet $ECHO_N " 19: Ambiguous reference to 02 items              $ECHO_C"
+    at_xfail=no
+    (
+      echo "19. definition.at:281: testing ..."
       $at_traceon
 
 
@@ -1971,8 +2024,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:283: \${COMPILE_ONLY} prog.cob"
-echo definition.at:283 >$at_check_line_file
+echo "definition.at:302: \${COMPILE_ONLY} prog.cob"
+echo definition.at:302 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -1987,7 +2040,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:283: exit code was $at_status, expected 1"
+   *) echo "definition.at:302: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2005,13 +2058,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  19 ) # 19. definition.at:287: Ambiguous reference to 02 and 03 items
-    at_setup_line='definition.at:287'
+  20 ) # 20. definition.at:306: Ambiguous reference to 02 and 03 items
+    at_setup_line='definition.at:306'
     at_desc='Ambiguous reference to 02 and 03 items'
-    $at_quiet $ECHO_N " 19: Ambiguous reference to 02 and 03 items       $ECHO_C"
+    $at_quiet $ECHO_N " 20: Ambiguous reference to 02 and 03 items       $ECHO_C"
     at_xfail=no
     (
-      echo "19. definition.at:287: testing ..."
+      echo "20. definition.at:306: testing ..."
       $at_traceon
 
 
@@ -2032,8 +2085,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:307: \${COMPILE_ONLY} prog.cob"
-echo definition.at:307 >$at_check_line_file
+echo "definition.at:326: \${COMPILE_ONLY} prog.cob"
+echo definition.at:326 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2048,7 +2101,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:307: exit code was $at_status, expected 1"
+   *) echo "definition.at:326: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2066,13 +2119,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  20 ) # 20. definition.at:311: Ambigous reference with qualification
-    at_setup_line='definition.at:311'
+  21 ) # 21. definition.at:330: Ambigous reference with qualification
+    at_setup_line='definition.at:330'
     at_desc='Ambigous reference with qualification'
-    $at_quiet $ECHO_N " 20: Ambigous reference with qualification        $ECHO_C"
+    $at_quiet $ECHO_N " 21: Ambigous reference with qualification        $ECHO_C"
     at_xfail=no
     (
-      echo "20. definition.at:311: testing ..."
+      echo "21. definition.at:330: testing ..."
       $at_traceon
 
 
@@ -2096,8 +2149,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:334: \${COMPILE_ONLY} prog.cob"
-echo definition.at:334 >$at_check_line_file
+echo "definition.at:353: \${COMPILE_ONLY} prog.cob"
+echo definition.at:353 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2112,7 +2165,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:334: exit code was $at_status, expected 1"
+   *) echo "definition.at:353: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2130,13 +2183,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  21 ) # 21. definition.at:340: Unique reference with ambiguous qualifiers
-    at_setup_line='definition.at:340'
+  22 ) # 22. definition.at:359: Unique reference with ambiguous qualifiers
+    at_setup_line='definition.at:359'
     at_desc='Unique reference with ambiguous qualifiers'
-    $at_quiet $ECHO_N " 21: Unique reference with ambiguous qualifiers   $ECHO_C"
+    $at_quiet $ECHO_N " 22: Unique reference with ambiguous qualifiers   $ECHO_C"
     at_xfail=no
     (
-      echo "21. definition.at:340: testing ..."
+      echo "22. definition.at:359: testing ..."
       $at_traceon
 
 
@@ -2160,8 +2213,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:359: \${COMPILE_ONLY} prog.cob"
-echo definition.at:359 >$at_check_line_file
+echo "definition.at:378: \${COMPILE_ONLY} prog.cob"
+echo definition.at:378 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2173,7 +2226,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:359: exit code was $at_status, expected 0"
+   *) echo "definition.at:378: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2191,13 +2244,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  22 ) # 22. definition.at:375: Undefined procedure name
-    at_setup_line='definition.at:375'
+  23 ) # 23. definition.at:394: Undefined procedure name
+    at_setup_line='definition.at:394'
     at_desc='Undefined procedure name'
-    $at_quiet $ECHO_N " 22: Undefined procedure name                     $ECHO_C"
+    $at_quiet $ECHO_N " 23: Undefined procedure name                     $ECHO_C"
     at_xfail=no
     (
-      echo "22. definition.at:375: testing ..."
+      echo "23. definition.at:394: testing ..."
       $at_traceon
 
 
@@ -2212,8 +2265,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:387: \${COMPILE_ONLY} prog.cob"
-echo definition.at:387 >$at_check_line_file
+echo "definition.at:406: \${COMPILE_ONLY} prog.cob"
+echo definition.at:406 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2226,7 +2279,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:387: exit code was $at_status, expected 1"
+   *) echo "definition.at:406: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2244,66 +2297,10 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  23 ) # 23. definition.at:394: Redefinition of section names
-    at_setup_line='definition.at:394'
-    at_desc='Redefinition of section names'
-    $at_quiet $ECHO_N " 23: Redefinition of section names                $ECHO_C"
-    at_xfail=no
-    (
-      echo "23. definition.at:394: testing ..."
-      $at_traceon
-
-
-cat >prog.cob <<'_ATEOF'
-
-       IDENTIFICATION   DIVISION.
-       PROGRAM-ID.      prog.
-       PROCEDURE        DIVISION.
-       L SECTION.
-       L SECTION.
-           STOP RUN.
-_ATEOF
-
-
-$at_traceoff
-echo "definition.at:409: \${COMPILE_ONLY} prog.cob"
-echo definition.at:409 >$at_check_line_file
-( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
-at_status=$?
-grep '^ *+' $at_stder1 >&2
-grep -v '^ *+' $at_stder1 >$at_stderr
-at_failed=false
-echo >>$at_stderr; echo "prog.cob: In section 'L':
-prog.cob:6: Error: Redefinition of 'L'
-prog.cob:5: Error: 'L' previously defined here
-" | $at_diff - $at_stderr || at_failed=:
-$at_diff $at_devnull $at_stdout || at_failed=:
-case $at_status in
-   77) echo 77 > $at_status_file
-            exit 77;;
-   1) ;;
-   *) echo "definition.at:409: exit code was $at_status, expected 1"
-      at_failed=:;;
-esac
-if $at_failed; then
-
-  echo 1 > $at_status_file
-  exit 1
-fi
-
-$at_traceon
-
-
-      $at_traceoff
-      $at_times_p && times >$at_times_file
-    ) 5>&1 2>&1 | eval $at_tee_pipe
-    at_status=`cat $at_status_file`
-    ;;
-
-  24 ) # 24. definition.at:413: Redefinition of section and paragraph names
+  24 ) # 24. definition.at:413: Redefinition of section names
     at_setup_line='definition.at:413'
-    at_desc='Redefinition of section and paragraph names'
-    $at_quiet $ECHO_N " 24: Redefinition of section and paragraph names  $ECHO_C"
+    at_desc='Redefinition of section names'
+    $at_quiet $ECHO_N " 24: Redefinition of section names                $ECHO_C"
     at_xfail=no
     (
       echo "24. definition.at:413: testing ..."
@@ -2316,7 +2313,7 @@ cat >prog.cob <<'_ATEOF'
        PROGRAM-ID.      prog.
        PROCEDURE        DIVISION.
        L SECTION.
-       L.
+       L SECTION.
            STOP RUN.
 _ATEOF
 
@@ -2356,13 +2353,69 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  25 ) # 25. definition.at:432: Redefinition of paragraph names
+  25 ) # 25. definition.at:432: Redefinition of section and paragraph names
     at_setup_line='definition.at:432'
-    at_desc='Redefinition of paragraph names'
-    $at_quiet $ECHO_N " 25: Redefinition of paragraph names              $ECHO_C"
+    at_desc='Redefinition of section and paragraph names'
+    $at_quiet $ECHO_N " 25: Redefinition of section and paragraph names  $ECHO_C"
     at_xfail=no
     (
       echo "25. definition.at:432: testing ..."
+      $at_traceon
+
+
+cat >prog.cob <<'_ATEOF'
+
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      prog.
+       PROCEDURE        DIVISION.
+       L SECTION.
+       L.
+           STOP RUN.
+_ATEOF
+
+
+$at_traceoff
+echo "definition.at:447: \${COMPILE_ONLY} prog.cob"
+echo definition.at:447 >$at_check_line_file
+( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
+at_status=$?
+grep '^ *+' $at_stder1 >&2
+grep -v '^ *+' $at_stder1 >$at_stderr
+at_failed=false
+echo >>$at_stderr; echo "prog.cob: In section 'L':
+prog.cob:6: Error: Redefinition of 'L'
+prog.cob:5: Error: 'L' previously defined here
+" | $at_diff - $at_stderr || at_failed=:
+$at_diff $at_devnull $at_stdout || at_failed=:
+case $at_status in
+   77) echo 77 > $at_status_file
+            exit 77;;
+   1) ;;
+   *) echo "definition.at:447: exit code was $at_status, expected 1"
+      at_failed=:;;
+esac
+if $at_failed; then
+
+  echo 1 > $at_status_file
+  exit 1
+fi
+
+$at_traceon
+
+
+      $at_traceoff
+      $at_times_p && times >$at_times_file
+    ) 5>&1 2>&1 | eval $at_tee_pipe
+    at_status=`cat $at_status_file`
+    ;;
+
+  26 ) # 26. definition.at:451: Redefinition of paragraph names
+    at_setup_line='definition.at:451'
+    at_desc='Redefinition of paragraph names'
+    $at_quiet $ECHO_N " 26: Redefinition of paragraph names              $ECHO_C"
+    at_xfail=no
+    (
+      echo "26. definition.at:451: testing ..."
       $at_traceon
 
 
@@ -2378,8 +2431,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:444: \${COMPILE_ONLY} prog.cob"
-echo definition.at:444 >$at_check_line_file
+echo "definition.at:463: \${COMPILE_ONLY} prog.cob"
+echo definition.at:463 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2391,7 +2444,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:444: exit code was $at_status, expected 0"
+   *) echo "definition.at:463: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2416,13 +2469,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  26 ) # 26. definition.at:455: Ambiguous reference to paragraph name
-    at_setup_line='definition.at:455'
+  27 ) # 27. definition.at:474: Ambiguous reference to paragraph name
+    at_setup_line='definition.at:474'
     at_desc='Ambiguous reference to paragraph name'
-    $at_quiet $ECHO_N " 26: Ambiguous reference to paragraph name        $ECHO_C"
+    $at_quiet $ECHO_N " 27: Ambiguous reference to paragraph name        $ECHO_C"
     at_xfail=no
     (
-      echo "26. definition.at:455: testing ..."
+      echo "27. definition.at:474: testing ..."
       $at_traceon
 
 
@@ -2442,8 +2495,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:475: \${COMPILE_ONLY} prog.cob"
-echo definition.at:475 >$at_check_line_file
+echo "definition.at:494: \${COMPILE_ONLY} prog.cob"
+echo definition.at:494 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2459,7 +2512,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    1) ;;
-   *) echo "definition.at:475: exit code was $at_status, expected 1"
+   *) echo "definition.at:494: exit code was $at_status, expected 1"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2477,13 +2530,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  27 ) # 27. definition.at:479: Non-matching level numbers (extension)
-    at_setup_line='definition.at:479'
+  28 ) # 28. definition.at:498: Non-matching level numbers (extension)
+    at_setup_line='definition.at:498'
     at_desc='Non-matching level numbers (extension)'
-    $at_quiet $ECHO_N " 27: Non-matching level numbers (extension)       $ECHO_C"
+    $at_quiet $ECHO_N " 28: Non-matching level numbers (extension)       $ECHO_C"
     at_xfail=no
     (
-      echo "27. definition.at:479: testing ..."
+      echo "28. definition.at:498: testing ..."
       $at_traceon
 
 
@@ -2511,8 +2564,8 @@ _ATEOF
 
 
 $at_traceoff
-echo "definition.at:502: \${COMPILE_ONLY} -conf=test.conf prog.cob"
-echo definition.at:502 >$at_check_line_file
+echo "definition.at:521: \${COMPILE_ONLY} -conf=test.conf prog.cob"
+echo definition.at:521 >$at_check_line_file
 ( $at_traceon; ${COMPILE_ONLY} -conf=test.conf prog.cob ) >$at_stdout 2>$at_stder1
 at_status=$?
 grep '^ *+' $at_stder1 >&2
@@ -2525,7 +2578,7 @@ case $at_status in
    77) echo 77 > $at_status_file
             exit 77;;
    0) ;;
-   *) echo "definition.at:502: exit code was $at_status, expected 0"
+   *) echo "definition.at:521: exit code was $at_status, expected 0"
       at_failed=:;;
 esac
 if $at_failed; then
@@ -2543,13 +2596,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  28 ) # 28. expression.at:21: Ambiguous AND/OR
+  29 ) # 29. expression.at:21: Ambiguous AND/OR
     at_setup_line='expression.at:21'
     at_desc='Ambiguous AND/OR'
-    $at_quiet $ECHO_N " 28: Ambiguous AND/OR                             $ECHO_C"
+    $at_quiet $ECHO_N " 29: Ambiguous AND/OR                             $ECHO_C"
     at_xfail=no
     (
-      echo "28. expression.at:21: testing ..."
+      echo "29. expression.at:21: testing ..."
       $at_traceon
 
 
@@ -2604,13 +2657,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  29 ) # 29. expression.at:45: START on SEQUENTIAL file
+  30 ) # 30. expression.at:45: START on SEQUENTIAL file
     at_setup_line='expression.at:45'
     at_desc='START on SEQUENTIAL file'
-    $at_quiet $ECHO_N " 29: START on SEQUENTIAL file                     $ECHO_C"
+    $at_quiet $ECHO_N " 30: START on SEQUENTIAL file                     $ECHO_C"
     at_xfail=no
     (
-      echo "29. expression.at:45: testing ..."
+      echo "30. expression.at:45: testing ..."
       $at_traceon
 
 
@@ -2669,13 +2722,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  30 ) # 30. subscripts.at:31: Subscripted item requires OCCURS clause
+  31 ) # 31. subscripts.at:31: Subscripted item requires OCCURS clause
     at_setup_line='subscripts.at:31'
     at_desc='Subscripted item requires OCCURS clause'
-    $at_quiet $ECHO_N " 30: Subscripted item requires OCCURS clause      $ECHO_C"
+    $at_quiet $ECHO_N " 31: Subscripted item requires OCCURS clause      $ECHO_C"
     at_xfail=no
     (
-      echo "30. subscripts.at:31: testing ..."
+      echo "31. subscripts.at:31: testing ..."
       $at_traceon
 
 
@@ -2730,13 +2783,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  31 ) # 31. subscripts.at:58: The number of subscripts
+  32 ) # 32. subscripts.at:58: The number of subscripts
     at_setup_line='subscripts.at:58'
     at_desc='The number of subscripts'
-    $at_quiet $ECHO_N " 31: The number of subscripts                     $ECHO_C"
+    $at_quiet $ECHO_N " 32: The number of subscripts                     $ECHO_C"
     at_xfail=no
     (
-      echo "31. subscripts.at:58: testing ..."
+      echo "32. subscripts.at:58: testing ..."
       $at_traceon
 
 
@@ -2802,13 +2855,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  32 ) # 32. occurs.at:28: OCCURS with level 01, 66, 77, and 88
+  33 ) # 33. occurs.at:28: OCCURS with level 01, 66, 77, and 88
     at_setup_line='occurs.at:28'
     at_desc='OCCURS with level 01, 66, 77, and 88'
-    $at_quiet $ECHO_N " 32: OCCURS with level 01, 66, 77, and 88         $ECHO_C"
+    $at_quiet $ECHO_N " 33: OCCURS with level 01, 66, 77, and 88         $ECHO_C"
     at_xfail=no
     (
-      echo "32. occurs.at:28: testing ..."
+      echo "33. occurs.at:28: testing ..."
       $at_traceon
 
 
@@ -2864,13 +2917,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  33 ) # 33. occurs.at:53: OCCURS with variable-occurrence data item
+  34 ) # 34. occurs.at:53: OCCURS with variable-occurrence data item
     at_setup_line='occurs.at:53'
     at_desc='OCCURS with variable-occurrence data item'
-    $at_quiet $ECHO_N " 33: OCCURS with variable-occurrence data item    $ECHO_C"
+    $at_quiet $ECHO_N " 34: OCCURS with variable-occurrence data item    $ECHO_C"
     at_xfail=no
     (
-      echo "33. occurs.at:53: testing ..."
+      echo "34. occurs.at:53: testing ..."
       $at_traceon
 
 
@@ -2920,13 +2973,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  34 ) # 34. occurs.at:90: Nested OCCURS clause
+  35 ) # 35. occurs.at:90: Nested OCCURS clause
     at_setup_line='occurs.at:90'
     at_desc='Nested OCCURS clause'
-    $at_quiet $ECHO_N " 34: Nested OCCURS clause                         $ECHO_C"
+    $at_quiet $ECHO_N " 35: Nested OCCURS clause                         $ECHO_C"
     at_xfail=no
     (
-      echo "34. occurs.at:90: testing ..."
+      echo "35. occurs.at:90: testing ..."
       $at_traceon
 
 
@@ -2980,13 +3033,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  35 ) # 35. occurs.at:136: OCCURS DEPENDING followed by another field
+  36 ) # 36. occurs.at:136: OCCURS DEPENDING followed by another field
     at_setup_line='occurs.at:136'
     at_desc='OCCURS DEPENDING followed by another field'
-    $at_quiet $ECHO_N " 35: OCCURS DEPENDING followed by another field   $ECHO_C"
+    $at_quiet $ECHO_N " 36: OCCURS DEPENDING followed by another field   $ECHO_C"
     at_xfail=no
     (
-      echo "35. occurs.at:136: testing ..."
+      echo "36. occurs.at:136: testing ..."
       $at_traceon
 
 
@@ -3046,13 +3099,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  36 ) # 36. occurs.at:174: OCCURS DEPENDING without TO clause
+  37 ) # 37. occurs.at:174: OCCURS DEPENDING without TO clause
     at_setup_line='occurs.at:174'
     at_desc='OCCURS DEPENDING without TO clause'
-    $at_quiet $ECHO_N " 36: OCCURS DEPENDING without TO clause           $ECHO_C"
+    $at_quiet $ECHO_N " 37: OCCURS DEPENDING without TO clause           $ECHO_C"
     at_xfail=no
     (
-      echo "36. occurs.at:174: testing ..."
+      echo "37. occurs.at:174: testing ..."
       $at_traceon
 
 
@@ -3101,13 +3154,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  37 ) # 37. redefines.at:28: REDEFINES: not following entry-name
+  38 ) # 38. redefines.at:28: REDEFINES: not following entry-name
     at_setup_line='redefines.at:28'
     at_desc='REDEFINES: not following entry-name'
-    $at_quiet $ECHO_N " 37: REDEFINES: not following entry-name          $ECHO_C"
+    $at_quiet $ECHO_N " 38: REDEFINES: not following entry-name          $ECHO_C"
     at_xfail=no
     (
-      echo "37. redefines.at:28: testing ..."
+      echo "38. redefines.at:28: testing ..."
       $at_traceon
 
 
@@ -3156,13 +3209,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  38 ) # 38. redefines.at:49: REDEFINES: level 02 by 01
+  39 ) # 39. redefines.at:49: REDEFINES: level 02 by 01
     at_setup_line='redefines.at:49'
     at_desc='REDEFINES: level 02 by 01'
-    $at_quiet $ECHO_N " 38: REDEFINES: level 02 by 01                    $ECHO_C"
+    $at_quiet $ECHO_N " 39: REDEFINES: level 02 by 01                    $ECHO_C"
     at_xfail=no
     (
-      echo "38. redefines.at:49: testing ..."
+      echo "39. redefines.at:49: testing ..."
       $at_traceon
 
 
@@ -3214,13 +3267,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  39 ) # 39. redefines.at:70: REDEFINES: level 03 by 02
+  40 ) # 40. redefines.at:70: REDEFINES: level 03 by 02
     at_setup_line='redefines.at:70'
     at_desc='REDEFINES: level 03 by 02'
-    $at_quiet $ECHO_N " 39: REDEFINES: level 03 by 02                    $ECHO_C"
+    $at_quiet $ECHO_N " 40: REDEFINES: level 03 by 02                    $ECHO_C"
     at_xfail=no
     (
-      echo "39. redefines.at:70: testing ..."
+      echo "40. redefines.at:70: testing ..."
       $at_traceon
 
 
@@ -3273,13 +3326,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  40 ) # 40. redefines.at:92: REDEFINES: level 66
+  41 ) # 41. redefines.at:92: REDEFINES: level 66
     at_setup_line='redefines.at:92'
     at_desc='REDEFINES: level 66'
-    $at_quiet $ECHO_N " 40: REDEFINES: level 66                          $ECHO_C"
+    $at_quiet $ECHO_N " 41: REDEFINES: level 66                          $ECHO_C"
     at_xfail=no
     (
-      echo "40. redefines.at:92: testing ..."
+      echo "41. redefines.at:92: testing ..."
       $at_traceon
 
 
@@ -3332,13 +3385,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  41 ) # 41. redefines.at:114: REDEFINES: level 88
+  42 ) # 42. redefines.at:114: REDEFINES: level 88
     at_setup_line='redefines.at:114'
     at_desc='REDEFINES: level 88'
-    $at_quiet $ECHO_N " 41: REDEFINES: level 88                          $ECHO_C"
+    $at_quiet $ECHO_N " 42: REDEFINES: level 88                          $ECHO_C"
     at_xfail=no
     (
-      echo "41. redefines.at:114: testing ..."
+      echo "42. redefines.at:114: testing ..."
       $at_traceon
 
 
@@ -3390,13 +3443,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  42 ) # 42. redefines.at:143: REDEFINES: lower level number
+  43 ) # 43. redefines.at:143: REDEFINES: lower level number
     at_setup_line='redefines.at:143'
     at_desc='REDEFINES: lower level number'
-    $at_quiet $ECHO_N " 42: REDEFINES: lower level number                $ECHO_C"
+    $at_quiet $ECHO_N " 43: REDEFINES: lower level number                $ECHO_C"
     at_xfail=no
     (
-      echo "42. redefines.at:143: testing ..."
+      echo "43. redefines.at:143: testing ..."
       $at_traceon
 
 
@@ -3450,13 +3503,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  43 ) # 43. redefines.at:169: REDEFINES: with OCCURS
+  44 ) # 44. redefines.at:169: REDEFINES: with OCCURS
     at_setup_line='redefines.at:169'
     at_desc='REDEFINES: with OCCURS'
-    $at_quiet $ECHO_N " 43: REDEFINES: with OCCURS                       $ECHO_C"
+    $at_quiet $ECHO_N " 44: REDEFINES: with OCCURS                       $ECHO_C"
     at_xfail=no
     (
-      echo "43. redefines.at:169: testing ..."
+      echo "44. redefines.at:169: testing ..."
       $at_traceon
 
 
@@ -3508,13 +3561,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  44 ) # 44. redefines.at:190: REDEFINES: with subscript
+  45 ) # 45. redefines.at:190: REDEFINES: with subscript
     at_setup_line='redefines.at:190'
     at_desc='REDEFINES: with subscript'
-    $at_quiet $ECHO_N " 44: REDEFINES: with subscript                    $ECHO_C"
+    $at_quiet $ECHO_N " 45: REDEFINES: with subscript                    $ECHO_C"
     at_xfail=no
     (
-      echo "44. redefines.at:190: testing ..."
+      echo "45. redefines.at:190: testing ..."
       $at_traceon
 
 
@@ -3567,13 +3620,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  45 ) # 45. redefines.at:212: REDEFINES: with variable occurrence
+  46 ) # 46. redefines.at:212: REDEFINES: with variable occurrence
     at_setup_line='redefines.at:212'
     at_desc='REDEFINES: with variable occurrence'
-    $at_quiet $ECHO_N " 45: REDEFINES: with variable occurrence          $ECHO_C"
+    $at_quiet $ECHO_N " 46: REDEFINES: with variable occurrence          $ECHO_C"
     at_xfail=no
     (
-      echo "45. redefines.at:212: testing ..."
+      echo "46. redefines.at:212: testing ..."
       $at_traceon
 
 
@@ -3636,13 +3689,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  46 ) # 46. redefines.at:247: REDEFINES: with qualification
+  47 ) # 47. redefines.at:247: REDEFINES: with qualification
     at_setup_line='redefines.at:247'
     at_desc='REDEFINES: with qualification'
-    $at_quiet $ECHO_N " 46: REDEFINES: with qualification                $ECHO_C"
+    $at_quiet $ECHO_N " 47: REDEFINES: with qualification                $ECHO_C"
     at_xfail=no
     (
-      echo "46. redefines.at:247: testing ..."
+      echo "47. redefines.at:247: testing ..."
       $at_traceon
 
 
@@ -3696,13 +3749,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  47 ) # 47. redefines.at:273: REDEFINES: multiple redefinition
+  48 ) # 48. redefines.at:273: REDEFINES: multiple redefinition
     at_setup_line='redefines.at:273'
     at_desc='REDEFINES: multiple redefinition'
-    $at_quiet $ECHO_N " 47: REDEFINES: multiple redefinition             $ECHO_C"
+    $at_quiet $ECHO_N " 48: REDEFINES: multiple redefinition             $ECHO_C"
     at_xfail=no
     (
-      echo "47. redefines.at:273: testing ..."
+      echo "48. redefines.at:273: testing ..."
       $at_traceon
 
 
@@ -3782,13 +3835,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  48 ) # 48. redefines.at:301: REDEFINES: size exceeds
+  49 ) # 49. redefines.at:301: REDEFINES: size exceeds
     at_setup_line='redefines.at:301'
     at_desc='REDEFINES: size exceeds'
-    $at_quiet $ECHO_N " 48: REDEFINES: size exceeds                      $ECHO_C"
+    $at_quiet $ECHO_N " 49: REDEFINES: size exceeds                      $ECHO_C"
     at_xfail=no
     (
-      echo "48. redefines.at:301: testing ..."
+      echo "49. redefines.at:301: testing ..."
       $at_traceon
 
 
@@ -3849,13 +3902,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  49 ) # 49. redefines.at:334: REDEFINES: with VALUE
+  50 ) # 50. redefines.at:334: REDEFINES: with VALUE
     at_setup_line='redefines.at:334'
     at_desc='REDEFINES: with VALUE'
-    $at_quiet $ECHO_N " 49: REDEFINES: with VALUE                        $ECHO_C"
+    $at_quiet $ECHO_N " 50: REDEFINES: with VALUE                        $ECHO_C"
     at_xfail=no
     (
-      echo "49. redefines.at:334: testing ..."
+      echo "50. redefines.at:334: testing ..."
       $at_traceon
 
 
@@ -3911,13 +3964,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  50 ) # 50. redefines.at:362: REDEFINES: with intervention
+  51 ) # 51. redefines.at:362: REDEFINES: with intervention
     at_setup_line='redefines.at:362'
     at_desc='REDEFINES: with intervention'
-    $at_quiet $ECHO_N " 50: REDEFINES: with intervention                 $ECHO_C"
+    $at_quiet $ECHO_N " 51: REDEFINES: with intervention                 $ECHO_C"
     at_xfail=no
     (
-      echo "50. redefines.at:362: testing ..."
+      echo "51. redefines.at:362: testing ..."
       $at_traceon
 
 
@@ -3974,13 +4027,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  51 ) # 51. redefines.at:391: REDEFINES: within REDEFINES
+  52 ) # 52. redefines.at:391: REDEFINES: within REDEFINES
     at_setup_line='redefines.at:391'
     at_desc='REDEFINES: within REDEFINES'
-    $at_quiet $ECHO_N " 51: REDEFINES: within REDEFINES                  $ECHO_C"
+    $at_quiet $ECHO_N " 52: REDEFINES: within REDEFINES                  $ECHO_C"
     at_xfail=no
     (
-      echo "51. redefines.at:391: testing ..."
+      echo "52. redefines.at:391: testing ..."
       $at_traceon
 
 
@@ -4032,13 +4085,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  52 ) # 52. value.at:43: Numeric item (integer)
+  53 ) # 53. value.at:43: Numeric item (integer)
     at_setup_line='value.at:43'
     at_desc='Numeric item (integer)'
-    $at_quiet $ECHO_N " 52: Numeric item (integer)                       $ECHO_C"
+    $at_quiet $ECHO_N " 53: Numeric item (integer)                       $ECHO_C"
     at_xfail=no
     (
-      echo "52. value.at:43: testing ..."
+      echo "53. value.at:43: testing ..."
       $at_traceon
 
 
@@ -4094,13 +4147,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  53 ) # 53. value.at:68: Numeric item (non-integer)
+  54 ) # 54. value.at:68: Numeric item (non-integer)
     at_setup_line='value.at:68'
     at_desc='Numeric item (non-integer)'
-    $at_quiet $ECHO_N " 53: Numeric item (non-integer)                   $ECHO_C"
+    $at_quiet $ECHO_N " 54: Numeric item (non-integer)                   $ECHO_C"
     at_xfail=no
     (
-      echo "53. value.at:68: testing ..."
+      echo "54. value.at:68: testing ..."
       $at_traceon
 
 
@@ -4153,13 +4206,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  54 ) # 54. value.at:90: Numeric item with picture P
+  55 ) # 55. value.at:90: Numeric item with picture P
     at_setup_line='value.at:90'
     at_desc='Numeric item with picture P'
-    $at_quiet $ECHO_N " 54: Numeric item with picture P                  $ECHO_C"
+    $at_quiet $ECHO_N " 55: Numeric item with picture P                  $ECHO_C"
     at_xfail=no
     (
-      echo "54. value.at:90: testing ..."
+      echo "55. value.at:90: testing ..."
       $at_traceon
 
 
@@ -4218,13 +4271,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  55 ) # 55. value.at:121: Signed numeric literal
+  56 ) # 56. value.at:121: Signed numeric literal
     at_setup_line='value.at:121'
     at_desc='Signed numeric literal'
-    $at_quiet $ECHO_N " 55: Signed numeric literal                       $ECHO_C"
+    $at_quiet $ECHO_N " 56: Signed numeric literal                       $ECHO_C"
     at_xfail=no
     (
-      echo "55. value.at:121: testing ..."
+      echo "56. value.at:121: testing ..."
       $at_traceon
 
 
@@ -4277,13 +4330,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  56 ) # 56. value.at:146: Alphabetic item
+  57 ) # 57. value.at:146: Alphabetic item
     at_setup_line='value.at:146'
     at_desc='Alphabetic item'
-    $at_quiet $ECHO_N " 56: Alphabetic item                              $ECHO_C"
+    $at_quiet $ECHO_N " 57: Alphabetic item                              $ECHO_C"
     at_xfail=no
     (
-      echo "56. value.at:146: testing ..."
+      echo "57. value.at:146: testing ..."
       $at_traceon
 
 
@@ -4339,13 +4392,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  57 ) # 57. value.at:171: Alphanumeric item
+  58 ) # 58. value.at:171: Alphanumeric item
     at_setup_line='value.at:171'
     at_desc='Alphanumeric item'
-    $at_quiet $ECHO_N " 57: Alphanumeric item                            $ECHO_C"
+    $at_quiet $ECHO_N " 58: Alphanumeric item                            $ECHO_C"
     at_xfail=no
     (
-      echo "57. value.at:171: testing ..."
+      echo "58. value.at:171: testing ..."
       $at_traceon
 
 
@@ -4397,13 +4450,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  58 ) # 58. value.at:192: Alphanumeric group item
+  59 ) # 59. value.at:192: Alphanumeric group item
     at_setup_line='value.at:192'
     at_desc='Alphanumeric group item'
-    $at_quiet $ECHO_N " 58: Alphanumeric group item                      $ECHO_C"
+    $at_quiet $ECHO_N " 59: Alphanumeric group item                      $ECHO_C"
     at_xfail=no
     (
-      echo "58. value.at:192: testing ..."
+      echo "59. value.at:192: testing ..."
       $at_traceon
 
 
@@ -4458,13 +4511,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  59 ) # 59. value.at:226: Numeric-edited item
+  60 ) # 60. value.at:226: Numeric-edited item
     at_setup_line='value.at:226'
     at_desc='Numeric-edited item'
-    $at_quiet $ECHO_N " 59: Numeric-edited item                          $ECHO_C"
+    $at_quiet $ECHO_N " 60: Numeric-edited item                          $ECHO_C"
     at_xfail=no
     (
-      echo "59. value.at:226: testing ..."
+      echo "60. value.at:226: testing ..."
       $at_traceon
 
 
@@ -4518,13 +4571,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  60 ) # 60. value.at:249: Alphanumeric-edited item
+  61 ) # 61. value.at:249: Alphanumeric-edited item
     at_setup_line='value.at:249'
     at_desc='Alphanumeric-edited item'
-    $at_quiet $ECHO_N " 60: Alphanumeric-edited item                     $ECHO_C"
+    $at_quiet $ECHO_N " 61: Alphanumeric-edited item                     $ECHO_C"
     at_xfail=no
     (
-      echo "60. value.at:249: testing ..."
+      echo "61. value.at:249: testing ..."
       $at_traceon
 
 
@@ -4577,13 +4630,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  61 ) # 61. move.at:37: MOVE SPACE TO numeric or numeric-edited item
+  62 ) # 62. move.at:37: MOVE SPACE TO numeric or numeric-edited item
     at_setup_line='move.at:37'
     at_desc='MOVE SPACE TO numeric or numeric-edited item'
-    $at_quiet $ECHO_N " 61: MOVE SPACE TO numeric or numeric-edited item $ECHO_C"
+    $at_quiet $ECHO_N " 62: MOVE SPACE TO numeric or numeric-edited item $ECHO_C"
     at_xfail=no
     (
-      echo "61. move.at:37: testing ..."
+      echo "62. move.at:37: testing ..."
       $at_traceon
 
 
@@ -4636,13 +4689,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  62 ) # 62. move.at:62: MOVE ZERO TO alphabetic item
+  63 ) # 63. move.at:62: MOVE ZERO TO alphabetic item
     at_setup_line='move.at:62'
     at_desc='MOVE ZERO TO alphabetic item'
-    $at_quiet $ECHO_N " 62: MOVE ZERO TO alphabetic item                 $ECHO_C"
+    $at_quiet $ECHO_N " 63: MOVE ZERO TO alphabetic item                 $ECHO_C"
     at_xfail=no
     (
-      echo "62. move.at:62: testing ..."
+      echo "63. move.at:62: testing ..."
       $at_traceon
 
 
@@ -4692,13 +4745,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  63 ) # 63. move.at:87: MOVE alphabetic TO x
+  64 ) # 64. move.at:87: MOVE alphabetic TO x
     at_setup_line='move.at:87'
     at_desc='MOVE alphabetic TO x'
-    $at_quiet $ECHO_N " 63: MOVE alphabetic TO x                         $ECHO_C"
+    $at_quiet $ECHO_N " 64: MOVE alphabetic TO x                         $ECHO_C"
     at_xfail=no
     (
-      echo "63. move.at:87: testing ..."
+      echo "64. move.at:87: testing ..."
       $at_traceon
 
 
@@ -4758,13 +4811,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  64 ) # 64. move.at:116: MOVE alphanumeric TO x
+  65 ) # 65. move.at:116: MOVE alphanumeric TO x
     at_setup_line='move.at:116'
     at_desc='MOVE alphanumeric TO x'
-    $at_quiet $ECHO_N " 64: MOVE alphanumeric TO x                       $ECHO_C"
+    $at_quiet $ECHO_N " 65: MOVE alphanumeric TO x                       $ECHO_C"
     at_xfail=no
     (
-      echo "64. move.at:116: testing ..."
+      echo "65. move.at:116: testing ..."
       $at_traceon
 
 
@@ -4822,13 +4875,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  65 ) # 65. move.at:142: MOVE alphanumeric-edited TO x
+  66 ) # 66. move.at:142: MOVE alphanumeric-edited TO x
     at_setup_line='move.at:142'
     at_desc='MOVE alphanumeric-edited TO x'
-    $at_quiet $ECHO_N " 65: MOVE alphanumeric-edited TO x                $ECHO_C"
+    $at_quiet $ECHO_N " 66: MOVE alphanumeric-edited TO x                $ECHO_C"
     at_xfail=no
     (
-      echo "65. move.at:142: testing ..."
+      echo "66. move.at:142: testing ..."
       $at_traceon
 
 
@@ -4888,13 +4941,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  66 ) # 66. move.at:171: MOVE numeric (integer) TO x
+  67 ) # 67. move.at:171: MOVE numeric (integer) TO x
     at_setup_line='move.at:171'
     at_desc='MOVE numeric (integer) TO x'
-    $at_quiet $ECHO_N " 66: MOVE numeric (integer) TO x                  $ECHO_C"
+    $at_quiet $ECHO_N " 67: MOVE numeric (integer) TO x                  $ECHO_C"
     at_xfail=no
     (
-      echo "66. move.at:171: testing ..."
+      echo "67. move.at:171: testing ..."
       $at_traceon
 
 
@@ -4953,13 +5006,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  67 ) # 67. move.at:199: MOVE numeric (non-integer) TO x
+  68 ) # 68. move.at:199: MOVE numeric (non-integer) TO x
     at_setup_line='move.at:199'
     at_desc='MOVE numeric (non-integer) TO x'
-    $at_quiet $ECHO_N " 67: MOVE numeric (non-integer) TO x              $ECHO_C"
+    $at_quiet $ECHO_N " 68: MOVE numeric (non-integer) TO x              $ECHO_C"
     at_xfail=no
     (
-      echo "67. move.at:199: testing ..."
+      echo "68. move.at:199: testing ..."
       $at_traceon
 
 
@@ -5020,13 +5073,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  68 ) # 68. move.at:229: MOVE numeric-edited TO x
+  69 ) # 69. move.at:229: MOVE numeric-edited TO x
     at_setup_line='move.at:229'
     at_desc='MOVE numeric-edited TO x'
-    $at_quiet $ECHO_N " 68: MOVE numeric-edited TO x                     $ECHO_C"
+    $at_quiet $ECHO_N " 69: MOVE numeric-edited TO x                     $ECHO_C"
     at_xfail=no
     (
-      echo "68. move.at:229: testing ..."
+      echo "69. move.at:229: testing ..."
       $at_traceon
 
 
@@ -5085,13 +5138,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  69 ) # 69. move.at:263: Operands must be groups
+  70 ) # 70. move.at:263: Operands must be groups
     at_setup_line='move.at:263'
     at_desc='Operands must be groups'
-    $at_quiet $ECHO_N " 69: Operands must be groups                      $ECHO_C"
+    $at_quiet $ECHO_N " 70: Operands must be groups                      $ECHO_C"
     at_xfail=no
     (
-      echo "69. move.at:263: testing ..."
+      echo "70. move.at:263: testing ..."
       $at_traceon
 
 
@@ -5150,13 +5203,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  70 ) # 70. move.at:295: MOVE: misc
+  71 ) # 71. move.at:295: MOVE: misc
     at_setup_line='move.at:295'
     at_desc='MOVE: misc'
-    $at_quiet $ECHO_N " 70: MOVE: misc                                   $ECHO_C"
+    $at_quiet $ECHO_N " 71: MOVE: misc                                   $ECHO_C"
     at_xfail=no
     (
-      echo "70. move.at:295: testing ..."
+      echo "71. move.at:295: testing ..."
       $at_traceon
 
 
@@ -5208,13 +5261,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  71 ) # 71. multiply.at:28: Category check of Format 1
+  72 ) # 72. multiply.at:28: Category check of Format 1
     at_setup_line='multiply.at:28'
     at_desc='Category check of Format 1'
-    $at_quiet $ECHO_N " 71: Category check of Format 1                   $ECHO_C"
+    $at_quiet $ECHO_N " 72: Category check of Format 1                   $ECHO_C"
     at_xfail=no
     (
-      echo "71. multiply.at:28: testing ..."
+      echo "72. multiply.at:28: testing ..."
       $at_traceon
 
 
@@ -5281,13 +5334,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  72 ) # 72. multiply.at:66: Category check of Format 2
+  73 ) # 73. multiply.at:66: Category check of Format 2
     at_setup_line='multiply.at:66'
     at_desc='Category check of Format 2'
-    $at_quiet $ECHO_N " 72: Category check of Format 2                   $ECHO_C"
+    $at_quiet $ECHO_N " 73: Category check of Format 2                   $ECHO_C"
     at_xfail=no
     (
-      echo "72. multiply.at:66: testing ..."
+      echo "73. multiply.at:66: testing ..."
       $at_traceon
 
 
@@ -5356,13 +5409,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  73 ) # 73. multiply.at:106: Category check of literals
+  74 ) # 74. multiply.at:106: Category check of literals
     at_setup_line='multiply.at:106'
     at_desc='Category check of literals'
-    $at_quiet $ECHO_N " 73: Category check of literals                   $ECHO_C"
+    $at_quiet $ECHO_N " 74: Category check of literals                   $ECHO_C"
     at_xfail=no
     (
-      echo "73. multiply.at:106: testing ..."
+      echo "74. multiply.at:106: testing ..."
       $at_traceon
 
 
@@ -5421,13 +5474,13 @@ $at_traceon
     at_status=`cat $at_status_file`
     ;;
 
-  74 ) # 74. set.at:24: SET: misc
+  75 ) # 75. set.at:24: SET: misc
     at_setup_line='set.at:24'
     at_desc='SET: misc'
-    $at_quiet $ECHO_N " 74: SET: misc                                    $ECHO_C"
+    $at_quiet $ECHO_N " 75: SET: misc                                    $ECHO_C"
     at_xfail=no
     (
-      echo "74. set.at:24: testing ..."
+      echo "75. set.at:24: testing ..."
       $at_traceon
 
 

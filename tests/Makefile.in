@@ -83,6 +83,7 @@ COB_CFLAGS = @COB_CFLAGS@
 COB_CONFIG_DIR = @COB_CONFIG_DIR@
 COB_COPY_DIR = @COB_COPY_DIR@
 COB_EXPORT_DYN = @COB_EXPORT_DYN@
+COB_FIX_LIB = @COB_FIX_LIB@
 COB_HAS_INLINE = @COB_HAS_INLINE@
 COB_LDFLAGS = @COB_LDFLAGS@
 COB_LIBRARY_PATH = @COB_LIBRARY_PATH@
@@ -639,7 +640,7 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	} > $(srcdir)/package.m4
 
 $(srcdir)/%: $(srcdir)/%.at $(srcdir)/package.m4
-	autom4te --language=autotest -I $(srcdir) -I $(srcdir)/$@.src -o $@ $<
+	autom4te --language=autotest -I $(srcdir) -I $@.src -o $@ $<
 	chmod +x $@
 
 $(srcdir)/syntax: $(syntax_DEPENDENCIES)

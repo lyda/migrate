@@ -1,3 +1,30 @@
+2008-09-29  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Fix bug in multi-program source file genning
+	* codegen.c : Tidy up date/time info in genned C code
+
+2008-09-22  Roger While <simrw@sim-basis.de>
+
+	* typeck.c : Pass FILE STATUS for SORT files
+
+2008-09-15  Roger While <simrw@sim-basis.de>
+
+	* cobc.c : -I options must also be passed to the C compiler
+	* reserved.c, parser.y, typeck.c : Preliminary WAIT support
+
+2008-08-20  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Change to check for __builtin_expect
+
+2008-08-16  Roger While <simrw@sim-basis.de>
+
+	* codegen.c : Unions for function pointers
+
+2008-08-10  Roger While <simrw@sim-basis.de>
+
+	* parser.y, cobc.[ch], typeck.c : Do not allow C keywords as file names
+		or PROGRAM-ID's
+
 2008-08-01  Roger While <simrw@sim-basis.de>
 
 	* pplex.l : Specific fix for >>D

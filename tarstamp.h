@@ -1,1 +1,1 @@
-static char octardate[] = "Wed Jul 30 11:23:52 CEST 2008";
+static char octardate[] = "Sep 29 2008 17:06:46 CEST";

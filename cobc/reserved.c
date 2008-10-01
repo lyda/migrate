@@ -317,6 +317,7 @@ static const struct reserved reserved_words[] = {
   {"ID",		IDENTIFICATION},	/* extension */
   {"IDENTIFICATION",	IDENTIFICATION},	/* 2002 */
   {"IF",		IF},			/* 2002 */
+  {"IGNORE",		IGNORE},		/* extension */
   {"IGNORING",		IGNORING},		/* 2002 (C/S) */
   {"IMPLEMENTS",	-1},			/* 2002 (C/S) */
   {"IN",		IN},			/* 2002 */
@@ -587,6 +588,7 @@ static const struct reserved reserved_words[] = {
   {"VALUE",		VALUE},			/* 2002 */
   {"VALUES",		VALUE},			/* 2002 */
   {"VARYING",		VARYING},		/* 2002 */
+  {"WAIT",		WAIT},			/* extension */
   {"WHEN",		WHEN},			/* 2002 */
   {"WITH",		WITH},			/* 2002 */
   {"WORKING-STORAGE",	WORKING_STORAGE},	/* 2002 */

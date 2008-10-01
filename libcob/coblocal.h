@@ -42,7 +42,7 @@
 COB_HIDDEN extern const int		cob_exp10[];
 COB_HIDDEN extern const long long	cob_exp10LL[];
 */
-COB_HIDDEN extern int			screen_initialized;
+COB_HIDDEN extern int			cob_screen_initialized;
 COB_HIDDEN extern int			cob_got_exception;
 COB_HIDDEN extern unsigned int		cob_orig_line;
 COB_HIDDEN extern const char		*cob_orig_statement;
@@ -50,7 +50,8 @@ COB_HIDDEN extern const char		*cob_orig_program_id;
 COB_HIDDEN extern const char		*cob_orig_section;
 COB_HIDDEN extern const char		*cob_orig_paragraph;
 
-COB_HIDDEN extern void		cob_memcpy (cob_field *dst, unsigned char *src, int size);
+COB_HIDDEN extern void		cob_memcpy (cob_field *dst, unsigned char *src,
+					    const int size);
 COB_HIDDEN extern void		cob_exit_fileio (void);
 COB_HIDDEN extern void		cob_field_to_string (const cob_field *f, char *s);
 COB_HIDDEN extern void		cob_init_numeric (void);

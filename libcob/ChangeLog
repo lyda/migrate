@@ -1,3 +1,16 @@
+2008-09-22  Roger While <simrw@sim-basis.de>
+
+	* fileio.[ch] : Evaluate FILE STATUS for SORT files
+	* General : More constification
+
+2008-08-20  Roger While <simrw@sim-basis.de>
+
+	* common.h : Change macro for __builtin_expect
+
+2008-08-16  Roger While <simrw@sim-basis.de>
+
+	* coblocal.h, termio.c, screenio.c : Change global name screen_initialized
+
 2008-08-01  Roger While <simrw@sim-basis.de>
 
 	* byteswap.h : Do not rely on gcc doing the right thing for short

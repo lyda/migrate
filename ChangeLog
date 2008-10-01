@@ -1,3 +1,20 @@
+2008-09-29  Roger While <simrw@sim-basis.de>
+
+	* Makefile.am : Revise format of tarstamp.h
+
+2008-08-20  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Option changes for AIX
+
+2008-08-16  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Fix AIX xlc
+
+2008-08-08  Roger While <simrw@sim-basis.de>
+
+	* configure.ac : Take out --enable-debug
+	* Makefile.am : Force permissions when making dist
+
 2008-07-05  Roger While <simrw@sim-basis.de>
 
 	* configure.ac : No need to check for regex or mvgetnstr

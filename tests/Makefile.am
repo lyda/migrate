@@ -64,7 +64,7 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	} > $(srcdir)/package.m4
 
 $(srcdir)/%: $(srcdir)/%.at $(srcdir)/package.m4
-	autom4te --language=autotest -I $(srcdir) -I $(srcdir)/$@.src -o $@ $<
+	autom4te --language=autotest -I $(srcdir) -I $@.src -o $@ $<
 	chmod +x $@
 
 $(srcdir)/syntax: $(syntax_DEPENDENCIES)

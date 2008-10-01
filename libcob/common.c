@@ -371,7 +371,7 @@ cob_get_prog_pointer (const unsigned char *srcptr)
 }
 
 void
-cob_memcpy (cob_field *dst, unsigned char *src, int size)
+cob_memcpy (cob_field *dst, unsigned char *src, const int size)
 {
 	cob_field	temp;
 	cob_field_attr	attr;
@@ -414,7 +414,7 @@ cob_set_exception (const int id)
 /* static sighandler_t	oldsig; */
 
 #ifdef	HAVE_SIGNAL_H
-static void
+static void COB_NOINLINE
 cob_sig_handler (int sig)
 {
 	cob_screen_terminate ();

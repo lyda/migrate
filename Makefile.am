@@ -10,10 +10,28 @@ DISTCLEANFILES = $(BUILT_SOURCES) cpucheck
 EXTRA_DIST = cpucheck.c COPYING.DOC
 
 dist-hook:
-	echo "static char octardate[] = \"`date`\";" > $(distdir)/tarstamp.h
+	echo "static char octardate[] = \"`date +'%b %d %Y %T %Z'`\";" > $(distdir)/tarstamp.h
 	find $(distdir) -type d -print | xargs chmod 777
 	chmod 644 $(distdir)/cpucheck.c
 	chmod 644 $(distdir)/cob-config.in
+	chmod 644 $(distdir)/ABOUT-NLS
+	chmod 644 $(distdir)/AUTHORS
+	chmod 644 $(distdir)/COPYING
+	chmod 644 $(distdir)/COPYING.DOC
+	chmod 644 $(distdir)/COPYING.LIB
+	chmod 644 $(distdir)/INSTALL
+	chmod 644 $(distdir)/NEWS
+	chmod 644 $(distdir)/README
+	chmod 644 $(distdir)/THANKS
+	chmod 644 $(distdir)/TODO
+	chmod 755 $(distdir)/ltmain.sh
+	chmod 755 $(distdir)/missing
+	chmod 755 $(distdir)/install-sh
+	chmod 755 $(distdir)/config.guess
+	chmod 755 $(distdir)/config.sub
+	chmod 755 $(distdir)/config.rpath
+	chmod 755 $(distdir)/depcomp
+	chmod 755 $(distdir)/mkinstalldirs
 
 defaults.h: Makefile.am $(top_builddir)/config.status
 	@echo "Creating defaults.h..."

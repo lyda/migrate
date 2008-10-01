@@ -87,7 +87,7 @@ AC_DEFINE(__USE_STRING_INLINES)
 LIBCOB_LIBS="-lm"
 LIBCOB_CFLAGS="$lt_prog_compiler_pic"
 
-AC_PROG_CC
+AC_PROG_CC(gcc xlc cc)
 AC_PROG_CPP
 AC_PROG_EGREP
 
@@ -594,6 +594,7 @@ AH_VERBATIM([_XOPEN_SOURCE_EXTENDED],
 # undef _XOPEN_SOURCE_EXTENDED
 #endif])dnl
 
+COB_FIX_LIB="$COB_EXPORT_DYN"
 case $host_os in
   mingw*)
 	if test "$prefix" = "NONE"
@@ -602,9 +603,11 @@ case $host_os in
 	COB_COPY_DIR="`cd /usr && pwd -W`/local/share/$PACKAGE_TARNAME/copy"
 	fi
 	COB_EXPORT_DYN="-Wl,--export-all-symbols -Wl,--enable-auto-import"
+	COB_FIX_LIB="$COB_EXPORT_DYN"
 	;;
   cygwin*)
 	COB_EXPORT_DYN="-Wl,--export-all-symbols -Wl,--enable-auto-import"
+	COB_FIX_LIB="$COB_EXPORT_DYN"
 	;;
   darwin* | rhapsody*)
 	COB_SHARED_OPT="-bundle -flat_namespace -undefined suppress"
@@ -632,7 +635,13 @@ case $host_os in
 	COB_EXPORT_DYN="-Wl,-bexpfull"
 	if test "`basename $CC`" != "gcc"
 	then
+		CFLAGS="$CFLAGS -O2 -Q -qro -qroconst"
 		COB_SHARED_OPT="-G"
+		COB_FIX_LIB=""
+		# COB_FIX_LIB="-Wc,-G $COB_EXPORT_DYN"
+		# COB_CFLAGS="$COB_CFLAGS -qchars=signed"
+	else
+		COB_FIX_LIB="$COB_EXPORT_DYN"
 	fi
 	;;
   solaris*)
@@ -680,6 +689,7 @@ AC_SUBST(COB_PIC_FLAGS)
 AC_SUBST(COB_SHARED_OPT)
 COB_BIGENDIAN="$ac_cv_c_bigendian"
 AC_SUBST(COB_BIGENDIAN)
+AC_SUBST(COB_FIX_LIB)
 AC_SUBST(COB_HAS_INLINE)
 
 AC_CONFIG_FILES([cob-config

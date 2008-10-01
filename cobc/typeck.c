@@ -577,10 +577,10 @@ cb_encode_program_id (const char *name)
 const char *
 cb_build_program_id (cb_tree name, cb_tree alt_name)
 {
+	const char	*s;
+
 /* This needs some more thought, should we generate an entry
 	point per program source name ?
-	char	*s;
-
 	if (alt_name) {
 		s = (char *)CB_LITERAL (alt_name)->data;
 	} else if (CB_LITERAL_P (name)) {
@@ -598,14 +598,18 @@ cb_build_program_id (cb_tree name, cb_tree alt_name)
 
 	if (alt_name) {
 		current_program->orig_source_name = strdup ((char *)CB_LITERAL (alt_name)->data);
-		return (char *)CB_LITERAL (alt_name)->data;
+		s = (char *)CB_LITERAL (alt_name)->data;
 	} else if (CB_LITERAL_P (name)) {
 		current_program->orig_source_name = strdup ((char *)CB_LITERAL (name)->data);
-		return cb_encode_program_id ((char *)CB_LITERAL (name)->data);
+		s = cb_encode_program_id ((char *)CB_LITERAL (name)->data);
 	} else {
 		current_program->orig_source_name = strdup (CB_NAME (name));
-		return cb_encode_program_id (CB_NAME (name));
+		s = cb_encode_program_id (CB_NAME (name));
 	}
+	if (cob_check_valid_name (current_program->orig_source_name)) {
+		cb_error (_("PROGRAM-ID '%s' invalid"), current_program->orig_source_name);
+	}
+	return s;
 }
 
 void
@@ -5070,6 +5074,8 @@ cb_emit_read (cb_tree ref, cb_tree next, cb_tree into, cb_tree key, cb_tree lock
 		read_opts = COB_READ_NO_LOCK;
 	} else if (lock_opts == cb_int3) {
 		read_opts = COB_READ_IGNORE_LOCK;
+	} else if (lock_opts == cb_int4) {
+		read_opts = COB_READ_WAIT_LOCK;
 	}
 	if (ref == cb_error_node) {
 		return;
@@ -5521,9 +5527,10 @@ cb_emit_sort_init (cb_tree name, cb_tree keys, cb_tree col)
 		if (CB_FILE (cb_ref (name))->organization != COB_ORG_SORT) {
 			cb_error_x (name, _("Invalid SORT filename"));
 		}
-		cb_emit (cb_build_funcall_4 ("cob_file_sort_init", cb_ref (name),
+		cb_emit (cb_build_funcall_5 ("cob_file_sort_init", cb_ref (name),
 					     cb_int (cb_list_length (keys)), col,
-					     cb_build_cast_address(current_program->cb_sort_return)));
+					     cb_build_cast_address(current_program->cb_sort_return),
+					     CB_FILE(cb_ref (name))->file_status));
 		for (l = keys; l; l = CB_CHAIN (l)) {
 			cb_emit (cb_build_funcall_4 ("cob_file_sort_init_key", cb_ref (name),
 					CB_PURPOSE (l),
@@ -5753,6 +5760,7 @@ void
 cb_emit_write (cb_tree record, cb_tree from, cb_tree opt, cb_tree lockopt)
 {
 	cb_tree		file;
+	int		val;
 
 	if (record != cb_error_node) {
 		file = CB_TREE (CB_FIELD (cb_ref (record))->file);
@@ -5778,6 +5786,23 @@ cb_emit_write (cb_tree record, cb_tree from, cb_tree opt, cb_tree lockopt)
 		}
 		if (from) {
 			cb_emit (cb_build_move (from, record));
+		}
+		if (CB_FILE (file)->organization == COB_ORG_LINE_SEQUENTIAL &&
+		    opt == cb_int0) {
+			opt = cb_int (COB_WRITE_BEFORE | COB_WRITE_LINES | 1);
+		}
+		/* RXW - This is horrible */
+		if (current_statement->handler_id == COB_EC_I_O_EOP &&
+		    current_statement->handler1) {
+			if (CB_CAST_P(opt)) {
+				val = CB_INTEGER(CB_BINARY_OP(CB_CAST(opt)->val)->x)->val;
+				val |= COB_WRITE_EOP;
+				CB_BINARY_OP(CB_CAST(opt)->val)->x = cb_int (val);
+			} else {
+				val = CB_INTEGER(opt)->val;
+				val |= COB_WRITE_EOP;
+				opt = cb_int (val);
+			}
 		}
 		cb_emit (cb_build_funcall_4 ("cob_write", file, record, opt,
 					CB_FILE(file)->file_status));

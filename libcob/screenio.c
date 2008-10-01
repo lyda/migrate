@@ -44,7 +44,7 @@
 #define SCREEN_LINE_POS(s)	(cob_get_int (s->line) - 1)
 #define SCREEN_COLUMN_POS(s)	(cob_get_int (s->column) - 1)
 
-int	screen_initialized = 0;
+int	cob_screen_initialized = 0;
 int	cob_screen_mode = 0;
 
 #if HAVE_LIBNCURSES || HAVE_LIBPDCURSES || HAVE_LIBCURSES
@@ -248,7 +248,7 @@ cob_screen_init (void)
 {
 	char	*s;
 
-	if (!screen_initialized) {
+	if (!cob_screen_initialized) {
 		s = getenv ("COB_SCREEN_EXCEPTIONS");
 		if (s) {
 			if (*s == 'Y' || *s == 'y') {
@@ -280,15 +280,15 @@ cob_screen_init (void)
 		}
 		attrset (A_NORMAL);
 		getmaxyx (stdscr, cob_max_y, cob_max_x);
-		screen_initialized = 1;
+		cob_screen_initialized = 1;
 	}
 }
 
 void
 cob_screen_terminate (void)
 {
-	if (screen_initialized) {
-		screen_initialized = 0;
+	if (cob_screen_initialized) {
+		cob_screen_initialized = 0;
 		endwin ();
 	}
 }
@@ -642,7 +642,7 @@ cob_prep_input (cob_screen *s)
 void
 cob_screen_display (cob_screen *s, cob_field *line, cob_field *column)
 {
-	if (!screen_initialized) {
+	if (!cob_screen_initialized) {
 		cob_screen_init ();
 	}
 
@@ -678,7 +678,7 @@ cob_screen_accept (cob_screen *s, cob_field *line, cob_field *column)
 	size_t			firsty;
 	int			starty;
 
-	if (!screen_initialized) {
+	if (!cob_screen_initialized) {
 		cob_screen_init ();
 	}
 	if (!cob_base_inp) {
@@ -733,12 +733,12 @@ cob_screen_accept (cob_screen *s, cob_field *line, cob_field *column)
 
 void
 cob_field_display (cob_field *f, cob_field *line, cob_field *column,
-		   cob_field *fgc, cob_field *bgc, int attr)
+		   cob_field *fgc, cob_field *bgc, const int attr)
 {
 	int sline;
 	int scolumn;
 
-	if (!screen_initialized) {
+	if (!cob_screen_initialized) {
 		cob_screen_init ();
 	}
 
@@ -751,7 +751,7 @@ cob_field_display (cob_field *f, cob_field *line, cob_field *column,
 
 void
 cob_field_accept (cob_field *f, cob_field *line, cob_field *column,
-		  cob_field *fgc, cob_field *bgc, int attr)
+		  cob_field *fgc, cob_field *bgc, const int attr)
 {
 	unsigned char	*p;
 	size_t		count;
@@ -765,7 +765,7 @@ cob_field_accept (cob_field *f, cob_field *line, cob_field *column,
 	int		ateof;
 	int		gotbacksp;
 
-	if (!screen_initialized) {
+	if (!cob_screen_initialized) {
 		cob_screen_init ();
 	}
 
@@ -912,22 +912,19 @@ cob_field_accept (cob_field *f, cob_field *line, cob_field *column,
 #else
 
 void
-cob_screen_init (void)
-{
-}
-
-void
 cob_screen_terminate (void)
 {
 }
 
 void
-cob_field_display (cob_field *f, cob_field *line, cob_field *column, int attr)
+cob_field_display (cob_field *f, cob_field *line, cob_field *column,
+		   cob_field *fgc, cob_field *bgc, const int attr)
 {
 }
 
 void
-cob_field_accept (cob_field *f, cob_field *line, cob_field *column)
+cob_field_accept (cob_field *f, cob_field *line, cob_field *column,
+		  cob_field *fgc, cob_field *bgc, const int attr)
 {
 }
 

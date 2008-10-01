@@ -1,3 +1,12 @@
+2008-09-30  Roger While <simrw@sim-basis.de>
+
+	* Makefile.am : Fix out of source directory builds
+	* cobol85/Makefile.am : Ditto
+
+2008-08-09  Roger While <simrw@sim-basis.de>
+
+	* Change ENTRY test so as not to use obscure/obsoleted options
+
 2008-07-02  Roger While <simrw@sim-basis.de>
 
 	* General for all OC tests - Cater for activated END-xxx checking

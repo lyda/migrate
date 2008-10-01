@@ -138,6 +138,7 @@
 #define COB_STATUS_52_EOP			52
 #define COB_STATUS_57_I_O_LINAGE		57
 #define COB_STATUS_61_FILE_SHARING		61
+#define COB_STATUS_91_NOT_AVAILABLE		91
 
 /* Special status */
 
@@ -202,30 +203,32 @@ typedef struct {
 /* File I-O functions */
 
 struct cob_fileio_funcs {
-	int	(*open) (cob_file *f, char *filename, int mode, int opt);
-	int	(*close) (cob_file *f, int opt);
-	int	(*start) (cob_file *f, int cond, cob_field *key);
+	int	(*open) (cob_file *f, char *filename, const int mode,
+			 const int sharing);
+	int	(*close) (cob_file *f, const int opt);
+	int	(*start) (cob_file *f, const int cond, cob_field *key);
 	int	(*read) (cob_file *f, cob_field *key, int read_opts);
 	int	(*read_next) (cob_file *f, int read_opts);
-	int	(*write) (cob_file *f, int opt);
-	int	(*rewrite) (cob_file *f, int opt);
+	int	(*write) (cob_file *f, const int opt);
+	int	(*rewrite) (cob_file *f, const int opt);
 	int	(*fdelete) (cob_file *f);
 };
 
 DLL_EXPIMP extern cob_file	*cob_error_file;
 
-DLL_EXPIMP extern size_t	cob_check_eop;
-
 extern void cob_default_error_handle (void);
 
-extern void cob_open (cob_file *f, int mode, int opt, cob_field *fnstatus);
-extern void cob_close (cob_file *f, int opt, cob_field *fnstatus);
+extern void cob_open (cob_file *f, const int mode, const int sharing,
+			cob_field *fnstatus);
+extern void cob_close (cob_file *f, const int opt, cob_field *fnstatus);
 extern void cob_read (cob_file *f, cob_field *key, cob_field *fnstatus,
-		      int read_opts);
-extern void cob_write (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus);
-extern void cob_rewrite (cob_file *f, cob_field *rec, int opt, cob_field *fnstatus);
+			int read_opts);
+extern void cob_write (cob_file *f, cob_field *rec, const int opt,
+			cob_field *fnstatus);
+extern void cob_rewrite (cob_file *f, cob_field *rec, const int opt,
+			cob_field *fnstatus);
 extern void cob_delete (cob_file *f, cob_field *fnstatus);
-extern void cob_start (cob_file *f, int cond, cob_field *key, cob_field *fnstatus);
+extern void cob_start (cob_file *f, const int cond, cob_field *key, cob_field *fnstatus);
 
 extern void cob_unlock_file (cob_file *f, cob_field *fnstatus);
 extern void cob_commit (void);
@@ -246,7 +249,8 @@ extern int CBL_DELETE_FILE (char *file_name);
 extern int CBL_COPY_FILE (char *fname1, char *fname2);
 extern int CBL_CHECK_FILE_EXIST (char *file_name, char *file_info);
 extern int CBL_RENAME_FILE (char *fname1, char *fname2);
-extern int CBL_GET_CURRENT_DIR (int flags, int dir_length, unsigned char *dir);
+extern int CBL_GET_CURRENT_DIR (const int flags, const int dir_length,
+				unsigned char *dir);
 extern int CBL_CHANGE_DIR (unsigned char *dir);
 extern int CBL_CREATE_DIR (unsigned char *dir);
 extern int CBL_DELETE_DIR (unsigned char *dir);
@@ -257,10 +261,10 @@ extern int cob_acuw_file_info (char *file_name, char *file_info);
 extern int cob_acuw_file_delete (char *file_name, char *file_type);
 
 /* SORT */
-extern void	cob_file_sort_init (cob_file *f, int nkeys,
+extern void	cob_file_sort_init (cob_file *f, const int nkeys,
 			const unsigned char *collating_sequence,
-			void *sort_return);
-extern void	cob_file_sort_init_key (cob_file *f, int flag,
+			void *sort_return, cob_field *fnstatus);
+extern void	cob_file_sort_init_key (cob_file *f, const int flag,
 			cob_field *field, size_t offset);
 extern void	cob_file_sort_close (cob_file *f);
 extern void	cob_file_sort_using (cob_file *sort_file, cob_file *data_file);

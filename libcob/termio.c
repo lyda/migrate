@@ -208,7 +208,7 @@ cob_new_display (const int outorerr, const int newline, const int varcnt, ...)
 	int		i;
 	va_list		args;
 
-	if (!outorerr && !screen_initialized) {
+	if (!outorerr && !cob_screen_initialized) {
 		fp = stdout;
 	} else {
 		fp = stderr;
@@ -239,7 +239,7 @@ cob_accept (cob_field *f)
 	cob_field	temp;
 	unsigned char	buff[COB_MEDIUM_BUFF];
 
-	if (screen_initialized) {
+	if (cob_screen_initialized) {
 		cob_field_accept (f, NULL, NULL, NULL, NULL, 0);
 		return;
 	}

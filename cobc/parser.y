@@ -291,6 +291,7 @@ static int literal_value (cb_tree x);
 %token HIGH_VALUE		"HIGH-VALUE"
 %token IDENTIFICATION
 %token IF
+%token IGNORE
 %token IGNORING
 %token IN
 %token INDEX
@@ -490,6 +491,7 @@ static int literal_value (cb_tree x);
 %token USING
 %token VALUE
 %token VARYING
+%token WAIT
 %token WHEN
 %token WHEN_COMPILED_FUNC	"FUNCTION WHEN-COMPILED"
 %token WITH
@@ -3298,6 +3300,9 @@ entry_statement:
   literal call_using
   {
 	if (cb_verify (cb_entry_statement, "ENTRY")) {
+		if (cob_check_valid_name ((char *)(CB_LITERAL ($3)->data))) {
+			cb_error (_("ENTRY '%s' invalid"), (char *)(CB_LITERAL ($3)->data));
+		}
 		emit_entry ((char *)(CB_LITERAL ($3)->data), 1, $4);
 	}
   }
@@ -3857,8 +3862,12 @@ open_sharing:
 ;
 
 open_option:
-| _with NO REWIND		{ /* ignored */ }
+  /* empty */			{ $$ = NULL; }
+| _with NO REWIND		{ $$ = NULL; }
 | _with LOCK			{ PENDING ("OPEN ... WITH LOCK"); }
+/*
+| _with LOCK			{ $$ = cb_int1; }
+*/
 ;
 
 
@@ -3996,6 +4005,14 @@ with_lock:
 | _with NO LOCK
   {
 	$$ = cb_int2;
+  }
+| _with IGNORE LOCK
+  {
+	$$ = cb_int3;
+  }
+| _with WAIT
+  {
+	$$ = cb_int4;
   }
 ;
 

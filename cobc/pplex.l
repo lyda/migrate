@@ -471,10 +471,9 @@ ppinput (char *buff, int max_size)
 
 start:
 	/* read a line */
-	n = 0;
 	gotcr = 0;
 	ipchar = 0;
-	for ( ; n < 256 && ipchar != '\n'; ) {
+	for (n = 0; n < 256 && ipchar != '\n'; ) {
 		ipchar = getc (ppin);
 		if (ipchar == EOF) {
 			if (newline_count == 0) {

@@ -13,7 +13,7 @@
  * GNU Lesser General Public License for more details.
  * 
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; see the file COPYING.LIB.  If
+ * License along with this library; see the file COPYING.LIB.  If not write to
  * the Free Software Foundation, 51 Franklin Street, Fifth Floor
  * Boston, MA 02110-1301 USA
  */
@@ -471,7 +471,10 @@ cob_cancel (const cob_field *f)
 {
 	struct call_hash	*p;
 	char			*name;
-	int			(*cancel_func)(int, ...);
+	union {
+		int	(*cancel_func)(int, ...);
+		void	*cancel_void;
+	} unifunc;
 
 	name = cob_get_buff (f->size + 1);
 	cob_field_to_string (f, name);
@@ -483,9 +486,9 @@ cob_cancel (const cob_field *f)
 #endif
 		if (strcmp (name, p->name) == 0) {
 			if (p->cancel) {
-				cancel_func = p->cancel;
-				cancel_func (-1, NULL, NULL, NULL, NULL, NULL,
-						NULL, NULL, NULL);
+				unifunc.cancel_void = p->cancel;
+				unifunc.cancel_func (-1, NULL, NULL, NULL, NULL,
+							NULL, NULL, NULL, NULL);
 			}
 		}
 	}
@@ -495,7 +498,10 @@ void
 cob_c_cancel (const char *name)
 {
 	struct call_hash	*p;
-	int			(*cancel_func)(int, ...);
+	union {
+		int	(*cancel_func)(int, ...);
+		void	*cancel_void;
+	} unifunc;
 
 #ifdef	COB_ALT_HASH
 	for (p = call_table; p; p = p->next) {
@@ -504,9 +510,8 @@ cob_c_cancel (const char *name)
 #endif
 		if (strcmp (name, p->name) == 0) {
 			if (p->cancel) {
-				cancel_func = p->cancel;
-				cancel_func (-1, NULL, NULL, NULL, NULL, NULL,
-						NULL, NULL, NULL);
+				unifunc.cancel_void = p->cancel;
+				unifunc.cancel_func (-1, NULL, NULL, NULL, NULL,							NULL, NULL, NULL, NULL);
 			}
 		}
 	}

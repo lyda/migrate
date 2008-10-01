@@ -1,3 +1,13 @@
+      *> Colors as defined by the Cobol standard
+       78  COB-COLOR-BLACK     VALUE 0.
+       78  COB-COLOR-BLUE      VALUE 1.
+       78  COB-COLOR-GREEN     VALUE 2.
+       78  COB-COLOR-CYAN      VALUE 3.
+       78  COB-COLOR-RED       VALUE 4.
+       78  COB-COLOR-MAGENTA   VALUE 5.
+       78  COB-COLOR-YELLOW    VALUE 6.
+       78  COB-COLOR-WHITE     VALUE 7.
+      *>
       *> Values that may be returned in CRT STATUS (or COB-CRT-STATUS)
       *> Normal return - Value 0000
        78  COB-SCR-OK          VALUE 0.

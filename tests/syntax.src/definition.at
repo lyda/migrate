@@ -19,6 +19,25 @@
 ## Boston, MA 02110-1301 USA
 
 ###
+### Invalid PROGRAM-ID
+###
+
+AT_SETUP([Invalid PROGRAM-ID])
+
+AT_DATA([prog.cob], [
+       IDENTIFICATION   DIVISION.
+       PROGRAM-ID.      short.
+       PROCEDURE        DIVISION.
+           STOP RUN.
+])
+
+AT_CHECK([${COMPILE_ONLY} prog.cob], [1], ,
+[prog.cob:3: Error: PROGRAM-ID 'short' invalid
+])
+
+AT_CLEANUP
+
+###
 ### Data name
 ###
 

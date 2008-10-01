@@ -11,8 +11,8 @@ test: $(MODULES)
 	@for m in $(MODULES); do \
 	  (cd $$m && make test) \
 	done
-	perl summary.pl $(MODULES) > summary.log
-	test -e summary.txt && diff summary.txt summary.log
+	perl $(srcdir)/summary.pl $(MODULES) > summary.log
+	test -e $(srcdir)/summary.txt && diff $(srcdir)/summary.txt summary.log
 
 save:
 	@for m in $(MODULES); do \
@@ -29,18 +29,18 @@ diff:
 clean-local:
 	rm -rf copy $(MODULES)
 
-$(MODULES): newcob.val EXEC85 EXEC85.conf.in
+$(MODULES): newcob.val EXEC85 $(srcdir)/EXEC85.conf.in
 	@echo -n "Building module $@..."
-	@sed 's/@MODULE@/$@/' EXEC85.conf.in > EXEC85.conf
+	@sed 's/@MODULE@/$@/' $(srcdir)/EXEC85.conf.in > EXEC85.conf
 	@. ../atconfig; . ../atlocal; export PATH; ./EXEC85
-	@./ifedit.sh
-	@perl expand.pl newcob.tmp
+	@$(srcdir)/ifedit.sh
+	@perl $(srcdir)/expand.pl newcob.tmp
 	@rm -f newcob.tmp newcob.log EXEC85.conf
 	@echo "test:"               > $@/Makefile
-	@echo "	. ../../atconfig; . ../../atlocal; export PATH; perl ../report.pl" >> $@/Makefile
-	@echo "	diff ../$@.txt report.txt" >> $@/Makefile
-	@echo "	. ../../atconfig; . ../../atlocal; export PATH; perl ../report.pl -O" >> $@/Makefile
-	@echo "	diff ../$@.txt report.txt" >> $@/Makefile
+	@echo "	. ../../atconfig; . ../../atlocal; export PATH; perl $(srcdir)/report.pl" >> $@/Makefile
+	@echo "	diff $(srcdir)/$@.txt report.txt" >> $@/Makefile
+	@echo "	. ../../atconfig; . ../../atlocal; export PATH; perl $(srcdir)/report.pl -O" >> $@/Makefile
+	@echo "	diff $(srcdir)/$@.txt report.txt" >> $@/Makefile
 	@echo "done"
 
 EXEC85: newcob.val

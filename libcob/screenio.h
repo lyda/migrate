@@ -81,8 +81,8 @@ DLL_EXPIMP extern int	cob_screen_mode;
 extern void cob_screen_display (cob_screen *s, cob_field *line, cob_field *column);
 extern void cob_screen_accept (cob_screen *s, cob_field *line, cob_field *column);
 extern void cob_field_display (cob_field *f, cob_field *line, cob_field *column,
-				cob_field *fgc, cob_field *bgc, int attr);
+				cob_field *fgc, cob_field *bgc, const int attr);
 extern void cob_field_accept (cob_field *f, cob_field *line, cob_field *column,
-				cob_field *fgc, cob_field *bgc, int attr);
+				cob_field *fgc, cob_field *bgc, const int attr);
 
 #endif /* COB_SCREENIO_H */
