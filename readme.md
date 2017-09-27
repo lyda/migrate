@@ -19,7 +19,7 @@ be forcibly pushed.
 We will be looking for the following things:
 
 1. Fixing email addresses.  This is more an issue for the CVS tree
-   as email address fixes will be done in `COB-SVN2GIT.DAT` for the
+   as email address fixes will be done in `authors-svn.list` for the
    subversion import.
 2. Removing generated code and other innappropriate files.
 
