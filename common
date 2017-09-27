@@ -1,5 +1,3 @@
-#!/bin/bash
-
 set -e
 
 base_dir=$(readlink -f $(dirname $0))
