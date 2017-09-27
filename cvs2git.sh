@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+. ./common || exit 1
 
 # CVS source: https://sourceforge.net/p/open-cobol/cvs/
 

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+base_dir=$(readlink -f $(dirname $0))
+cvs_dir=$(readlink -f "$base_dir/../open-cobol")
+cvs_git_dir=$(readlink -f "$base_dir/../open-cobol.git")
+svn_git_dir=$(readlink -f "$base_dir/../gnucobol")
+migration_dir=$(readlink -f "$base_dir/../test-migration.git")

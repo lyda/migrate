@@ -1,8 +1,7 @@
 #!/bin/bash
 
-set -e
+. ./common || exit 1
 
-base_dir=$(readlink -f $(dirname $0))
 if [[ ! -d ../gnucobol ]]; then
   git svn clone https://svn.code.sf.net/p/open-cobol/code --ignore-paths='^external-doc/' -A authors-svn.list --stdlayout ../gnucobol
 else
