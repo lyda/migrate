@@ -16,7 +16,7 @@ fix-commit-author() {
 cd "$migration_work_dir"
 git checkout cvs/import-review
 
-# Fix email addresses.
+# Fix email addresses.  time: 4m0s
 fix-commit-author bgiroud "Bernard Giroud" "bgiroud@open-cobol.org"
 fix-commit-author bitwalk "Keiichi Takahashi" "bitwalk@jcom.home.ne.jp"
 fix-commit-author knishida "Keisuke Nishida " "knishida@netlab.jp"
