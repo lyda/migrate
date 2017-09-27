@@ -4,10 +4,11 @@ These are possible steps in the migration.
 
 1. First, put `master` in this repo into a branch called
    `meta/2017-migration`.  Make this the current default branch.
+   (done)
 2. Second, put the `master` of the CVS import into a branch called
-   `cvs/import-review`
+   `cvs/import-review`  (done)
 3. Third, put the `master` of the subversion import into a branch called
-   `svn/import-review`
+   `svn/import-review`  (done)
 
 At this point the two `-review` branches should be reviewed.  It's
 important to note that there will be multiple [for-each-ref][1] runs
@@ -20,7 +21,7 @@ We will be looking for the following things:
 
 1. Fixing email addresses.  This is more an issue for the CVS tree
    as email address fixes will be done in `authors-svn.list` for the
-   subversion import.
+   subversion import.  (done)
 2. Removing generated code and other innappropriate files.
 
 Mapping of subversion revision numbers to git hashes is possible with
