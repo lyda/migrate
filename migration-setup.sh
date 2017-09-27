@@ -2,12 +2,6 @@
 
 . ./common || exit 1
 
-base_dir=$(readlink -f $(dirname $0))
-cvs_dir=$(readlink -f "$base_dir/../open-cobol")
-cvs_git_dir=$(readlink -f "$base_dir/../open-cobol.git")
-svn_git_dir=$(readlink -f "$base_dir/../gnucobol")
-migration_dir=$(readlink -f "$base_dir/../test-migration.git")
-
 if [[ -d "$migration_dir" ]]; then
   echo "Press C-c to abort generating a fresh trial migration tree"
   echo "or press return to continue."
