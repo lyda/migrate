@@ -8,7 +8,7 @@ These are possible steps in the migration.
 2. Second, put the `master` of the CVS import into a branch called
    `cvs/import-review`  (done)
 3. Third, put the `master` of the subversion import into a branch called
-   `svn/import-review`  (done)
+   `svn/import-review`  Note: see *Subversion import* section below.  (done)
 
 At this point the two `-review` branches should be reviewed.  It's
 important to note that there will be multiple [for-each-ref][1] runs
@@ -33,22 +33,22 @@ read-only.  The git repo is left with only the `meta/2017-migration`
 branch.  We then import the CVS and subversion trees and run the
 migration script.
 
-Then we need to do a bit of further cleanup - this would also go in the
-migration script.
+## Subversion Migration
 
-TODO: Read up on svn imports to get the specific commands required.
+These steps need to be done before pushing into the `svn/import-review`
+branch. They will also need to be done before the actual migration
+post-review.
 
 1. The `git svn` import put svn tags into branches. Turn these into
    actual tags.  Remove the old branches.
 2. The svn ignore metadata needs to be converted into `.gitignore` files.
-3. Look for empty directories and add `.gitignore` files into them.
-4. Local branches need to be generated from the remaining branches.
-5. The tags `cvs/master` and `svn/master` will be set to the imported
+3. Local branches need to be generated from the remaining branches.
+4. The tags `cvs/master` and `svn/master` will be set to the imported
    heads of their respective repo.
-6. The tag `svn/first` will be set to the initial commit of the svn tree.
 
 Next up is to link up the CVS to the svn tree.  This involves using the
-`git replace` [command][2] to graft the two trees together.
+`git replace` [command][2] to graft the two trees together.  As part of
+this an `svn/first` tag will be set to the initial commit of the svn tree.
 
 The resulting repository will actually contain three repos:
 
@@ -68,6 +68,8 @@ This way you'll get a complete view of the history with the ability to trace bac
 
 TODO: Provide a `git blame` example that might provide a clearer view
 of where a feature actually originated.
+
+TODO: Provide a `git bisect` example.
 
 [1]: https://git-scm.com/docs/git-for-each-ref [2]:
 https://git-scm.com/blog/2010/03/17/replace.html
