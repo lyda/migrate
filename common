@@ -7,3 +7,18 @@ svn_git_dir=$(readlink -f "$base_dir/../gnucobol")
 svn_work_dir=$(readlink -f "$base_dir/../gnucobol.post-svn")
 migration_dir=$(readlink -f "$base_dir/../test-migration.git")
 migration_work_dir=$(readlink -f "$base_dir/../test-migration")
+log_dir=$base_dir/log
+log_file=$base_dir/log/migration.log
+
+if [[ ! -d $log_dir ]]; then
+  mkdir $log_dir
+fi
+
+# Close stdout+stderr.
+exec 1<&-
+exec 2<&-
+
+# Log stdout+stderr.
+exec 1> $log_file
+exec 2>&1
+
