@@ -6,8 +6,8 @@ cd "$migration_work_dir"
 git checkout svn/import-review
 
 # Remove generated files.
-$base_dir/bfg.sh -D '{configure,parser.c}'
-$base_dir/bfg.sh -D '{printcbl|gnucobol|opencobol}.pdf'
+# $base_dir/bfg.sh -D '{configure,parser.c}'
+# $base_dir/bfg.sh -D '{printcbl|gnucobol|opencobol}.pdf'
 
 # Do the final replace to graft the svn and cvs trees together.
 git tag -a -m "First Subversion commit" \
