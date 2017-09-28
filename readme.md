@@ -73,5 +73,5 @@ what going all the way back to 2002.
 
 TODO: Provide a `git bisect` example.
 
-[1]: https://git-scm.com/docs/git-for-each-ref [2]:
-https://git-scm.com/blog/2010/03/17/replace.html
+[1]:https://git-scm.com/docs/git-for-each-ref
+[2]:https://git-scm.com/blog/2010/03/17/replace.html
