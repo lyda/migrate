@@ -21,7 +21,38 @@ cd "$cvs_git_dir"
 git push "$migration_dir" master:cvs/import-review
 
 # Push SVN branch.
-cd "$svn_git_dir"
+## Remove workdir to redo the svn migrations and still leave
+## the original svn import repo untouched.
+if [[ -d "$svn_work_dir" ]]; then
+  rm -rf "$svn_work_dir"
+fi
+cp -a "$svn_git_dir" "$svn_work_dir"
+
+## Do svn->git cleanups.
+cd "$svn_work_dir"
+
+### Create branches.
+for branch in $(git branch -r | grep origin/ | grep -v /tags/ \
+                  | grep -v /trunk | sed s@origin/@@); do
+  git branch $branch origin/$branch
+done
+
+### Create tags.
+for tag in $(git branch -r | grep origin/tags/ sed s@origin/@@); do
+  git tag -m "SVN converted tag: $tag" $tag origin/tags/$tag
+done
+
+### svn:ignore -> .gitignore
+for branch in $(git for-each-ref --format='%(refname:short)' refs/heads); do
+  git checkout "$branch"
+  svn_branch=$branch
+  test "$branch" = master && svn_branch=trunk
+  git svn show-ignore -i $svn_branch > .gitignore
+  git add .gitignore
+  git commit -m "Recreate svn:ignores in git."
+done
+
+git checkout master
 git push "$migration_dir" master:svn/import-review
 
 # Configure the repo.
