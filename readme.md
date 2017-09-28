@@ -66,8 +66,10 @@ it to just the subversion and current history by limiting the range to
 
 This way you'll get a complete view of the history with the ability to trace back changes all the way back to the beginning.
 
-TODO: Provide a `git blame` example that might provide a clearer view
-of where a feature actually originated.
+# Things to try
+
+Run `git blame --show-stats -w -M -C cobc/cobc.c` to see who has changed
+what going all the way back to 2002.
 
 TODO: Provide a `git bisect` example.
 
