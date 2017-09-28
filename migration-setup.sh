@@ -34,20 +34,26 @@ cd "$svn_work_dir"
 ### Create branches.
 for branch in $(git branch -r | grep origin/ | grep -v /tags/ \
                   | grep -v /trunk | sed s@origin/@@); do
-  git branch $branch origin/$branch
+  git branch $branch origin/$branch || true  # for branches already created.
 done
 
 ### Create tags.
-for tag in $(git branch -r | grep origin/tags/ sed s@origin/@@); do
+for tag in $(git branch -r | grep origin/tags/ | sed s@origin/tags/@@); do
   git tag -m "SVN converted tag: $tag" $tag origin/tags/$tag
 done
 
 ### svn:ignore -> .gitignore
-for branch in $(git for-each-ref --format='%(refname:short)' refs/heads); do
+git svn show-ignore -i trunk > .gitignore
+git add .gitignore
+git commit -m "Recreate svn:ignores in git."
+for branch in $(git for-each-ref --format='%(refname:short)' refs/heads \
+                  | grep -v master); do
   git checkout "$branch"
-  svn_branch=$branch
-  test "$branch" = master && svn_branch=trunk
-  git svn show-ignore -i $svn_branch > .gitignore
+  if [[ ! git svn show-ignore > .gitignore ]]; then
+    echo "INFO: Error generating .gitignore in $branch."
+    echo "INFO: Using .gitignore from master."
+    git checkout master -- .gitignore
+  fi
   git add .gitignore
   git commit -m "Recreate svn:ignores in git."
 done
