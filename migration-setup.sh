@@ -49,7 +49,7 @@ git commit -m "Recreate svn:ignores in git."
 for branch in $(git for-each-ref --format='%(refname:short)' refs/heads \
                   | grep -v master); do
   git checkout "$branch"
-  if [[ ! git svn show-ignore > .gitignore ]]; then
+  if ! git svn show-ignore > .gitignore; then
     echo "INFO: Error generating .gitignore in $branch."
     echo "INFO: Using .gitignore from master."
     git checkout master -- .gitignore
