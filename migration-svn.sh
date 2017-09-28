@@ -13,3 +13,9 @@ $base_dir/bfg.sh -D '{printcbl|gnucobol|opencobol}.pdf'
 git tag -a -m "First Subversion commit" \
         svn/first-commit $(git rev-list --max-parents=0 HEAD)
 git replace --graft $(git rev-list --max-parents=0 HEAD) cvs/import-review
+
+# Clean the repo up.
+git reflog expire --expire=now --all && git gc --prune=now --aggressive
+
+# Report size of repo.
+du -sh .git
